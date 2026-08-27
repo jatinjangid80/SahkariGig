@@ -6,7 +6,6 @@ import { WhyCooperative } from './components/WhyCooperative';
 import { WorkerDirectory } from './components/WorkerDirectory';
 import { AboutView } from './components/AboutView';
 import { ContactView } from './components/ContactView';
-import { StatusView } from './components/StatusView';
 import { CustomerDashboard } from './components/CustomerDashboard';
 import { WorkerDashboard } from './components/WorkerDashboard';
 import { AdminPanel } from './components/AdminPanel';
@@ -160,10 +159,6 @@ export default function App() {
 
         {currentPath === '/contact' && (
           <ContactView />
-        )}
-
-        {currentPath === '/status' && (
-          <StatusView />
         )}
 
         {currentPath === '/verify' && (
