@@ -21,9 +21,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = [
     { label: 'Home', path: '/' },
-    { label: 'Services', path: '/#services' },
+    { label: 'Find Services', path: '/#services' },
+    { label: 'Find Work', path: '/#for-workers' },
+    { label: 'Cooperatives', path: '/#how-it-works' }, // We'll link this to how-it-works for now
     { label: 'How It Works', path: '/#how-it-works' },
-    { label: 'For Workers', path: '/#for-workers' },
     { label: 'About', path: '/about' },
   ];
 
@@ -50,19 +51,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand Logo */}
         <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => handleNavClick('/')}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-md font-extrabold text-xl tracking-tight transition-transform group-hover:scale-105">
-            Cg
+            Sg
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-extrabold text-slate-900 text-xl tracking-tight font-outfit">
-                {CONFIG.appName}
+                SahkariGig
               </span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
                 <ShieldCheck className="w-3 h-3 mr-1 text-emerald-600" />
                 Cooperative
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 hidden sm:block font-medium">Ministry of Cooperation Verified</p>
+            <p className="text-[11px] text-slate-500 hidden sm:block font-medium">Worker-owned platform</p>
           </div>
         </div>
 
@@ -104,11 +105,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
               {onLogoutClick && (
                 <button
-                  onClick={onLogoutClick}
-                  className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
-                >
-                  Sign Out
-                </button>
+                onClick={() => {
+                  if (onLogoutClick) {
+                    localStorage.removeItem('mockAdmin');
+                    onLogoutClick();
+                  }
+                }}
+                className="px-4 py-2 text-slate-600 hover:text-slate-900 font-semibold text-xs transition-colors"
+              >
+                Log Out
+              </button>
               )}
             </div>
           ) : (

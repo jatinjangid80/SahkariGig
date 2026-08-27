@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, Calendar, MapPin, ShieldCheck, Star, Clock, ArrowRight, ArrowLeft, Printer } from 'lucide-react';
+import { X, CheckCircle, Calendar, MapPin, ShieldCheck, Star, Clock, ArrowRight, ArrowLeft, Printer, Zap, Droplet, Hammer, Paintbrush, Home, Heart } from 'lucide-react';
+// @ts-ignore
+import confetti from 'canvas-confetti';
+
 
 interface Worker {
   id: string;
@@ -82,6 +85,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       };
       onBookingSuccess(newBooking);
       setCurrentStep(6); // Success Step
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#06b6d4', '#f59e0b', '#3b82f6']
+      });
     }, 800);
   };
 
@@ -103,8 +112,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           </style>
         </head>
         <body>
-          <h1>CoopGig Booking Receipt</h1>
-          <div class="header-sub">Ministry of Cooperation Verified Services</div>
+          <h1>SahkariGig Booking Receipt</h1>
+          <div class="header-sub">Verified Cooperative Services</div>
           
           <div class="card">
             <div class="row">
@@ -163,12 +172,23 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     { num: 5, label: 'Review' }
   ];
 
+  const tradeIcons: Record<string, React.ReactNode> = {
+    'Electrician': <Zap className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Plumber': <Droplet className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Carpenter': <Hammer className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Painter': <Paintbrush className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Domestic Help': <Home className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Caregiver': <Heart className="w-5 h-5 mb-1.5 opacity-80" />
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col md:flex-row my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col md:flex-row my-8 transition-all duration-300 transform">
         
         {/* Persistent Summary Sidebar */}
-        <div className="w-full md:w-72 bg-slate-900 text-white p-6 flex flex-col justify-between">
+        <div className="w-full md:w-80 bg-gradient-to-b from-slate-900 to-slate-950 text-white p-7 flex flex-col justify-between relative overflow-hidden">
+          {/* Decorative subtle element */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
           <div>
             <div className="flex items-center justify-between mb-6">
               <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-800">
@@ -216,7 +236,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
           <div className="mt-8 pt-4 border-t border-slate-800 text-[11px] text-slate-400 flex items-center">
             <ShieldCheck className="w-4 h-4 text-emerald-400 mr-1.5 shrink-0" />
-            <span>Ministry of Cooperation Guarantee</span>
+            <span>Cooperative Network Guarantee</span>
           </div>
         </div>
 
@@ -237,43 +257,46 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               </button>
             </div>
 
-            {/* Step Progress Pills */}
+            {/* Stepper Redesign - Progress Bar */}
             {currentStep <= 5 && (
-              <div className="flex items-center space-x-2 my-6 overflow-x-auto pb-1">
-                {steps.map((s) => (
-                  <div
-                    key={s.num}
-                    className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                      currentStep === s.num
-                        ? 'bg-emerald-600 text-white'
-                        : currentStep > s.num
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
-                    <span>{s.num}.</span>
-                    <span>{s.label}</span>
-                  </div>
-                ))}
+              <div className="mb-8 mt-2">
+                <div className="flex items-center justify-between mb-2">
+                  {steps.map((s) => (
+                    <div key={s.num} className={`text-xs font-bold transition-colors duration-300 ${currentStep >= s.num ? 'text-emerald-700' : 'text-slate-400'}`}>
+                      {s.label}
+                    </div>
+                  ))}
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                  {steps.map((s) => (
+                    <div 
+                      key={s.num} 
+                      className={`h-full flex-1 transition-all duration-500 ease-in-out ${currentStep >= s.num ? 'bg-emerald-500' : 'bg-transparent'} ${s.num < steps.length ? 'border-r border-slate-100/30' : ''}`}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Step 1: Select Service */}
             {currentStep === 1 && (
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-900">Select Required Trade</h3>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-5">
+                <h3 className="text-base font-bold text-slate-900 font-outfit">Select Required Trade</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {['Electrician', 'Plumber', 'Carpenter', 'Painter', 'Domestic Help', 'Caregiver'].map((trade) => (
                     <button
                       key={trade}
                       onClick={() => setServiceType(trade)}
-                      className={`p-3 rounded-xl border text-left font-semibold text-xs transition-all ${
+                      className={`p-4 rounded-2xl border text-left font-semibold text-sm flex flex-col items-start transition-all duration-300 ${
                         serviceType === trade
-                          ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600'
-                          : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                          ? 'border-emerald-500 bg-emerald-50/50 text-emerald-900 shadow-[0_0_0_1px_rgba(16,185,129,1)] scale-[1.02]'
+                          : 'border-slate-200 bg-white hover:border-emerald-200 hover:bg-slate-50 hover:shadow-sm text-slate-700'
                       }`}
                     >
-                      {trade}
+                      <div className={serviceType === trade ? 'text-emerald-600' : 'text-slate-500'}>
+                        {tradeIcons[trade]}
+                      </div>
+                      <span className="mt-1">{trade}</span>
                     </button>
                   ))}
                 </div>
@@ -281,88 +304,114 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             )}
 
             {/* Step 2: Confirm Worker */}
+            {/* Step 2: Confirm Worker */}
             {currentStep === 2 && (
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-900">Verified Worker Profile</h3>
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-slate-900 text-base">{defaultWorker.name}</h4>
-                    <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                      {defaultWorker.rating} ★ ({defaultWorker.reviewsCount} reviews)
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h3 className="text-base font-bold text-slate-900 font-outfit">Verified Worker Profile</h3>
+                <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-lg">{defaultWorker.name}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{defaultWorker.coopName}</p>
+                    </div>
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md flex items-center">
+                      {defaultWorker.rating} <Star className="w-3 h-3 ml-1 fill-emerald-700 inline" />
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600">{defaultWorker.coopName}</p>
-                  <p className="text-xs font-semibold text-slate-800">ID: {defaultWorker.workerId}</p>
+                  <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
+                    <p className="text-xs font-mono font-medium text-slate-500">ID: {defaultWorker.workerId}</p>
+                    <p className="text-xs text-slate-500">{defaultWorker.reviewsCount} verified reviews</p>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Step 3: Date & Time */}
+            {/* Step 3: Date & Time */}
             {currentStep === 3 && (
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-900">Choose Visit Time</h3>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Date</label>
-                  <select
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                    className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-slate-50 text-slate-900"
-                  >
-                    <option value="Today">Today (Within 2 Hours)</option>
-                    <option value="Tomorrow">Tomorrow</option>
-                    <option value="Day After Tomorrow">Day After Tomorrow</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Time Slot</label>
-                  <select
-                    value={bookingTime}
-                    onChange={(e) => setBookingTime(e.target.value)}
-                    className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-slate-50 text-slate-900"
-                  >
-                    <option value="09:00 AM">09:00 AM – 11:00 AM</option>
-                    <option value="10:00 AM">10:00 AM – 12:00 PM</option>
-                    <option value="02:00 PM">02:00 PM – 04:00 PM</option>
-                    <option value="05:00 PM">05:00 PM – 07:00 PM</option>
-                  </select>
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h3 className="text-base font-bold text-slate-900 font-outfit">Choose Visit Time</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Date</label>
+                    <select
+                      value={bookingDate}
+                      onChange={(e) => setBookingDate(e.target.value)}
+                      className="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow outline-none shadow-sm"
+                    >
+                      <option value="Today">Today (Within 2 Hours)</option>
+                      <option value="Tomorrow">Tomorrow</option>
+                      <option value="Day After Tomorrow">Day After Tomorrow</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Time Slot</label>
+                    <select
+                      value={bookingTime}
+                      onChange={(e) => setBookingTime(e.target.value)}
+                      className="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow outline-none shadow-sm"
+                    >
+                      <option value="09:00 AM">09:00 AM – 11:00 AM</option>
+                      <option value="10:00 AM">10:00 AM – 12:00 PM</option>
+                      <option value="02:00 PM">02:00 PM – 04:00 PM</option>
+                      <option value="05:00 PM">05:00 PM – 07:00 PM</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Step 4: Address */}
+            {/* Step 4: Address */}
             {currentStep === 4 && (
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-900">Service Location & Notes</h3>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Complete Address</label>
-                  <textarea
-                    rows={2}
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-slate-50 text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Instructions for Worker</label>
-                  <textarea
-                    rows={2}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-slate-50 text-slate-900"
-                  />
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h3 className="text-base font-bold text-slate-900 font-outfit">Service Location & Notes</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Complete Address</label>
+                    <textarea
+                      rows={2}
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow outline-none shadow-sm"
+                      placeholder="Enter flat, building, and street..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Instructions for Worker</label>
+                    <textarea
+                      rows={2}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow outline-none shadow-sm"
+                      placeholder="Any specific tools needed or gate instructions..."
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Step 5: Review */}
             {currentStep === 5 && (
-              <div className="space-y-4 text-xs text-slate-700">
-                <h3 className="text-sm font-bold text-slate-900">Final Booking Review</h3>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                  <p><span className="font-semibold text-slate-900">Service:</span> {serviceType}</p>
-                  <p><span className="font-semibold text-slate-900">Worker:</span> {defaultWorker.name} ({defaultWorker.coopName})</p>
-                  <p><span className="font-semibold text-slate-900">Schedule:</span> {bookingDate}, {bookingTime}</p>
-                  <p><span className="font-semibold text-slate-900">Address:</span> {address}</p>
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h3 className="text-base font-bold text-slate-900 font-outfit">Final Booking Review</h3>
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex justify-between border-b border-slate-200 pb-3">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Service</span>
+                    <span className="text-sm font-semibold text-slate-900">{serviceType}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-200 pb-3">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Professional</span>
+                    <span className="text-sm font-semibold text-slate-900 text-right">{defaultWorker.name}<br/><span className="text-xs text-slate-500 font-normal">{defaultWorker.coopName}</span></span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-200 pb-3">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Schedule</span>
+                    <span className="text-sm font-semibold text-slate-900 text-right">{bookingDate}<br/><span className="text-xs text-slate-500 font-normal">{bookingTime}</span></span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Location</span>
+                    <span className="text-sm font-semibold text-slate-900 text-right max-w-[60%]">{address}</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -411,7 +460,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               <button
                 onClick={handleConfirmBooking}
                 disabled={isSubmitting}
-                className="ml-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
+                className="ml-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-70 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
               >
                 {isSubmitting ? 'Confirming...' : 'Confirm & Dispatch Booking'}
               </button>

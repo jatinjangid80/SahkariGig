@@ -19,6 +19,8 @@ import { WorkerIdCardModal } from './components/WorkerIdCardModal';
 import { AuthModal } from './components/AuthModal';
 import { Footer } from './components/Footer';
 import { supabase } from './supabase';
+// @ts-ignore
+import confetti from 'canvas-confetti';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState('/');
@@ -26,8 +28,15 @@ export default function App() {
   
   // User state & role management
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string } | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   useEffect(() => {
+    // Hardcoded Admin Bypass
+    if (localStorage.getItem('mockAdmin') === 'true') {
+      setCurrentUser({ id: 'admin-123', name: 'jatin Admin', email: 'admin@gmail.com', role: 'Admin' });
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setCurrentUser({
@@ -36,6 +45,12 @@ export default function App() {
           name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
           role: session.user.user_metadata?.role || 'Customer'
         });
+      } else {
+        // Auto-prompt login page modal on first visit of the session if not logged in
+        if (!sessionStorage.getItem('hasPromptedLogin')) {
+          sessionStorage.setItem('hasPromptedLogin', 'true');
+          setAuthModalOpen(true);
+        }
       }
     });
 
@@ -50,9 +65,11 @@ export default function App() {
           role: session.user.user_metadata?.role || 'Customer'
         });
       } else {
-        setCurrentUser(null);
-        if (currentPath === '/dashboard') {
-          navigateTo('/');
+        if (localStorage.getItem('mockAdmin') !== 'true') {
+          setCurrentUser(null);
+          if (currentPath === '/dashboard') {
+            navigateTo('/');
+          }
         }
       }
     });
@@ -61,8 +78,6 @@ export default function App() {
   }, [currentPath]);
 
   // Modal States
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedWorkerForBooking, setSelectedWorkerForBooking] = useState<any>(null);
   
@@ -88,12 +103,14 @@ export default function App() {
 
     // Listen to Supabase Auth State Changes (Google OAuth & Email Auth)
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (localStorage.getItem('mockAdmin') === 'true') return;
+      
       if (session?.user) {
         const email = session.user.email || '';
         const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
         const role = session.user.user_metadata?.role || 'Customer';
 
-        setCurrentUser({ name, role });
+        setCurrentUser({ name, role, id: session.user.id, email });
       }
     });
 
@@ -159,14 +176,6 @@ export default function App() {
               onNavigate={navigateTo}
             />
 
-            {/* Service Discovery Grid */}
-            <CategoryGrid
-              onSelectCategory={(cat) => setSelectedCategory(cat)}
-            />
-
-            {/* Why SahkariGig Trust Section */}
-            <WhyCooperative />
-
             {/* Verified Worker Discovery Directory */}
             <WorkerDirectory
               selectedCategory={selectedCategory}
@@ -177,6 +186,9 @@ export default function App() {
               }}
               onVerifyQrCode={handleVerifyQrCode}
             />
+
+            {/* Why SahkariGig Trust Section */}
+            <WhyCooperative />
           </>
         )}
 
@@ -239,6 +251,12 @@ export default function App() {
         onClose={() => setAuthModalOpen(false)}
         onSuccess={() => {
           navigateTo('/dashboard');
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ['#10b981', '#06b6d4', '#f59e0b', '#3b82f6']
+          });
         }}
       />
 

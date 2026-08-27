@@ -1,5 +1,5 @@
 export const CONFIG = {
-  appName: 'CoopGig',
+  appName: 'SahkariGig',
   appTagline: 'Cooperative gig services, owned by the people who do the work.',
   phase: 'Phase 0 · Foundation',
   version: '0.1.0-foundation',

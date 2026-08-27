@@ -30,7 +30,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </p>
             <div className="flex items-center space-x-2 text-xs font-medium text-emerald-500 bg-emerald-500/10 w-fit px-3 py-1.5 rounded-full border border-emerald-500/20">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Ministry of Cooperation Verified</span>
+              <span>Verified Cooperative Network</span>
             </div>
           </div>
 

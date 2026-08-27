@@ -38,7 +38,7 @@ export const VerifyWorkerPage: React.FC<VerifyWorkerPageProps> = ({
             Public Trust Verification Document
           </span>
           <h1 className="mt-2 text-2xl font-extrabold font-outfit">Verified Cooperative Worker</h1>
-          <p className="text-xs text-emerald-100 mt-1">Ministry of Cooperation Labour Federation Network</p>
+          <p className="text-xs text-emerald-100 mt-1">SahkariGig Labour Federation Network</p>
         </div>
 
         {/* Worker Details Card Body */}

@@ -163,91 +163,80 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
 
         {/* Worker Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredWorkers.map((worker) => (
-            <div key={worker.id} className="light-card p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
-              
-              <div>
-                {/* Worker Header Card Info */}
-                <div className="flex items-start space-x-4">
-                  <img
-                    src={worker.avatar}
-                    alt={worker.name}
-                    className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-2xs"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-bold text-slate-900 truncate font-outfit">
-                        {worker.name}
-                      </h3>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                        <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />
-                        {worker.rating} ({worker.reviewsCount})
-                      </span>
+          {filteredWorkers.map((worker) => {
+            const getTradeIcon = (trade: string) => {
+              if (trade.toLowerCase().includes('electrician')) return '⚡';
+              if (trade.toLowerCase().includes('plumber')) return '🔧';
+              if (trade.toLowerCase().includes('painter')) return '🎨';
+              if (trade.toLowerCase().includes('carpenter')) return '🪚';
+              return '🛠️';
+            };
+
+            return (
+              <div key={worker.id} className="bg-white border border-slate-200 shadow-sm hover:shadow-lg transition-all rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                  {/* Header: Photo, Name, Trade */}
+                  <div className="flex items-center space-x-4 mb-5">
+                    <img
+                      src={worker.avatar}
+                      alt={worker.name}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-emerald-100 shadow-sm"
+                    />
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 font-outfit">{worker.name}</h3>
+                      <p className="text-sm font-semibold text-emerald-700 flex items-center">
+                        <span className="mr-1.5 text-base">{getTradeIcon(worker.trade)}</span> 
+                        {worker.trade}
+                      </p>
                     </div>
-
-                    <p className="text-xs font-semibold text-emerald-700 mt-0.5">{worker.trade}</p>
-                    
-                    <p className="text-[11px] text-slate-500 truncate mt-1 flex items-center">
-                      <ShieldCheck className="w-3 h-3 mr-1 text-emerald-600 shrink-0" />
-                      {worker.coopName}
-                    </p>
                   </div>
-                </div>
 
-                {/* Badges */}
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" />
-                    Verified Member
-                  </span>
-                  {worker.isAvailableToday && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">
-                      Available Today
-                    </span>
-                  )}
-                  {worker.isTopRated && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">
-                      Top Rated
-                    </span>
-                  )}
-                </div>
-
-                {/* Rates & Distance */}
-                <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-medium">Estimated Rate</span>
-                    <p className="font-bold text-slate-900 text-xs">{worker.hourlyRate}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-medium">Proximity</span>
-                    <p className="font-semibold text-slate-700 text-xs flex items-center">
-                      <MapPin className="w-3 h-3 mr-0.5 text-slate-400" />
+                  {/* Body: Stats Stack */}
+                  <div className="space-y-2.5 text-sm text-slate-600">
+                    <div className="flex items-center text-emerald-700 font-medium">
+                      <CheckCircle className="w-4 h-4 mr-2.5 shrink-0" />
+                      Cooperative Verified
+                    </div>
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 mr-2.5 fill-amber-400 text-amber-400 shrink-0" />
+                      <span className="font-semibold text-slate-900 mr-1">{worker.rating}</span>
+                      <span>({worker.reviewsCount} reviews)</span>
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-2.5 text-slate-400 shrink-0" />
                       {worker.distanceKm} km away
-                    </p>
+                    </div>
+                    {worker.isAvailableToday && (
+                      <div className="flex items-center text-emerald-600 font-medium">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 mr-3.5 ml-1 animate-pulse" />
+                        Available today
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer: Price & Actions */}
+                <div className="mt-6 pt-5 border-t border-slate-100">
+                  <div className="font-bold text-slate-900 mb-4">{worker.hourlyRate}</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => onViewWorkerProfile(worker)}
+                      className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-sm rounded-xl transition-colors flex items-center justify-center border border-slate-200"
+                    >
+                      View Profile
+                    </button>
+
+                    <button
+                      onClick={() => onSelectWorkerForBooking(worker)}
+                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md shadow-emerald-600/20 transition-colors flex items-center justify-center"
+                    >
+                      Book Now
+                    </button>
                   </div>
                 </div>
               </div>
-
-              {/* Card CTAs */}
-              <div className="mt-6 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => onViewWorkerProfile(worker)}
-                  className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-xl transition-colors flex items-center justify-center space-x-1"
-                >
-                  <UserCheck className="w-3.5 h-3.5" />
-                  <span>View Profile</span>
-                </button>
-
-                <button
-                  onClick={() => onSelectWorkerForBooking(worker)}
-                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-2xs transition-colors flex items-center justify-center space-x-1"
-                >
-                  <span>Book Now</span>
-                </button>
-              </div>
-
-            </div>
-          ))}
+            );
+          })}
         </div>
 
       </div>

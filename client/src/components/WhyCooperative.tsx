@@ -46,6 +46,36 @@ export const WhyCooperative: React.FC = () => {
           </p>
         </div>
 
+        {/* Comparison Table */}
+        <div className="max-w-4xl mx-auto mb-16 bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+          <div className="grid grid-cols-2 bg-slate-900 text-white font-outfit text-sm font-bold">
+            <div className="p-5 border-r border-slate-700/50 flex items-center justify-center">Traditional Gig Platform</div>
+            <div className="p-5 flex items-center justify-center bg-emerald-700">SahkariGig</div>
+          </div>
+          <div className="divide-y divide-slate-100">
+            <div className="grid grid-cols-2 text-sm">
+              <div className="p-5 border-r border-slate-100 text-slate-500 flex items-center justify-center text-center">Individual workers</div>
+              <div className="p-5 text-emerald-800 font-semibold flex items-center justify-center text-center bg-emerald-50/50">Cooperative workforce</div>
+            </div>
+            <div className="grid grid-cols-2 text-sm">
+              <div className="p-5 border-r border-slate-100 text-slate-500 flex items-center justify-center text-center">Platform-centric</div>
+              <div className="p-5 text-emerald-800 font-semibold flex items-center justify-center text-center bg-emerald-50/50">Community-centric</div>
+            </div>
+            <div className="grid grid-cols-2 text-sm">
+              <div className="p-5 border-r border-slate-100 text-slate-500 flex items-center justify-center text-center">Generic profiles</div>
+              <div className="p-5 text-emerald-800 font-semibold flex items-center justify-center text-center bg-emerald-50/50">Skill + cooperative identity</div>
+            </div>
+            <div className="grid grid-cols-2 text-sm">
+              <div className="p-5 border-r border-slate-100 text-slate-500 flex items-center justify-center text-center">Individual opportunities</div>
+              <div className="p-5 text-emerald-800 font-semibold flex items-center justify-center text-center bg-emerald-50/50">Cooperative opportunities</div>
+            </div>
+            <div className="grid grid-cols-2 text-sm">
+              <div className="p-5 border-r border-slate-100 text-slate-500 flex items-center justify-center text-center">Limited local trust</div>
+              <div className="p-5 text-emerald-800 font-semibold flex items-center justify-center text-center bg-emerald-50/50">Local verification</div>
+            </div>
+          </div>
+        </div>
+
         {/* 4 Trust Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {trustPoints.map((point) => {

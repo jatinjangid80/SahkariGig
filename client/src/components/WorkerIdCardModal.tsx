@@ -141,7 +141,7 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
               </div>
 
               <p className="text-[10px] text-slate-400 border-t border-slate-100 pt-4">
-                Issued under Ministry of Cooperation Labour Cooperative Framework • Valid until {w.validUntil || '31-DEC-2027'}
+                Issued under SahkariGig Labour Cooperative Framework • Valid until {w.validUntil || '31-DEC-2027'}
               </p>
             </div>
           )}

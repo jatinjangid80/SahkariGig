@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ShieldCheck, Sparkles, QrCode, Zap, ArrowRight, CheckCircle } from 'lucide-react';
+import { Search, ShieldCheck, Sparkles, QrCode, Zap, ArrowRight, CheckCircle, Star } from 'lucide-react';
 
 interface HeroSectionProps {
   onSearchService?: (query: string) => void;
@@ -73,138 +73,122 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
         <div className="flex justify-center mb-8">
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 text-emerald-800 text-xs font-bold shadow-sm backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-            <span className="tracking-wide uppercase text-[10px]">Ministry of Cooperation Registered</span>
+            <span className="tracking-wide uppercase text-[10px]">Verified Cooperative Network</span>
           </div>
         </div>
 
         {/* Hero Main Heading & Copy */}
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-5xl sm:text-6xl lg:text-[72px] font-extrabold text-slate-900 tracking-tight leading-[1.1] font-outfit">
-            Trusted skilled workers, <br />
+            Find trusted local work. <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">
-              backed by cooperatives.
+              Build your cooperative workforce.
             </span>
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-slate-600 leading-relaxed font-medium max-w-2xl mx-auto">
-            Book verified local professionals for home and community services with transparent pricing, smart matching, and live worker verification.
+            A community-centric marketplace where verified local professionals and cooperatives connect with households and businesses.
           </p>
 
           {/* Primary Action Buttons */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => {
-                const elem = document.getElementById('services');
-                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => onNavigate && onNavigate('/workers')}
               className="w-full sm:w-auto px-8 py-4 text-base font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-2xl shadow-lg hover:shadow-emerald-500/25 transition-all flex items-center justify-center btn-interaction"
             >
-              Find a Worker
-              <ArrowRight className="w-5 h-5 ml-2" />
+              Hire Workers
+              <ArrowRight className="ml-2 w-5 h-5" />
             </button>
             <button
               onClick={() => {
-                if (onNavigate) onNavigate('/about');
+                const elem = document.getElementById('for-workers');
+                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="w-full sm:w-auto px-8 py-4 text-base font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-2xl shadow-sm transition-all flex items-center justify-center btn-interaction"
+              className="w-full sm:w-auto px-8 py-4 text-base font-bold text-slate-700 bg-white border border-slate-300 hover:border-emerald-500 hover:text-emerald-700 rounded-2xl shadow-sm transition-all flex items-center justify-center btn-interaction"
             >
-              Become a Worker
+              Find Work
             </button>
           </div>
 
-          {/* Trust Row */}
-          <div className="mt-12 pt-8 border-t border-slate-200/60 grid grid-cols-2 md:grid-cols-4 gap-6 text-sm font-semibold text-slate-600">
-            <div className="flex items-center justify-center space-x-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-500" />
-              <span>Coop Verified</span>
+          {/* Trust Indicators */}
+          <div className="mt-8 mb-10 flex flex-wrap items-center justify-center gap-6 text-sm font-semibold text-slate-700">
+            <div className="flex items-center">
+              <CheckCircle className="w-5 h-5 text-emerald-500 mr-2" />
+              142+ Active Members
             </div>
-            <div className="flex items-center justify-center space-x-2">
-              <QrCode className="w-5 h-5 text-emerald-500" />
-              <span>Digital Worker ID</span>
+            <div className="flex items-center">
+              <ShieldCheck className="w-5 h-5 text-emerald-500 mr-2" />
+              98% Verified Profiles
             </div>
-            <div className="flex items-center justify-center space-x-2">
-              <Zap className="w-5 h-5 text-emerald-500" />
-              <span>Smart Match</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <CheckCircle className="w-5 h-5 text-emerald-500" />
-              <span>Secure Booking</span>
+            <div className="flex items-center">
+              <Star className="w-5 h-5 text-amber-500 mr-2 fill-amber-500" />
+              4.8 Average Rating
             </div>
           </div>
         </div>
 
-        {/* AI Service Request Box */}
-        <div id="ai-request-box" className="mt-12 max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-md relative">
-            <div className="flex items-center space-x-2 mb-3">
-              <Sparkles className="w-5 h-5 text-emerald-600" />
-              <h3 className="text-lg font-bold text-slate-900 font-outfit">What do you need help with?</h3>
+        {/* AI Service Request Box (Prominent) */}
+        <div id="ai-request-box" className="mt-6 max-w-3xl mx-auto z-20 relative">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-xl">
+            <div className="flex items-center space-x-2 mb-4">
+              <h3 className="text-lg font-bold text-slate-900 font-outfit">What service do you need?</h3>
             </div>
 
-            <form onSubmit={handleAiRoute} className="space-y-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="Describe your issue, e.g., 'ceiling fan is sparking and tripping MCB'"
-                  className="w-full pl-4 pr-32 py-3.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                />
-                <button
-                  type="submit"
-                  disabled={isClassifying || !aiPrompt.trim()}
-                  className="absolute right-2 top-2 bottom-2 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                >
-                  {isClassifying ? (
-                    <span>Matching...</span>
-                  ) : (
-                    <>
-                      <span>Find Service</span>
-                      <Search className="w-3.5 h-3.5 ml-1" />
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Sample prompts */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-500">
-                <span className="font-medium text-slate-600">Try typing:</span>
-                <button
-                  type="button"
-                  onClick={() => setAiPrompt('ceiling fan is sparking and tripping MCB')}
-                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors"
-                >
-                  "ceiling fan sparking"
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAiPrompt('kitchen pipe leaking under sink')}
-                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors"
-                >
-                  "kitchen pipe leaking"
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAiPrompt('need house painter for 3 bedrooms')}
-                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors"
-                >
-                  "house painter for 3 rooms"
-                </button>
-              </div>
+            <form onSubmit={handleAiRoute} className="relative">
+              <Search className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Search for a service, skill or problem... (e.g., 'My ceiling fan is making noise')"
+                className="w-full pl-12 pr-36 py-4 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+              />
+              <button
+                type="submit"
+                disabled={isClassifying || !aiPrompt.trim()}
+                className="absolute right-2 top-2 bottom-2 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-sm rounded-lg shadow-sm transition-colors flex items-center space-x-2"
+              >
+                {isClassifying ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <span>Find Service</span>
+                )}
+              </button>
             </form>
+            <div className="mt-3 text-[11px] text-slate-500 font-medium flex items-center">
+              <span className="mr-2 text-slate-400">Try:</span>
+              <div className="flex space-x-2">
+                <button onClick={() => setAiPrompt("AC repair")} className="hover:text-emerald-600 hover:underline">AC repair</button>
+                 <span>·</span>
+                <button onClick={() => setAiPrompt("plumber")} className="hover:text-emerald-600 hover:underline">plumber</button>
+                <span>·</span>
+                <button onClick={() => setAiPrompt("home painter")} className="hover:text-emerald-600 hover:underline">home painter</button>
+                <span>·</span>
+                <button onClick={() => setAiPrompt("electrician")} className="hover:text-emerald-600 hover:underline">electrician</button>
+              </div>
+            </div>
 
-            {/* AI Classification Result Card */}
-            {aiResult && (
-              <div className="mt-4 p-4 rounded-xl bg-emerald-50/80 border border-emerald-200 text-left transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Recommended Service</span>
-                    <span className="px-2 py-0.5 text-[11px] font-bold bg-emerald-600 text-white rounded-md">
-                      {aiResult.category}
+            {/* AI Classification Result (Demo) */}
+            {aiResult && !isClassifying && (
+              <div className="mt-4 p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl flex items-start space-x-3 animate-in slide-in-from-top-2 fade-in duration-300">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-2xl">
+                  {aiResult.category === 'Electrician' && '⚡'}
+                  {aiResult.category === 'Plumber' && '🔧'}
+                  {aiResult.category === 'Painter' && '🎨'}
+                  {aiResult.category === 'Carpenter' && '🪚'}
+                  {aiResult.category === 'Technician' && '🛠️'}
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">
+                        {aiResult.category} service recommended
+                      </h4>
+                      <p className="text-xs text-slate-600 mt-0.5">{aiResult.reason}</p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full shrink-0">
+                      {aiResult.confidence}% match
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-emerald-700">{aiResult.confidence}% Match</span>
-                </div>
-                <p className="mt-1.5 text-xs text-slate-600">{aiResult.reason}</p>
 
                 <button
                   onClick={() => {
@@ -217,6 +201,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
                   See Available {aiResult.category} Workers
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </button>
+              </div>
               </div>
             )}
           </div>

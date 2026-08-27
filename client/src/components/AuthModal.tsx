@@ -41,6 +41,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   // Handle Email/Password Auth
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // HARDCODED ADMIN BYPASS
+    if (email === 'admin@gmail.com') {
+      localStorage.setItem('mockAdmin', 'true');
+      onSuccess({ name: 'Cooperative Admin', email: 'admin@gmail.com', role: 'Admin' });
+      onClose();
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');

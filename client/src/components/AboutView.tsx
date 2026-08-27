@@ -21,7 +21,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate }) => {
         </div>
 
         <div className="p-6 bg-emerald-50/80 rounded-2xl border border-emerald-200/60 space-y-3">
-          <h3 className="text-lg font-bold text-emerald-800 font-outfit">Ministry of Cooperation Directive</h3>
+          <h3 className="text-lg font-bold text-emerald-800 font-outfit">Cooperative Empowerment Directive</h3>
           <p className="text-xs text-slate-700 leading-relaxed font-medium">
             Problem Statement ID <span className="font-mono text-emerald-700 font-bold">SIH26089</span> in Smart Automation aims to establish a unified digital platform connecting this workforce to households and community customers on demand with democratic governance.
           </p>

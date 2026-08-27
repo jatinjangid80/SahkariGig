@@ -17,7 +17,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onOpenReview,
   onVerifyQrCode
 }) => {
-  const [activeTab, setActiveTab] = useState<'bookings' | 'history' | 'payments'>('bookings');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'payments'>('overview');
 
   // Sample bookings with state transitions: REQUESTED -> ACCEPTED -> IN_PROGRESS -> COMPLETED -> RATED
   const [bookings, setBookings] = useState<any[]>([]);
@@ -76,169 +76,287 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit">
-              Good morning, {firstName}
+              Good morning, {firstName} 👋
             </h1>
-            <p className="text-sm text-slate-600">
-              Manage your household service bookings, live worker verifications, and payments.
-            </p>
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center">
-              <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-              Verified Customer Account
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center">
+              <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+              Verified Customer
             </span>
           </div>
         </div>
 
-        {/* 4 Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="light-card p-5">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-medium uppercase tracking-wider">Upcoming Booking</span>
-              <Calendar className="w-4 h-4 text-emerald-600" />
-            </div>
-            <p className="text-2xl font-extrabold text-slate-900 font-outfit">
-              {bookings.filter(b => b.status === 'ACCEPTED' || b.status === 'REQUESTED').length} Active
-            </p>
-            <span className="text-xs text-emerald-600 font-medium">
-              {bookings.find(b => b.status === 'ACCEPTED' || b.status === 'REQUESTED')?.workerName || 'No upcoming bookings'}
-            </span>
-          </div>
-
-          <div className="light-card p-5">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-medium uppercase tracking-wider">Active Services</span>
-              <Clock className="w-4 h-4 text-sky-600" />
-            </div>
-            <p className="text-2xl font-extrabold text-slate-900 font-outfit">
-              {bookings.filter(b => b.status === 'IN_PROGRESS').length} In-Flight
-            </p>
-            <span className="text-xs text-slate-500">Currently ongoing</span>
-          </div>
-
-          <div className="light-card p-5">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-medium uppercase tracking-wider">Total Completed</span>
-              <CheckCircle2 className="w-4 h-4 text-indigo-600" />
-            </div>
-            <p className="text-2xl font-extrabold text-slate-900 font-outfit">
-              {bookings.filter(b => b.status === 'COMPLETED').length} Services
-            </p>
-            <span className="text-xs text-slate-500">100% Cooperative verified</span>
-          </div>
-
-          <div className="light-card p-5">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-medium uppercase tracking-wider">Pending Payment</span>
-              <CreditCard className="w-4 h-4 text-amber-600" />
-            </div>
-            <p className="text-2xl font-extrabold text-slate-900 font-outfit">
-              ₹{bookings.filter(b => b.paymentStatus === 'PENDING').reduce((acc, curr) => acc + parseInt(curr.amount.replace(/\D/g, '') || '0'), 0)}
-            </p>
-            <span className="text-xs text-amber-600 font-medium">
-              {bookings.filter(b => b.paymentStatus === 'PENDING').length} Payment pending
-            </span>
-          </div>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="light-card p-6">
-          
-          {/* Tab Navigation */}
-          <div className="flex items-center space-x-6 border-b border-slate-200 pb-3 mb-6 text-sm font-semibold">
-            <button
-              onClick={() => setActiveTab('bookings')}
-              className={`pb-2 border-b-2 transition-colors ${
-                activeTab === 'bookings'
-                  ? 'border-emerald-600 text-emerald-700'
-                  : 'border-transparent text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              My Bookings
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`pb-2 border-b-2 transition-colors ${
-                activeTab === 'history'
-                  ? 'border-emerald-600 text-emerald-700'
-                  : 'border-transparent text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Completed History
-            </button>
-          </div>
-
-          {/* Bookings List */}
-          <div className="space-y-4">
-            {bookings.map((booking) => (
-              <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
-                
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-3">
-                    <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
-                    {getStatusBadge(booking.status)}
-                  </div>
+        {/* Task-Centric Layout (Only shown on Overview) */}
+        {activeTab === 'overview' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Main Task Area */}
+            <div className="lg:col-span-2 space-y-8">
+            
+            {/* Upcoming Service Highlight */}
+            <div>
+              <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Upcoming service</h2>
+              {bookings.filter(b => b.status === 'ACCEPTED' || b.status === 'REQUESTED' || b.status === 'IN_PROGRESS').length > 0 ? (
+                <div className="bg-white rounded-2xl border border-emerald-200 shadow-md p-6 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100 rounded-full blur-3xl -mr-10 -mt-10 opacity-50 pointer-events-none" />
                   
-                  <p className="text-xs text-slate-600">
-                    Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
-                    <span className="flex items-center">
-                      <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                      {booking.date}, {booking.time}
-                    </span>
-                    <span className="flex items-center">
-                      <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                      {booking.address}
-                    </span>
-                  </div>
+                  {bookings.filter(b => b.status === 'ACCEPTED' || b.status === 'REQUESTED' || b.status === 'IN_PROGRESS').slice(0, 1).map(upcoming => (
+                    <div key={upcoming.id} className="relative z-10">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                            ⚡
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-slate-900 font-outfit">{upcoming.service}</h3>
+                            <p className="text-sm font-medium text-slate-600 mt-0.5">{upcoming.workerName}</p>
+                          </div>
+                        </div>
+                        {getStatusBadge(upcoming.status)}
+                      </div>
+                      
+                      <div className="mt-6 flex items-center space-x-6 text-sm text-slate-600">
+                        <div className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-2 text-emerald-600" />
+                          <span className="font-semibold">{upcoming.date} · {upcoming.time}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 pt-5 border-t border-slate-100 flex gap-3">
+                        <button
+                          onClick={() => onVerifyQrCode(upcoming.workerId)}
+                          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm"
+                        >
+                          Verify Worker ID
+                        </button>
+                        <button
+                          onClick={() => onOpenChat(upcoming)}
+                          className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-colors"
+                        >
+                          Message
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Actions */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={() => onVerifyQrCode(booking.workerId)}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                  >
-                    <QrCode className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Verify QR</span>
+              ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center py-10">
+                  <p className="text-slate-500 font-medium">No upcoming services scheduled.</p>
+                  <button className="mt-4 px-6 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-xl hover:bg-emerald-100 transition-colors">
+                    Book a Service
                   </button>
+                </div>
+              )}
+            </div>
 
-                  <button
-                    onClick={() => onOpenChat(booking)}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
-                    <span>Chat</span>
-                  </button>
-
-                  {booking.status === 'COMPLETED' ? (
-                    <button
-                      onClick={() => onOpenReview(booking)}
-                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                    >
-                      <Star className="w-3.5 h-3.5 fill-white" />
-                      <span>Review</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => onOpenPayment(booking)}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors flex items-center space-x-1"
-                    >
-                      <CreditCard className="w-3.5 h-3.5" />
-                      <span>Pay ({booking.amount})</span>
-                    </button>
+            {/* Recent Services List */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Recent services</h2>
+                <button 
+                  onClick={() => setActiveTab('history')}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+                >
+                  View All
+                </button>
+              </div>
+              
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="divide-y divide-slate-100">
+                  {bookings.filter(b => b.status === 'COMPLETED').slice(0, 3).map(booking => (
+                    <div key={booking.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                      <div>
+                        <p className="font-bold text-slate-900 text-sm font-outfit">{booking.service}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{booking.date} · {booking.workerName}</p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xs font-bold text-slate-900">{booking.amount}</span>
+                        {booking.paymentStatus === 'PENDING' ? (
+                          <button
+                            onClick={() => onOpenPayment(booking)}
+                            className="px-3 py-1.5 bg-amber-100 text-amber-800 hover:bg-amber-200 font-bold text-xs rounded-lg transition-colors"
+                          >
+                            Pay Now
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => onOpenReview(booking)}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition-colors flex items-center"
+                          >
+                            <Star className="w-3 h-3 mr-1" /> Review
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {bookings.filter(b => b.status === 'COMPLETED').length === 0 && (
+                    <div className="p-6 text-center text-sm text-slate-500">
+                      No completed services yet.
+                    </div>
                   )}
                 </div>
-
               </div>
-            ))}
+            </div>
+            
           </div>
 
-        </div>
+          {/* Sidebar / Quick Actions */}
+          <div className="space-y-6">
+            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Quick actions</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-2 space-y-1">
+              <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group">
+                <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <span>Book a Service</span>
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('bookings')}
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group"
+              >
+                <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <span>My Bookings</span>
+                </div>
+              </button>
+              
+              <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group">
+                <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <span>Messages</span>
+                </div>
+              </button>
+              
+              <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group">
+                <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                    <QrCode className="w-4 h-4" />
+                  </div>
+                  <span>Verify Worker ID</span>
+                </div>
+              </button>
+            </div>
+            </div>
+          </div>
+        )}
 
+        {/* Tab-based Full Lists */}
+        {activeTab !== 'overview' && (
+          <div className="light-card p-6">
+            
+            <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-3">
+              <div className="flex items-center space-x-6 text-sm font-semibold">
+                <button
+                  onClick={() => setActiveTab('bookings')}
+                  className={`pb-2 border-b-2 transition-colors ${
+                    activeTab === 'bookings'
+                      ? 'border-emerald-600 text-emerald-700'
+                      : 'border-transparent text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  My Bookings
+                </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`pb-2 border-b-2 transition-colors ${
+                    activeTab === 'history'
+                      ? 'border-emerald-600 text-emerald-700'
+                      : 'border-transparent text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  Completed History
+                </button>
+              </div>
+              <button onClick={() => setActiveTab('overview')} className="text-xs font-bold text-slate-500 hover:text-slate-800">
+                &larr; Back to Overview
+              </button>
+            </div>
+
+            {/* Bookings List */}
+            <div className="space-y-4">
+              {bookings.filter(b => activeTab === 'history' ? b.status === 'COMPLETED' : b.status !== 'COMPLETED').map((booking) => (
+                <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-3">
+                      <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
+                      {getStatusBadge(booking.status)}
+                    </div>
+                    
+                    <p className="text-xs text-slate-600">
+                      Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
+                    </p>
+                    
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
+                      <span className="flex items-center">
+                        <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                        {booking.date}, {booking.time}
+                      </span>
+                      <span className="flex items-center">
+                        <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                        {booking.address}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => onVerifyQrCode(booking.workerId)}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                    >
+                      <QrCode className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Verify QR</span>
+                    </button>
+
+                    <button
+                      onClick={() => onOpenChat(booking)}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
+                      <span>Chat</span>
+                    </button>
+
+                    {booking.status === 'COMPLETED' ? (
+                      <button
+                        onClick={() => onOpenReview(booking)}
+                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                      >
+                        <Star className="w-3.5 h-3.5 fill-white" />
+                        <span>Review</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onOpenPayment(booking)}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors flex items-center space-x-1"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>Pay ({booking.amount})</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {bookings.filter(b => activeTab === 'history' ? b.status === 'COMPLETED' : b.status !== 'COMPLETED').length === 0 && (
+                <div className="text-center py-10 text-slate-500 font-medium">
+                  No bookings found for this category.
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
       </div>
     </div>
   );
