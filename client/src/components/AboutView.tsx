@@ -45,7 +45,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate }) => {
             onClick={() => onNavigate('/contact')}
             className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md flex items-center space-x-2 transition-all"
           >
-            <span>Get in touch with admin</span>
+            <span>Company Details & Contact</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
