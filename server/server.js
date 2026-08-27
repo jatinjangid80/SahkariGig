@@ -75,7 +75,37 @@ app.use((err, req, res, next) => {
   return sendError(res, 'Internal Server Error', 500, err.message);
 });
 
+// --- SOCKET.IO REAL-TIME CHAT (Dedicated Server Mode) ---
 if (require.main === module) {
+  const { Server } = require('socket.io');
+  const io = new Server(server, {
+    cors: { origin: '*', methods: ['GET', 'POST'] }
+  });
+
+  const messages = [];
+
+  io.on('connection', (socket) => {
+    console.log('⚡ Client connected to Socket.io:', socket.id);
+
+    socket.on('joinBooking', (bookingId) => {
+      socket.join(bookingId);
+    });
+
+    socket.on('sendMessage', ({ bookingId, senderId, senderType, senderName, text }) => {
+      const newMessage = {
+        id: `msg-${Date.now()}`,
+        bookingId,
+        senderType,
+        senderId,
+        senderName,
+        text,
+        createdAt: new Date().toISOString()
+      };
+      messages.push(newMessage);
+      io.to(bookingId).emit('newMessage', newMessage);
+    });
+  });
+
   server.listen(PORT, () => {
     console.log(`=======================================================`);
     console.log(`🚀 CoopGig Foundation Backend API Active!`);
