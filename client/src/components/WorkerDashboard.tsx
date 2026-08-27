@@ -10,7 +10,7 @@ interface WorkerDashboardProps {
 export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ currentUser, onOpenWorkerIdCard, onOpenChat }) => {
   const [requests, setRequests] = useState([
     {
-      id: 'req-201',
+      id: 'bk-101', // Matched with CustomerDashboard
       service: 'Electrician',
       customerName: 'Ananya Sharma',
       address: 'Flat 402, Green Park Apartments, New Delhi',
@@ -19,7 +19,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ currentUser, o
       status: 'PENDING'
     },
     {
-      id: 'req-202',
+      id: 'bk-102', // Matched with CustomerDashboard
       service: 'Wiring Inspection',
       customerName: 'Rohit Verma',
       address: 'Sector 14, Dwarka, New Delhi',
