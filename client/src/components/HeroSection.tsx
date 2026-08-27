@@ -92,7 +92,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
                 const elem = document.getElementById('services');
                 if (elem) elem.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-2xl shadow-md transition-all flex items-center justify-center"
+              className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-2xl shadow-md transition-all flex items-center justify-center btn-interaction"
             >
               Find a Worker
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -101,7 +101,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
               onClick={() => {
                 if (onNavigate) onNavigate('/about');
               }}
-              className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-2xl shadow-2xs transition-all flex items-center justify-center"
+              className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-2xl shadow-2xs transition-all flex items-center justify-center btn-interaction"
             >
               Become a Worker
             </button>

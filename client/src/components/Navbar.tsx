@@ -115,14 +115,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             <>
               <button
                 onClick={onLoginClick || (() => onNavigate('/dashboard'))}
-                className="inline-flex items-center text-sm font-semibold text-slate-700 hover:text-emerald-700 transition-colors"
+                className="inline-flex items-center text-sm font-semibold text-slate-700 hover:text-emerald-700 transition-colors btn-interaction"
               >
                 <LogIn className="w-4 h-4 mr-1.5 text-slate-500" />
                 Sign In
               </button>
               <button
                 onClick={() => handleNavClick('/#services')}
-                className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors btn-interaction"
               >
                 Find a Worker
                 <ArrowRight className="w-4 h-4 ml-1.5" />
