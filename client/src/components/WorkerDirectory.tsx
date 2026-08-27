@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, ShieldCheck, MapPin, Search, Filter, QrCode, CheckCircle, Zap, UserCheck } from 'lucide-react';
+import { supabase } from '../supabase';
 
 interface Worker {
   id: string;
@@ -33,96 +34,43 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
   const [minRating, setMinRating] = useState(4.0);
   const [maxDistance, setMaxDistance] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Sample production-grade verified worker list
-  const mockWorkers: Worker[] = [
-    {
-      id: 'w-101',
-      name: 'Rajesh Kumar',
-      avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80',
-      trade: 'Electrician',
-      rating: 4.9,
-      reviewsCount: 128,
-      coopName: 'Delhi Labour Cooperative Federation',
-      hourlyRate: '₹400–₹700 / visit',
-      distanceKm: 1.8,
-      isAvailableToday: true,
-      isTopRated: true,
-      workerId: 'WORKER-DEL-8901'
-    },
-    {
-      id: 'w-102',
-      name: 'Suresh Sharma',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-      trade: 'Plumber',
-      rating: 4.8,
-      reviewsCount: 94,
-      coopName: 'JanSeva Plumbing Society',
-      hourlyRate: '₹350–₹650 / visit',
-      distanceKm: 2.4,
-      isAvailableToday: true,
-      isTopRated: true,
-      workerId: 'WORKER-DEL-7652'
-    },
-    {
-      id: 'w-103',
-      name: 'Vikram Singh',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-      trade: 'Carpenter',
-      rating: 4.7,
-      reviewsCount: 82,
-      coopName: 'Northern Crafts Cooperative Federation',
-      hourlyRate: '₹500–₹900 / visit',
-      distanceKm: 3.5,
-      isAvailableToday: false,
-      isTopRated: false,
-      workerId: 'WORKER-DEL-4390'
-    },
-    {
-      id: 'w-104',
-      name: 'Anita Verma',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-      trade: 'Painter',
-      rating: 4.9,
-      reviewsCount: 156,
-      coopName: 'National Cooperative Union of India',
-      hourlyRate: '₹600–₹1200 / day',
-      distanceKm: 2.1,
-      isAvailableToday: true,
-      isTopRated: true,
-      workerId: 'WORKER-DEL-1249'
-    },
-    {
-      id: 'w-105',
-      name: 'Sunil Paswan',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-      trade: 'Domestic Help',
-      rating: 4.6,
-      reviewsCount: 65,
-      coopName: 'JanSeva Labour Cooperative',
-      hourlyRate: '₹300–₹500 / visit',
-      distanceKm: 4.2,
-      isAvailableToday: true,
-      isTopRated: false,
-      workerId: 'WORKER-DEL-6582'
-    },
-    {
-      id: 'w-106',
-      name: 'Priya Devi',
-      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
-      trade: 'Caregiver',
-      rating: 5.0,
-      reviewsCount: 42,
-      coopName: 'Mahila Sahkari Healthcare Union',
-      hourlyRate: '₹600–₹1000 / shift',
-      distanceKm: 1.5,
-      isAvailableToday: true,
-      isTopRated: true,
-      workerId: 'WORKER-DEL-9810'
-    }
-  ];
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase.from('workers').select('*');
+        if (error) throw error;
+        
+        if (data) {
+          const formattedWorkers = data.map(w => ({
+            id: w.id,
+            name: w.name,
+            avatar: w.avatar || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80',
+            trade: w.trade,
+            rating: w.rating || 4.5,
+            reviewsCount: w.reviews_count || 10,
+            coopName: w.coop_name,
+            hourlyRate: w.hourly_rate,
+            distanceKm: w.distance_km || 2.0,
+            isAvailableToday: w.is_available_today,
+            isTopRated: w.is_top_rated,
+            workerId: w.worker_id
+          }));
+          setWorkers(formattedWorkers);
+        }
+      } catch (err) {
+        console.error('Error fetching workers:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchWorkers();
+  }, []);
 
-  const filteredWorkers = mockWorkers.filter((worker) => {
+  const filteredWorkers = workers.filter((worker) => {
     const matchesTrade = filterTrade === 'All' || filterTrade === '' || worker.trade.toLowerCase() === filterTrade.toLowerCase();
     const matchesRating = worker.rating >= minRating;
     const matchesDistance = worker.distanceKm <= maxDistance;
