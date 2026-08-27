@@ -7,8 +7,8 @@
     "start": "node server/server.js",
     "server": "node server/server.js",
     "client": "npm --prefix client run dev",
-    "build": "npm --prefix client run build && cp -r client/dist ./dist",
-    "vercel-build": "npm --prefix client run build && cp -r client/dist ./dist",
+    "build": "npm --prefix client install && npm --prefix client run build && cp -r client/dist ./dist",
+    "vercel-build": "npm --prefix client install && npm --prefix client run build && cp -r client/dist ./dist",
     "dev": "concurrently \"npm run server\" \"npm run client\""
   },
   "devDependencies": {
