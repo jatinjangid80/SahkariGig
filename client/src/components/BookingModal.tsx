@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, Calendar, MapPin, ShieldCheck, Star, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
+import { X, CheckCircle, Calendar, MapPin, ShieldCheck, Star, Clock, ArrowRight, ArrowLeft, Printer } from 'lucide-react';
 
 interface Worker {
   id: string;
@@ -33,6 +33,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [address, setAddress] = useState('Flat 402, Green Park Apartments, New Delhi');
   const [notes, setNotes] = useState('Please bring standard multimeter and MCB replacements.');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingCode, setBookingCode] = useState('');
 
   if (!isOpen) return null;
 
@@ -63,8 +64,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
+      const generatedCode = `BK-${Date.now().toString().slice(-4)}`;
+      setBookingCode(generatedCode);
       const newBooking = {
-        id: `bk-${Date.now().toString().slice(-4)}`,
+        id: generatedCode,
         service: serviceType,
         workerName: defaultWorker.name,
         workerTrade: defaultWorker.trade,
@@ -80,6 +83,76 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       onBookingSuccess(newBooking);
       setCurrentStep(6); // Success Step
     }, 800);
+  };
+
+  const handlePrintPDF = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Booking Receipt - ${bookingCode}</title>
+          <style>
+            body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; color: #0f172a; }
+            h1 { color: #059669; font-size: 24px; margin-bottom: 5px; }
+            .header-sub { font-size: 14px; color: #64748b; margin-bottom: 30px; }
+            .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+            .row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+            .label { color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; }
+            .value { font-weight: 600; font-size: 15px; }
+            .footer { margin-top: 40px; font-size: 11px; color: #94a3b8; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <h1>CoopGig Booking Receipt</h1>
+          <div class="header-sub">Ministry of Cooperation Verified Services</div>
+          
+          <div class="card">
+            <div class="row">
+              <span class="label">Booking Code</span>
+              <span class="value" style="color: #059669;">${bookingCode}</span>
+            </div>
+            <div class="row">
+              <span class="label">Service</span>
+              <span class="value">${serviceType}</span>
+            </div>
+            <div class="row">
+              <span class="label">Professional</span>
+              <span class="value">${defaultWorker.name} (${defaultWorker.coopName})</span>
+            </div>
+            <div class="row">
+              <span class="label">Schedule</span>
+              <span class="value">${bookingDate} at ${bookingTime}</span>
+            </div>
+            <div class="row">
+              <span class="label">Location</span>
+              <span class="value">${address}</span>
+            </div>
+            <div class="row">
+              <span class="label">Rate</span>
+              <span class="value">${defaultWorker.hourlyRate}</span>
+            </div>
+            <div class="row">
+              <span class="label">Status</span>
+              <span class="value" style="color: #059669;">REQUESTED</span>
+            </div>
+          </div>
+          
+          <div class="footer">
+            Keep this receipt for your records. The professional will arrive at the scheduled time.
+          </div>
+        </body>
+      </html>
+    `;
+    const printWindow = window.open('', '', 'width=800,height=800');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+    }
   };
 
   const steps = [
@@ -345,12 +418,21 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             )}
 
             {currentStep === 6 && (
-              <button
-                onClick={onClose}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors"
-              >
-                Close & Track Booking
-              </button>
+              <div className="flex w-full space-x-3">
+                <button
+                  onClick={handlePrintPDF}
+                  className="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-1"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print PDF</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors"
+                >
+                  Close & Track Booking
+                </button>
+              </div>
             )}
           </div>
 
