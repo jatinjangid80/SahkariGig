@@ -301,10 +301,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
           </form>
 
-          <p className="text-[11px] text-center text-slate-400 pt-2 border-t border-slate-100">
-            Protected by Supabase Auth (Project <span className="font-mono text-slate-600">gjriuaexwaklsyctffli</span>)
-          </p>
-
         </div>
 
       </div>
