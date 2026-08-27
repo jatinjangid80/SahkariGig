@@ -216,6 +216,7 @@ export default function App() {
             {currentUser?.role === 'Worker' && (
               <WorkerDashboard
                 currentUser={currentUser}
+                onOpenChat={handleOpenChat}
                 onOpenWorkerIdCard={() => {
                   setActiveWorkerIdCard(null);
                   setWorkerIdCardModalOpen(true);

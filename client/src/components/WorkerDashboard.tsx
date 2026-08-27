@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star } from 'lucide-react';
+import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare } from 'lucide-react';
 
 interface WorkerDashboardProps {
   currentUser?: { name: string; role: string } | null;
   onOpenWorkerIdCard?: () => void;
+  onOpenChat?: (booking: any) => void;
 }
 
-export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ currentUser, onOpenWorkerIdCard }) => {
+export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ currentUser, onOpenWorkerIdCard, onOpenChat }) => {
   const [requests, setRequests] = useState([
     {
       id: 'req-201',
@@ -145,9 +146,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ currentUser, o
                     </button>
                   </div>
                 ) : (
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-lg border border-emerald-200">
-                    Accepted & Confirmed
-                  </span>
+                  <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
+                    <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-lg border border-emerald-200">
+                      Accepted & Confirmed
+                    </span>
+                    <button
+                      onClick={() => onOpenChat && onOpenChat(req)}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-2xs transition-colors flex items-center justify-center space-x-1"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      <span>Chat with Customer</span>
+                    </button>
+                  </div>
                 )}
 
               </div>
