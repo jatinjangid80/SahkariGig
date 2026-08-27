@@ -32,9 +32,6 @@ app.get('/api/health', (req, res) => {
 // 2. System Status Endpoint (Reports configuration status safely without exposing secret values)
 app.get('/api/status', (req, res) => {
   const supabaseConfigured = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
-  const dbConfigured = Boolean(process.env.MONGODB_URI);
-  const firebaseConfigured = Boolean(process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-  const jwtConfigured = Boolean(process.env.JWT_SECRET);
 
   return sendSuccess(res, {
     application: 'CoopGig — Cooperative Gig Services Platform',
@@ -43,9 +40,7 @@ app.get('/api/status', (req, res) => {
     services: {
       backendServer: { status: 'configured', details: `Running on port ${PORT}` },
       supabasePostgres: { status: supabaseConfigured ? 'configured' : 'not_configured', details: supabaseConfigured ? 'Connected to Project gjriuaexwaklsyctffli' : 'Missing Supabase keys' },
-      mongoDbAtlas: { status: dbConfigured ? 'configured' : 'not_configured', details: dbConfigured ? 'URI present' : 'MONGODB_URI missing' },
-      firebaseAuth: { status: firebaseConfigured ? 'configured' : 'not_configured', details: firebaseConfigured ? 'SDK active' : 'Default credentials' },
-      jwtSecrets: { status: jwtConfigured ? 'configured' : 'not_configured', details: jwtConfigured ? 'Custom secret set' : 'Default fallback' }
+      supabaseAuth: { status: supabaseConfigured ? 'configured' : 'not_configured', details: supabaseConfigured ? 'Auth Provider active' : 'Missing configuration' }
     },
     supportedRoles: ['Customer', 'Worker', 'Cooperative Admin'],
     timestamp: new Date().toISOString()

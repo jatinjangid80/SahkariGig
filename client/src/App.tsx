@@ -210,6 +210,7 @@ export default function App() {
 
             {currentUser?.role === 'Customer' && (
               <CustomerDashboard
+                currentUser={currentUser}
                 onOpenChat={handleOpenChat}
                 onOpenPayment={handleOpenPayment}
                 onOpenReview={handleOpenReview}
@@ -219,6 +220,7 @@ export default function App() {
 
             {currentUser?.role === 'Worker' && (
               <WorkerDashboard
+                currentUser={currentUser}
                 onOpenWorkerIdCard={() => {
                   setActiveWorkerIdCard(null);
                   setWorkerIdCardModalOpen(true);

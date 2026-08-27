@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface CustomerDashboardProps {
+  currentUser?: { name: string; role: string } | null;
   onOpenChat: (booking: any) => void;
   onOpenPayment: (booking: any) => void;
   onOpenReview: (booking: any) => void;
@@ -9,6 +10,7 @@ interface CustomerDashboardProps {
 }
 
 export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
+  currentUser,
   onOpenChat,
   onOpenPayment,
   onOpenReview,
@@ -63,6 +65,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
     }
   };
 
+  const firstName = currentUser?.name?.split(' ')[0] || 'Customer';
+
   return (
     <div className="py-8 bg-slate-50 min-h-[calc(100vh-4rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -71,7 +75,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit">
-              Good morning, Ananya
+              Good morning, {firstName}
             </h1>
             <p className="text-sm text-slate-600">
               Manage your household service bookings, live worker verifications, and payments.

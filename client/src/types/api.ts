@@ -17,9 +17,8 @@ export interface SystemStatusData {
   systemStatus: string;
   services: {
     backendServer: ServiceStatus;
-    mongoDbAtlas: ServiceStatus;
-    firebaseAuth: ServiceStatus;
-    jwtSecrets: ServiceStatus;
+    supabasePostgres: ServiceStatus;
+    supabaseAuth: ServiceStatus;
   };
   supportedRoles: string[];
   timestamp: string;

@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star } from 'lucide-react';
 
 interface WorkerDashboardProps {
+  currentUser?: { name: string; role: string } | null;
   onOpenWorkerIdCard?: () => void;
 }
 
-export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onOpenWorkerIdCard }) => {
+export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ currentUser, onOpenWorkerIdCard }) => {
   const [requests, setRequests] = useState([
     {
       id: 'req-201',
@@ -35,6 +36,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onOpenWorkerId
     setRequests(requests.filter(r => r.id !== id));
   };
 
+  const fullName = currentUser?.name || 'Worker';
+
   return (
     <div className="py-8 bg-slate-50 min-h-[calc(100vh-4rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -44,7 +47,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onOpenWorkerId
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit">
-                Rajesh Kumar
+                {fullName}
               </h1>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                 Verified Electrician
