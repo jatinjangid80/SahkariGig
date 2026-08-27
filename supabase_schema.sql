@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS public.contact_inquiries (
 -- 5. Create Reviews Table
 CREATE TABLE IF NOT EXISTS public.reviews (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES auth.users(id),
     booking_id TEXT NOT NULL,
     worker_id TEXT NOT NULL,
     rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
