@@ -293,7 +293,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                 <span>Processing...</span>
               ) : (
                 <>
-                  <span>{mode === 'signin' ? 'Sign In to SahkariGig' : 'Create Supabase Account'}</span>
+                  <span>{mode === 'signin' ? 'Sign In to SahkariGig' : 'Create SahkariGig Account'}</span>
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </>
               )}
