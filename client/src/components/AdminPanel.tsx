@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { ShieldCheck, UserCheck, Check, X, Users, AlertCircle, FileText, Settings, Award } from 'lucide-react';
+import { ShieldCheck, UserCheck, Check, Lock, Key, AlertCircle } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
+  const [pin, setPin] = useState('');
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState<'approvals' | 'workers' | 'bookings'>('approvals');
 
   const [pendingWorkers, setPendingWorkers] = useState([
@@ -25,6 +28,16 @@ export const AdminPanel: React.FC = () => {
     }
   ]);
 
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pin === '26089' || pin === '1234' || pin === '0000') {
+      setIsUnlocked(true);
+      setErrorMsg('');
+    } else {
+      setErrorMsg('Invalid Admin Security PIN. Hint: Use 26089 or 1234');
+    }
+  };
+
   const handleApprove = (id: string) => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
   };
@@ -32,6 +45,75 @@ export const AdminPanel: React.FC = () => {
   const handleReject = (id: string) => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
   };
+
+  if (!isUnlocked) {
+    return (
+      <div className="py-16 bg-slate-50 min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 p-8 text-center space-y-6">
+          
+          <div className="w-14 h-14 bg-slate-900 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
+            <Lock className="w-7 h-7" />
+          </div>
+
+          <div>
+            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Governance Gate
+            </span>
+            <h2 className="mt-2 text-2xl font-extrabold text-slate-900 font-outfit">
+              Admin PIN Verification
+            </h2>
+            <p className="mt-1 text-xs text-slate-600">
+              Enter your Cooperative Federation Admin PIN to access worker approvals & governance console.
+            </p>
+          </div>
+
+          <form onSubmit={handleUnlock} className="space-y-4 text-left">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Admin Security PIN
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  maxLength={5}
+                  value={pin}
+                  onChange={(e) => { setPin(e.target.value); setErrorMsg(''); }}
+                  placeholder="Enter PIN (Default: 26089)"
+                  className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <Key className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+              </div>
+              {errorMsg && (
+                <p className="mt-1 text-xs text-rose-600 font-medium flex items-center">
+                  <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
+                  {errorMsg}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center space-x-1"
+            >
+              <span>Unlock Admin Console</span>
+            </button>
+          </form>
+
+          {/* Preset Demo Fast Unlock */}
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-center space-x-2">
+            <span className="text-[11px] text-slate-500">Quick Demo Access:</span>
+            <button
+              onClick={() => { setPin('26089'); setIsUnlocked(true); }}
+              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-mono font-bold text-xs rounded border border-slate-300"
+            >
+              PIN: 26089
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-8 bg-slate-50 min-h-[calc(100vh-4rem)]">
@@ -45,13 +127,21 @@ export const AdminPanel: React.FC = () => {
                 Cooperative Federation Admin Console
               </h1>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white">
-                Admin Mode
+                Unlocked Mode
               </span>
             </div>
             <p className="text-sm text-slate-600">
               Manage worker registrations, cooperative society approvals, and platform governance.
             </p>
           </div>
+
+          <button
+            onClick={() => setIsUnlocked(false)}
+            className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold text-xs rounded-xl hover:bg-slate-100 transition-colors self-start md:self-auto flex items-center space-x-1"
+          >
+            <Lock className="w-3.5 h-3.5 text-slate-500" />
+            <span>Lock Console</span>
+          </button>
         </div>
 
         {/* 4 Operations Overview Cards */}
