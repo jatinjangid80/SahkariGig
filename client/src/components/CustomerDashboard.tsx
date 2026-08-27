@@ -98,8 +98,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               <span className="text-xs font-medium uppercase tracking-wider">Upcoming Booking</span>
               <Calendar className="w-4 h-4 text-emerald-600" />
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 font-outfit">1 Active</p>
-            <span className="text-xs text-emerald-600 font-medium">Rajesh Kumar (Today 10 AM)</span>
+            <p className="text-2xl font-extrabold text-slate-900 font-outfit">
+              {bookings.filter(b => b.status === 'ACCEPTED' || b.status === 'REQUESTED').length} Active
+            </p>
+            <span className="text-xs text-emerald-600 font-medium">
+              {bookings.find(b => b.status === 'ACCEPTED' || b.status === 'REQUESTED')?.workerName || 'No upcoming bookings'}
+            </span>
           </div>
 
           <div className="light-card p-5">
@@ -107,8 +111,10 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               <span className="text-xs font-medium uppercase tracking-wider">Active Services</span>
               <Clock className="w-4 h-4 text-sky-600" />
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 font-outfit">0 In-Flight</p>
-            <span className="text-xs text-slate-500">Normal service schedule</span>
+            <p className="text-2xl font-extrabold text-slate-900 font-outfit">
+              {bookings.filter(b => b.status === 'IN_PROGRESS').length} In-Flight
+            </p>
+            <span className="text-xs text-slate-500">Currently ongoing</span>
           </div>
 
           <div className="light-card p-5">
@@ -116,7 +122,9 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               <span className="text-xs font-medium uppercase tracking-wider">Total Completed</span>
               <CheckCircle2 className="w-4 h-4 text-indigo-600" />
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 font-outfit">12 Services</p>
+            <p className="text-2xl font-extrabold text-slate-900 font-outfit">
+              {bookings.filter(b => b.status === 'COMPLETED').length} Services
+            </p>
             <span className="text-xs text-slate-500">100% Cooperative verified</span>
           </div>
 
@@ -125,8 +133,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               <span className="text-xs font-medium uppercase tracking-wider">Pending Payment</span>
               <CreditCard className="w-4 h-4 text-amber-600" />
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 font-outfit">₹600</p>
-            <span className="text-xs text-amber-600 font-medium">1 Payment pending</span>
+            <p className="text-2xl font-extrabold text-slate-900 font-outfit">
+              ₹{bookings.filter(b => b.paymentStatus === 'PENDING').reduce((acc, curr) => acc + parseInt(curr.amount.replace(/\D/g, '') || '0'), 0)}
+            </p>
+            <span className="text-xs text-amber-600 font-medium">
+              {bookings.filter(b => b.paymentStatus === 'PENDING').length} Payment pending
+            </span>
           </div>
         </div>
 
