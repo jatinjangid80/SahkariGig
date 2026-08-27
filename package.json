@@ -7,7 +7,9 @@
     "start": "node server/server.js",
     "server": "node server/server.js",
     "client": "npm --prefix client run dev",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "build": "npm --prefix client run build",
+    "vercel-build": "npm --prefix client run build",
+    "dev": "node server/server.js"
   },
   "keywords": ["cooperative", "gig-services", "sih26089", "react", "express", "mongodb"],
   "author": "SIH Team",

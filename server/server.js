@@ -75,9 +75,13 @@ app.use((err, req, res, next) => {
   return sendError(res, 'Internal Server Error', 500, err.message);
 });
 
-server.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(`🚀 CoopGig Foundation Backend API Active!`);
-  console.log(`📡 Listening on Port: ${PORT}`);
-  console.log(`=======================================================`);
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`=======================================================`);
+    console.log(`🚀 CoopGig Foundation Backend API Active!`);
+    console.log(`📡 Listening on Port: ${PORT}`);
+    console.log(`=======================================================`);
+  });
+}
+
+module.exports = app;
