@@ -46,63 +46,63 @@ export const ContactView: React.FC = () => {
 
   return (
     <div className="py-12 max-w-2xl mx-auto px-4">
-      <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-slate-800 shadow-2xl">
+      <div className="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200 shadow-xl">
         
-        <div className="mb-6">
-          <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">CONTACT THE COOPERATIVE</span>
-          <h1 className="text-3xl font-bold text-white tracking-tight mt-1 font-outfit">Get in Touch</h1>
-          <p className="text-xs text-slate-400 mt-1">Have questions about joining as a worker or setting up a household/community account?</p>
+        <div className="mb-8">
+          <span className="text-xs font-mono uppercase tracking-widest text-emerald-600 font-bold">CONTACT THE COOPERATIVE</span>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight mt-1 font-outfit">Get in Touch</h1>
+          <p className="text-sm text-slate-600 mt-2 font-medium">Have questions about joining as a worker or setting up a household/community account?</p>
         </div>
 
         {successTicket && (
-          <div className="mb-6 p-4 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl flex items-start space-x-3 text-xs text-emerald-300 animate-fade-in">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start space-x-3 text-sm text-emerald-800 animate-fade-in shadow-sm">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-white">Message Received!</p>
-              <p className="mt-0.5">Your support ticket ID is <span className="font-mono text-emerald-300 font-bold">{successTicket}</span>. A cooperative administrator will get in touch shortly.</p>
+              <p className="font-bold text-emerald-900">Message Received!</p>
+              <p className="mt-0.5">Your support ticket ID is <span className="font-mono text-emerald-700 font-bold">{successTicket}</span>. A cooperative administrator will get in touch shortly.</p>
             </div>
           </div>
         )}
 
         {errorMsg && (
-          <div className="mb-6 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{errorMsg}</span>
+          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-sm flex items-start space-x-3 shadow-sm">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <span className="font-medium">{errorMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="space-y-5 text-sm">
           
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Your Full Name</label>
+            <label className="block text-slate-700 font-bold mb-1.5">Your Full Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Ramesh Kumar"
-              className="w-full px-3.5 py-2.5 bg-slate-950/80 text-white rounded-xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-4 py-3 bg-slate-50 text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Email Address</label>
+            <label className="block text-slate-700 font-bold mb-1.5">Email Address</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. ramesh@example.com"
-              className="w-full px-3.5 py-2.5 bg-slate-950/80 text-white rounded-xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-4 py-3 bg-slate-50 text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Primary Role Interest</label>
+            <label className="block text-slate-700 font-bold mb-1.5">Primary Role Interest</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-950/80 text-white rounded-xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-4 py-3 bg-slate-50 text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm"
             >
               <option value="Customer">Household / Community Customer</option>
               <option value="Worker">Skilled Worker / Cooperative Member</option>
@@ -111,24 +111,24 @@ export const ContactView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Message / Query</label>
+            <label className="block text-slate-700 font-bold mb-1.5">Message / Query</label>
             <textarea
               rows={4}
               required
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe your query or interest in the cooperative gig platform..."
-              className="w-full px-3.5 py-2.5 bg-slate-950/80 text-white rounded-xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-4 py-3 bg-slate-50 text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 gradient-bg hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
+            className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-emerald-500/25 flex items-center justify-center space-x-2 disabled:opacity-50 transition-all btn-interaction"
           >
             {loading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
                 <Send className="w-4 h-4" />
