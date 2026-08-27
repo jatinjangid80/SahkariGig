@@ -12,6 +12,12 @@ const server = http.createServer(app);
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
+const { createClient } = require('@supabase/supabase-js');
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
+
+
 const PORT = process.env.PORT || 5001;
 
 // Initialize DB connection
@@ -84,15 +90,47 @@ if (require.main === module) {
   io.on('connection', (socket) => {
     console.log('⚡ Client connected to Socket.io:', socket.id);
 
-    socket.on('joinBooking', (bookingId) => {
+    socket.on('joinBooking', async (bookingId) => {
       socket.join(bookingId);
-      // Send chat history to the newly connected client
-      const history = messages.filter(m => m.bookingId === bookingId);
-      socket.emit('chatHistory', history);
+      // Fetch chat history from Supabase
+      if (supabase) {
+        const { data: history, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('booking_id', bookingId)
+          .order('created_at', { ascending: true });
+        
+        if (!error && history) {
+          const formattedHistory = history.map(msg => ({
+            id: msg.id,
+            bookingId: msg.booking_id,
+            senderType: msg.sender_type,
+            senderId: msg.sender_id,
+            senderName: msg.sender_name,
+            text: msg.text,
+            createdAt: msg.created_at
+          }));
+          socket.emit('chatHistory', formattedHistory);
+        } else {
+          console.error("Error fetching chat history from Supabase:", error);
+          socket.emit('chatHistory', []);
+        }
+      } else {
+        const history = messages.filter(m => m.bookingId === bookingId);
+        socket.emit('chatHistory', history);
+      }
     });
 
-    socket.on('sendMessage', ({ bookingId, senderId, senderType, senderName, text }) => {
-      const newMessage = {
+    socket.on('sendMessage', async ({ bookingId, senderId, senderType, senderName, text }) => {
+      let newMessage = {
+        booking_id: bookingId,
+        sender_type: senderType,
+        sender_id: senderId,
+        sender_name: senderName,
+        text
+      };
+      
+      let emittedMessage = {
         id: `msg-${Date.now()}`,
         bookingId,
         senderType,
@@ -101,8 +139,32 @@ if (require.main === module) {
         text,
         createdAt: new Date().toISOString()
       };
-      messages.push(newMessage);
-      io.to(bookingId).emit('newMessage', newMessage);
+
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .insert(newMessage)
+          .select()
+          .single();
+          
+        if (!error && data) {
+           emittedMessage = {
+             id: data.id,
+             bookingId: data.booking_id,
+             senderType: data.sender_type,
+             senderId: data.sender_id,
+             senderName: data.sender_name,
+             text: data.text,
+             createdAt: data.created_at
+           };
+        } else {
+          console.error("Error saving message to Supabase:", error);
+        }
+      } else {
+        messages.push(emittedMessage);
+      }
+      
+      io.to(bookingId).emit('newMessage', emittedMessage);
     });
   });
 

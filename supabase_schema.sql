@@ -99,3 +99,17 @@ VALUES
     ('WORKER-DEL-7652', 'Suresh Sharma', 'Plumber', 'JanSeva Plumbing Society', 4.80, 94, '₹350–₹650 / visit', 2.40, true, true, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'),
     ('WORKER-DEL-4390', 'Vikram Singh', 'Carpenter', 'Northern Crafts Cooperative Federation', 4.70, 82, '₹500–₹900 / visit', 3.50, false, false, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80')
 ON CONFLICT (worker_id) DO NOTHING;
+
+-- 6. Create Chat Messages Table
+CREATE TABLE IF NOT EXISTS public.chat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    booking_id TEXT NOT NULL,
+    sender_id TEXT NOT NULL,
+    sender_type TEXT NOT NULL,
+    sender_name TEXT NOT NULL,
+    text TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Read/Write Chat" ON public.chat_messages FOR ALL USING (true);
