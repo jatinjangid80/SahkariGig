@@ -48,21 +48,21 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Brand Logo */}
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => handleNavClick('/')}>
-          <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm font-extrabold text-xl tracking-tight">
+        <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => handleNavClick('/')}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-md font-extrabold text-xl tracking-tight transition-transform group-hover:scale-105">
             Cg
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-slate-900 text-lg tracking-tight font-outfit">
+              <span className="font-extrabold text-slate-900 text-xl tracking-tight font-outfit">
                 {CONFIG.appName}
               </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
                 <ShieldCheck className="w-3 h-3 mr-1 text-emerald-600" />
                 Cooperative
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 hidden sm:block">Ministry of Cooperation Verified</p>
+            <p className="text-[11px] text-slate-500 hidden sm:block font-medium">Ministry of Cooperation Verified</p>
           </div>
         </div>
 
