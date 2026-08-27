@@ -3,47 +3,36 @@
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', sans-serif;
   }
 }
 
-/* Glassmorphism & Visual Aesthetics */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Light Theme Card System & Shadows */
+.light-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease-in-out;
 }
 
-.glass-card {
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+.light-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
 }
 
-.glass-card:hover {
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.15);
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #6366f1 100%);
+.brand-gradient-text {
+  background: linear-gradient(135deg, #059669 0%, #0284c7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.gradient-bg {
-  background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
-}
-
-.gradient-border {
-  position: relative;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(99, 102, 241, 0.3));
-  padding: 1px;
+.brand-gradient-bg {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
 
 /* Custom Scrollbar */
@@ -52,22 +41,12 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
-}
-
-/* Animations */
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 3s infinite ease-in-out;
+  background: #059669;
 }
