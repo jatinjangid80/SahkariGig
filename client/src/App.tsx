@@ -17,7 +17,9 @@ import { ChatModal } from './components/ChatModal';
 import { PaymentModal } from './components/PaymentModal';
 import { ReviewModal } from './components/ReviewModal';
 import { WorkerIdCardModal } from './components/WorkerIdCardModal';
+import { AuthModal } from './components/AuthModal';
 import { Footer } from './components/Footer';
+import { supabase } from './supabase';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState('/');
@@ -33,6 +35,8 @@ export default function App() {
   });
 
   // Modal States
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedWorkerForBooking, setSelectedWorkerForBooking] = useState<any>(null);
   
@@ -55,7 +59,22 @@ export default function App() {
       setCurrentPath(window.location.pathname || '/');
     };
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    // Listen to Supabase Auth State Changes (Google OAuth & Email Auth)
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const email = session.user.email || '';
+        const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
+        const role = session.user.user_metadata?.role || 'Customer';
+
+        setCurrentUser({ name, role });
+      }
+    });
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   const navigateTo = (path: string) => {
@@ -97,8 +116,11 @@ export default function App() {
         currentPath={currentPath}
         onNavigate={navigateTo}
         currentUser={currentUser}
-        onLoginClick={() => navigateTo('/dashboard')}
-        onLogoutClick={() => setCurrentUser(null)}
+        onLoginClick={() => setAuthModalOpen(true)}
+        onLogoutClick={() => {
+          supabase.auth.signOut();
+          setCurrentUser(null);
+        }}
       />
 
       {/* Main Page Content */}
@@ -219,6 +241,15 @@ export default function App() {
       <Footer onNavigate={navigateTo} />
 
       {/* Interactive Modals */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={(user) => {
+          setCurrentUser(user);
+          navigateTo('/dashboard');
+        }}
+      />
+
       <BookingModal
         isOpen={bookingModalOpen}
         onClose={() => setBookingModalOpen(false)}
