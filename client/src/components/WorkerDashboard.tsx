@@ -1,40 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare } from 'lucide-react';
+import { supabase } from '../supabase';
 
 interface WorkerDashboardProps {
-  currentUser?: { name: string; role: string } | null;
+  currentUser?: { name: string; role: string; id: string; email: string } | null;
   onOpenWorkerIdCard?: () => void;
   onOpenChat?: (booking: any) => void;
 }
 
 export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ currentUser, onOpenWorkerIdCard, onOpenChat }) => {
-  const [requests, setRequests] = useState([
-    {
-      id: 'bk-101', // Matched with CustomerDashboard
-      service: 'Electrician',
-      customerName: 'Ananya Sharma',
-      address: 'Flat 402, Green Park Apartments, New Delhi',
-      dateTime: 'Today, 10:00 AM',
-      amount: '₹600',
-      status: 'PENDING'
-    },
-    {
-      id: 'bk-102', // Matched with CustomerDashboard
-      service: 'Wiring Inspection',
-      customerName: 'Rohit Verma',
-      address: 'Sector 14, Dwarka, New Delhi',
-      dateTime: 'Tomorrow, 02:00 PM',
-      amount: '₹850',
-      status: 'PENDING'
-    }
-  ]);
+  const [requests, setRequests] = useState<any[]>([]);
 
-  const handleAccept = (id: string) => {
+  useEffect(() => {
+    if (!currentUser?.name) return;
+    const fetchRequests = async () => {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('worker_name', currentUser.name)
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        setRequests(data.map(b => ({
+          id: b.id,
+          service: b.service,
+          customerName: b.customer_name,
+          address: b.address,
+          dateTime: `${b.booking_date}, ${b.booking_time}`,
+          amount: b.amount,
+          status: b.status
+        })));
+      }
+    };
+    fetchRequests();
+  }, [currentUser]);
+
+  const handleAccept = async (id: string) => {
+    // Update local state optimistically
     setRequests(requests.map(r => r.id === id ? { ...r, status: 'ACCEPTED' } : r));
+    // Update DB
+    await supabase.from('bookings').update({ status: 'ACCEPTED' }).eq('id', id);
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = async (id: string) => {
+    // Update local state optimistically
     setRequests(requests.filter(r => r.id !== id));
+    // Optionally update DB status to 'REJECTED' if you support it, or delete it
   };
 
   const fullName = currentUser?.name || 'Worker';

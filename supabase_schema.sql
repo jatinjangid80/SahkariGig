@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.cooperatives (
 -- 2. Create Workers Table
 CREATE TABLE IF NOT EXISTS public.workers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id),
     worker_id TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     trade TEXT NOT NULL,
@@ -35,6 +36,7 @@ CREATE TABLE IF NOT EXISTS public.workers (
 -- 3. Create Bookings Table
 CREATE TABLE IF NOT EXISTS public.bookings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES auth.users(id),
     booking_code TEXT NOT NULL UNIQUE,
     service TEXT NOT NULL,
     worker_name TEXT NOT NULL,

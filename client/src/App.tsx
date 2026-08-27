@@ -25,13 +25,40 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   
   // User state & role management
-  const [currentUser, setCurrentUser] = useState<{
-    name: string;
-    role: 'Customer' | 'Worker' | 'Admin';
-  } | null>({
-    name: 'Ananya Sharma',
-    role: 'Customer'
-  });
+  const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string } | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          role: session.user.user_metadata?.role || 'Customer'
+        });
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          role: session.user.user_metadata?.role || 'Customer'
+        });
+      } else {
+        setCurrentUser(null);
+        if (currentPath === '/dashboard') {
+          navigateTo('/');
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [currentPath]);
 
   // Modal States
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -170,38 +197,6 @@ export default function App() {
 
         {currentPath === '/dashboard' && (
           <div>
-            {/* Role Bar Switcher for Authenticated User Preview */}
-            <div className="bg-slate-900 text-white py-2 px-4 text-xs">
-              <div className="max-w-7xl mx-auto flex items-center justify-between">
-                <span className="font-semibold text-slate-300">Preview Dashboard View:</span>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setCurrentUser({ name: 'Ananya Sharma', role: 'Customer' })}
-                    className={`px-2.5 py-1 rounded font-bold transition-colors ${
-                      currentUser?.role === 'Customer' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300'
-                    }`}
-                  >
-                    Customer View
-                  </button>
-                  <button
-                    onClick={() => setCurrentUser({ name: 'Rajesh Kumar', role: 'Worker' })}
-                    className={`px-2.5 py-1 rounded font-bold transition-colors ${
-                      currentUser?.role === 'Worker' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300'
-                    }`}
-                  >
-                    Worker View
-                  </button>
-                  <button
-                    onClick={() => setCurrentUser({ name: 'Cooperative Federation Admin', role: 'Admin' })}
-                    className={`px-2.5 py-1 rounded font-bold transition-colors ${
-                      currentUser?.role === 'Admin' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300'
-                    }`}
-                  >
-                    Admin View
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {currentUser?.role === 'Customer' && (
               <CustomerDashboard
@@ -242,8 +237,7 @@ export default function App() {
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        onSuccess={(user) => {
-          setCurrentUser(user);
+        onSuccess={() => {
           navigateTo('/dashboard');
         }}
       />

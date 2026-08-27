@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { supabase } from '../supabase';
 
 interface CustomerDashboardProps {
-  currentUser?: { name: string; role: string } | null;
+  currentUser?: { name: string; role: string; id: string; email: string } | null;
   onOpenChat: (booking: any) => void;
   onOpenPayment: (booking: any) => void;
   onOpenReview: (booking: any) => void;
@@ -19,36 +20,36 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'bookings' | 'history' | 'payments'>('bookings');
 
   // Sample bookings with state transitions: REQUESTED -> ACCEPTED -> IN_PROGRESS -> COMPLETED -> RATED
-  const [bookings, setBookings] = useState([
-    {
-      id: 'bk-101',
-      service: 'Electrician',
-      workerName: 'Rajesh Kumar',
-      workerTrade: 'Electrician',
-      workerId: 'WORKER-DEL-8901',
-      coopName: 'Delhi Labour Cooperative Federation',
-      date: 'Today',
-      time: '10:00 AM',
-      address: 'Flat 402, Green Park Apartments, New Delhi',
-      amount: '₹600',
-      status: 'ACCEPTED',
-      paymentStatus: 'PENDING'
-    },
-    {
-      id: 'bk-102',
-      service: 'Plumber',
-      workerName: 'Suresh Sharma',
-      workerTrade: 'Plumber',
-      workerId: 'WORKER-DEL-7652',
-      coopName: 'JanSeva Plumbing Society',
-      date: 'Yesterday',
-      time: '02:00 PM',
-      address: 'House 12, Sector 15, Gurgaon',
-      amount: '₹450',
-      status: 'COMPLETED',
-      paymentStatus: 'PAID'
-    }
-  ]);
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const fetchBookings = async () => {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('customer_id', currentUser.id)
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        setBookings(data.map(b => ({
+          id: b.id,
+          service: b.service,
+          workerName: b.worker_name,
+          workerTrade: b.worker_trade,
+          workerId: b.worker_id,
+          coopName: 'Cooperative Federation', // Fallback display name
+          date: b.booking_date,
+          time: b.booking_time,
+          address: b.address,
+          amount: b.amount,
+          status: b.status,
+          paymentStatus: b.payment_status
+        })));
+      }
+    };
+    fetchBookings();
+  }, [currentUser]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

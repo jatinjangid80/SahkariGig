@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, UserCheck, Check, Lock, Key, AlertCircle } from 'lucide-react';
+import { supabase } from '../supabase';
 
 export const AdminPanel: React.FC = () => {
   const [pin, setPin] = useState('');
@@ -7,26 +8,32 @@ export const AdminPanel: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState<'approvals' | 'workers' | 'bookings'>('approvals');
 
-  const [pendingWorkers, setPendingWorkers] = useState([
-    {
-      id: 'app-301',
-      name: 'Ramesh Sharma',
-      trade: 'Plumber & Sanitation Specialist',
-      coopName: 'JanSeva Plumbing Society',
-      experience: '7 Years',
-      appliedAt: '2 Hours ago',
-      documents: ['Aadhaar Verified', 'Trade Certificate', 'Coop Membership ID']
-    },
-    {
-      id: 'app-302',
-      name: 'Mohan Lal',
-      trade: 'Mason & Carpenter',
-      coopName: 'Northern Crafts Cooperative Federation',
-      experience: '10 Years',
-      appliedAt: 'Yesterday',
-      documents: ['Aadhaar Verified', 'Coop Membership ID']
+  const [pendingWorkers, setPendingWorkers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isUnlocked) {
+      const fetchPendingWorkers = async () => {
+        const { data, error } = await supabase
+          .from('workers')
+          .select('*')
+          .eq('is_verified', false)
+          .order('created_at', { ascending: false });
+        
+        if (!error && data) {
+          setPendingWorkers(data.map(w => ({
+            id: w.id,
+            name: w.name,
+            trade: w.trade,
+            coopName: w.coop_name,
+            experience: 'Unknown',
+            appliedAt: new Date(w.created_at).toLocaleDateString(),
+            documents: ['Aadhaar Uploaded', 'Coop ID']
+          })));
+        }
+      };
+      fetchPendingWorkers();
     }
-  ]);
+  }, [isUnlocked]);
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,12 +45,14 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
-  const handleApprove = (id: string) => {
+  const handleApprove = async (id: string) => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
+    await supabase.from('workers').update({ is_verified: true }).eq('id', id);
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = async (id: string) => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
+    await supabase.from('workers').delete().eq('id', id);
   };
 
   if (!isUnlocked) {
