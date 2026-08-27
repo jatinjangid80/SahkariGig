@@ -1,0 +1,15 @@
+{
+  "name": "cooperative-gig-services-platform",
+  "version": "1.0.0",
+  "description": "Cooperative Gig Services Platform for Household & Community Services (SIH26089)",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "node server/server.js",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": ["cooperative", "gig-services", "sih26089", "react", "express", "mongodb"],
+  "author": "SIH Team",
+  "license": "ISC"
+}
