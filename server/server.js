@@ -86,6 +86,9 @@ if (require.main === module) {
 
     socket.on('joinBooking', (bookingId) => {
       socket.join(bookingId);
+      // Send chat history to the newly connected client
+      const history = messages.filter(m => m.bookingId === bookingId);
+      socket.emit('chatHistory', history);
     });
 
     socket.on('sendMessage', ({ bookingId, senderId, senderType, senderName, text }) => {

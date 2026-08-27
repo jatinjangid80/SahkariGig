@@ -265,6 +265,7 @@ export default function App() {
         isOpen={chatModalOpen}
         onClose={() => setChatModalOpen(false)}
         booking={activeBookingForChat}
+        currentUser={currentUser}
       />
 
       <PaymentModal
