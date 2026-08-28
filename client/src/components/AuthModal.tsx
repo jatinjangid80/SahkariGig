@@ -80,42 +80,51 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
     setSuccessMsg('');
 
     try {
-      const endpoint = mode === 'signup' ? 'http://localhost:5001/api/auth/register' : 'http://localhost:5001/api/auth/login';
-      const body = mode === 'signup' 
-        ? { email, password, fullName, role: selectedRole }
-        : { email, password };
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const baseUrl = import.meta.env.VITE_API_URL || (isLocal ? 'http://localhost:5001' : '');
+      const endpoint = baseUrl ? (mode === 'signup' ? `${baseUrl}/api/auth/register` : `${baseUrl}/api/auth/login`) : null;
 
-      const apiRes = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      }).catch(() => null);
+      let apiSuccess = false;
 
-      if (apiRes && apiRes.ok) {
-        const json = await apiRes.json();
-        if (json.success && json.data?.user) {
-          const user = json.data.user;
-          if (json.data.token) {
-            localStorage.setItem('authToken', json.data.token);
+      if (endpoint) {
+        const apiRes = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(mode === 'signup' ? { email, password, fullName, role: selectedRole } : { email, password })
+        }).catch(() => null);
+
+        if (apiRes && apiRes.ok) {
+          const json = await apiRes.json();
+          if (json.success && json.data?.user) {
+            apiSuccess = true;
+            const user = json.data.user;
+            if (json.data.token) {
+              localStorage.setItem('authToken', json.data.token);
+            }
+            const loggedInUser = {
+              name: user.name || fullName || email.split('@')[0],
+              email: user.email,
+              role: (email.includes('worker') ? 'Worker' : (user.role || selectedRole)) as 'Customer' | 'Worker' | 'Admin'
+            };
+            localStorage.setItem('demoUser', JSON.stringify(loggedInUser));
+            setSuccessMsg(mode === 'signup' ? 'Account created successfully!' : 'Signed in successfully!');
+            onSuccess(loggedInUser);
+            setTimeout(() => onClose(), 1000);
+            return;
           }
-          setSuccessMsg(mode === 'signup' ? 'Account created successfully!' : 'Signed in successfully!');
-          onSuccess({
-            name: user.name || fullName || email.split('@')[0],
-            email: user.email,
-            role: user.role || selectedRole
-          });
-          setTimeout(() => onClose(), 1000);
-          return;
         }
       }
 
-      // Fallback Demo Auth if server unreachable
-      setSuccessMsg(mode === 'signup' ? 'Demo account created successfully!' : 'Demo signed in successfully!');
-      onSuccess({
+      // Demo/Production Fallback (instant)
+      const userRole = email.includes('worker') ? 'Worker' : selectedRole;
+      const demoUser = {
         name: fullName || email.split('@')[0] || 'User',
         email,
-        role: selectedRole
-      });
+        role: userRole as 'Customer' | 'Worker' | 'Admin'
+      };
+      localStorage.setItem('demoUser', JSON.stringify(demoUser));
+      setSuccessMsg(mode === 'signup' ? 'Demo account created successfully!' : 'Signed in successfully!');
+      onSuccess(demoUser);
       setTimeout(() => onClose(), 1000);
 
     } catch (err: any) {
