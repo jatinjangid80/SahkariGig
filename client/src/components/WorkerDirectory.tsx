@@ -41,6 +41,16 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
     const fetchWorkers = async () => {
       setIsLoading(true);
       try {
+        const apiRes = await fetch('http://localhost:5001/api/workers').catch(() => null);
+        if (apiRes && apiRes.ok) {
+          const json = await apiRes.json();
+          if (json.success && Array.isArray(json.data?.workers)) {
+            setWorkers(json.data.workers);
+            setIsLoading(false);
+            return;
+          }
+        }
+
         const { data, error } = await supabase.from('workers').select('*');
         if (error) throw error;
         
@@ -62,11 +72,12 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
           setWorkers(formattedWorkers);
         }
       } catch (err) {
-        console.error('Error fetching workers:', err);
+        console.error("Using fallback worker list:", err);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchWorkers();
   }, []);
 

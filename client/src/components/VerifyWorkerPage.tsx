@@ -10,8 +10,7 @@ export const VerifyWorkerPage: React.FC<VerifyWorkerPageProps> = ({
   workerId = 'WORKER-DEL-8901',
   onClose
 }) => {
-  // Real DB / verified profile lookup values
-  const workerDetails = {
+  const [workerDetails, setWorkerDetails] = React.useState({
     workerId,
     name: 'Rajesh Kumar',
     trade: 'Licensed Electrician',
@@ -23,7 +22,26 @@ export const VerifyWorkerPage: React.FC<VerifyWorkerPageProps> = ({
     verificationTimestamp: new Date().toISOString(),
     validUntil: '31-DEC-2027',
     avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80'
-  };
+  });
+
+  React.useEffect(() => {
+    fetch(`http://localhost:5001/api/workers/verify/${workerId}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data?.worker) {
+          const w = json.data.worker;
+          setWorkerDetails(prev => ({
+            ...prev,
+            name: w.name,
+            trade: w.trade,
+            coopName: w.coopName,
+            rating: w.rating || prev.rating,
+            status: json.data.verificationStatus === 'VERIFIED' ? 'ACTIVE & VERIFIED' : 'PENDING VERIFICATION'
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [workerId]);
 
   return (
     <div className="py-12 bg-slate-50 min-h-screen flex items-center justify-center p-4">

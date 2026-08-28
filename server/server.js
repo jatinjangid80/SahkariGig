@@ -23,7 +23,15 @@ const PORT = process.env.PORT || 5001;
 // Initialize DB connection
 connectDB();
 
-// --- PHASE 0 FOUNDATION ENDPOINTS ---
+// Import API Routes
+const authRoutes = require('./routes/authRoutes');
+const workerRoutes = require('./routes/workerRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+
+// Mount API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/workers', workerRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // 1. Health Check Endpoint
 app.get('/api/health', (req, res) => {

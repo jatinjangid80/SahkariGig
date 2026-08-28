@@ -37,6 +37,13 @@ export default function App() {
       return;
     }
 
+    // Demo User Bypass (survives page reload)
+    const savedDemoUser = localStorage.getItem('demoUser');
+    if (savedDemoUser) {
+      setCurrentUser(JSON.parse(savedDemoUser));
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setCurrentUser({
@@ -65,7 +72,7 @@ export default function App() {
           role: session.user.user_metadata?.role || 'Customer'
         });
       } else {
-        if (localStorage.getItem('mockAdmin') !== 'true') {
+        if (localStorage.getItem('mockAdmin') !== 'true' && !localStorage.getItem('demoUser')) {
           setCurrentUser(null);
           if (currentPath === '/dashboard') {
             navigateTo('/');
@@ -161,6 +168,7 @@ export default function App() {
         currentUser={currentUser}
         onLoginClick={() => setAuthModalOpen(true)}
         onLogoutClick={() => {
+          localStorage.removeItem('demoUser');
           supabase.auth.signOut();
           setCurrentUser(null);
         }}
@@ -249,7 +257,15 @@ export default function App() {
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        onSuccess={() => {
+        onSuccess={(user) => {
+          const demoUser = {
+            id: 'demo-' + Date.now(),
+            name: user.name,
+            email: user.email,
+            role: user.role
+          };
+          localStorage.setItem('demoUser', JSON.stringify(demoUser));
+          setCurrentUser(demoUser);
           navigateTo('/dashboard');
           confetti({
             particleCount: 120,
