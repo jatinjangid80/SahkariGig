@@ -15,13 +15,34 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
     reason: string;
   } | null>(null);
 
-  const handleAiRoute = (e: React.FormEvent) => {
+  const handleAiRoute = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aiPrompt.trim()) return;
 
     setIsClassifying(true);
-    setTimeout(() => {
-      setIsClassifying(false);
+    try {
+      const res = await fetch('http://localhost:5001/api/categories/ai-classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: aiPrompt })
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          if (json.data.matched && json.data.category) {
+            setAiResult({
+              category: json.data.category.name,
+              confidence: json.data.confidence === 'HIGH' ? 96 : 85,
+              reason: json.data.category.description || `Classified based on live service taxonomy.`
+            });
+            setIsClassifying(false);
+            return;
+          }
+        }
+      }
+
+      // Fallback local rules if server offline
       const text = aiPrompt.toLowerCase();
       if (text.includes('fan') || text.includes('wire') || text.includes('switch') || text.includes('light') || text.includes('mcb') || text.includes('spark')) {
         setAiResult({
@@ -54,7 +75,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
           reason: 'Matched general appliance repair and home technician service.'
         });
       }
-    }, 600);
+    } catch (err) {
+      console.error("AI Routing Error:", err);
+    } finally {
+      setIsClassifying(false);
+    }
   };
 
   return (

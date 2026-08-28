@@ -83,12 +83,30 @@ export const AdminPanel: React.FC = () => {
 
   const handleApprove = async (id: string) => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
-    await supabase.from('workers').update({ is_verified: true }).eq('id', id);
+    fetch(`http://localhost:5001/api/workers/${id}/status`, {
+      method: 'PATCH',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
+        'x-user-role': 'Admin'
+      },
+      body: JSON.stringify({ status: 'active' })
+    }).catch(() => null);
+    await supabase.from('workers').update({ is_verified: true }).eq('id', id).catch(() => null);
   };
 
   const handleReject = async (id: string) => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
-    await supabase.from('workers').delete().eq('id', id);
+    fetch(`http://localhost:5001/api/workers/${id}/status`, {
+      method: 'PATCH',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
+        'x-user-role': 'Admin'
+      },
+      body: JSON.stringify({ status: 'rejected', rejectionReason: 'Incomplete documentation' })
+    }).catch(() => null);
+    await supabase.from('workers').delete().eq('id', id).catch(() => null);
   };
 
   if (!isUnlocked) {

@@ -23,29 +23,62 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   const [bookings, setBookings] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!currentUser?.id) return;
     const fetchBookings = async () => {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('customer_id', currentUser.id)
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) {
-        setBookings(data.map(b => ({
-          id: b.id,
-          service: b.service,
-          workerName: b.worker_name,
-          workerTrade: b.worker_trade,
-          workerId: b.worker_id,
-          coopName: 'Cooperative Federation', // Fallback display name
-          date: b.booking_date,
-          time: b.booking_time,
-          address: b.address,
-          amount: b.amount,
-          status: b.status,
-          paymentStatus: b.payment_status
-        })));
+      try {
+        const apiRes = await fetch('http://localhost:5001/api/bookings', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
+            'x-user-role': 'Customer'
+          }
+        }).catch(() => null);
+
+        if (apiRes && apiRes.ok) {
+          const json = await apiRes.json();
+          if (json.success && Array.isArray(json.data?.bookings)) {
+            setBookings(json.data.bookings.map((b: any) => ({
+              id: b.id,
+              service: b.service,
+              workerName: b.workerName,
+              workerTrade: b.workerTrade,
+              workerId: b.workerId,
+              coopName: 'Cooperative Federation',
+              date: b.bookingDate,
+              time: b.bookingTime,
+              address: b.address,
+              amount: b.amount,
+              status: b.status,
+              paymentStatus: b.paymentStatus
+            })));
+            return;
+          }
+        }
+
+        if (currentUser?.id) {
+          const { data, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('customer_id', currentUser.id)
+            .order('created_at', { ascending: false });
+          
+          if (!error && data) {
+            setBookings(data.map(b => ({
+              id: b.id,
+              service: b.service,
+              workerName: b.worker_name,
+              workerTrade: b.worker_trade,
+              workerId: b.worker_id,
+              coopName: 'Cooperative Federation',
+              date: b.booking_date,
+              time: b.booking_time,
+              address: b.address,
+              amount: b.amount,
+              status: b.status,
+              paymentStatus: b.payment_status
+            })));
+          }
+        }
+      } catch (err) {
+        console.error("Booking fetch error:", err);
       }
     };
     fetchBookings();

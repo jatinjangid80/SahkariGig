@@ -27,11 +27,13 @@ connectDB();
 const authRoutes = require('./routes/authRoutes');
 const workerRoutes = require('./routes/workerRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 // Mount API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // 1. Health Check Endpoint
 app.get('/api/health', (req, res) => {
