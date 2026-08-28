@@ -149,16 +149,19 @@ if (require.main === module) {
 
       // Optionally attempt Supabase insert in background
       if (supabase) {
-        supabase
-          .from('chat_messages')
-          .insert({
-            booking_id: bookingId,
-            sender_type: senderType,
-            sender_id: senderId,
-            sender_name: senderName,
-            text
-          })
-          .catch(err => console.error("Supabase async save notice:", err.message));
+        (async () => {
+          try {
+            await supabase.from('chat_messages').insert({
+              booking_id: bookingId,
+              sender_type: senderType,
+              sender_id: senderId,
+              sender_name: senderName,
+              text
+            });
+          } catch (err) {
+            console.error("Supabase async save notice:", err.message);
+          }
+        })();
       }
       
       io.to(bookingId).emit('newMessage', emittedMessage);
