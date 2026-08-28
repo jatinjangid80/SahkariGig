@@ -23,24 +23,49 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
   useEffect(() => {
     if (isOpen && booking) {
-      // Connect to Socket.IO backend
-      socketRef.current = io(CONFIG.apiUrl);
+      const storageKey = `chat_history_${booking.id}`;
+      const savedLocal = localStorage.getItem(storageKey);
+      if (savedLocal) {
+        try {
+          setMessages(JSON.parse(savedLocal));
+        } catch (e) {}
+      }
 
-      // Join the specific booking room
-      socketRef.current.emit('joinBooking', booking.id);
+      // Connect to Socket.IO backend if valid URL
+      if (CONFIG.apiUrl) {
+        socketRef.current = io(CONFIG.apiUrl);
 
-      // Receive Chat History
-      socketRef.current.on('chatHistory', (history: any[]) => {
-        setMessages(history);
-      });
+        socketRef.current.emit('joinBooking', booking.id);
 
-      // Listen for new messages
-      socketRef.current.on('newMessage', (message: any) => {
-        setMessages((prev) => [...prev, message]);
-      });
+        socketRef.current.on('chatHistory', (history: any[]) => {
+          if (history && history.length > 0) {
+            setMessages(history);
+            localStorage.setItem(storageKey, JSON.stringify(history));
+          }
+        });
+
+        socketRef.current.on('newMessage', (message: any) => {
+          setMessages((prev) => {
+            const updated = [...prev, message];
+            localStorage.setItem(storageKey, JSON.stringify(updated));
+            return updated;
+          });
+        });
+      }
+
+      // Window storage listener for cross-tab sync without socket
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === storageKey && e.newValue) {
+          try {
+            setMessages(JSON.parse(e.newValue));
+          } catch (err) {}
+        }
+      };
+      window.addEventListener('storage', handleStorageChange);
 
       return () => {
         socketRef.current?.disconnect();
+        window.removeEventListener('storage', handleStorageChange);
       };
     }
   }, [isOpen, booking]);
@@ -49,17 +74,36 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || !socketRef.current || !booking) return;
+    if (!inputText.trim() || !booking) return;
 
     const senderName = currentUser?.name || 'Unknown User';
-    
-    // Emit message to backend
-    socketRef.current.emit('sendMessage', {
+    const storageKey = `chat_history_${booking.id}`;
+
+    const newMsg = {
+      id: `msg-${Date.now()}`,
       bookingId: booking.id,
-      senderId: senderName, // Using name as ID for demo purposes
       senderType: currentUser?.role || 'Customer',
       senderName: senderName,
-      text: inputText.trim()
+      text: inputText.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    // Emit via Socket.io if connected
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit('sendMessage', {
+        bookingId: booking.id,
+        senderId: senderName,
+        senderType: currentUser?.role || 'Customer',
+        senderName: senderName,
+        text: inputText.trim()
+      });
+    }
+
+    // Always update local messages and localStorage for instant cross-tab sync
+    setMessages((prev) => {
+      const updated = [...prev, newMsg];
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
     });
 
     setInputText('');
