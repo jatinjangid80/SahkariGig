@@ -21,27 +21,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = [
     { label: 'Home', path: '/' },
-    { label: 'Find Services', path: '/#services' },
-    { label: 'Find Work', path: '/#for-workers' },
-    { label: 'Cooperatives', path: '/#how-it-works' },
-    { label: 'How It Works', path: '/#how-it-works' },
+    { label: 'Find Services', path: '/services' },
+    { label: 'Find Work', path: '/for-workers' },
+    { label: 'Cooperatives', path: '/cooperatives' },
+    { label: 'How It Works', path: '/how-it-works' },
     { label: 'About', path: '/about' },
   ];
 
   const handleNavClick = (path: string) => {
     setMobileMenuOpen(false);
-    if (path.startsWith('/#')) {
-      const targetId = path.replace('/#', '');
-      onNavigate('/');
-      setTimeout(() => {
-        const elem = document.getElementById(targetId);
-        if (elem) {
-          elem.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    } else {
-      onNavigate(path);
-    }
+    onNavigate(path);
   };
 
   return (
@@ -128,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Sign In
               </button>
               <button
-                onClick={() => handleNavClick('/#services')}
+                onClick={() => handleNavClick('/services')}
                 className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors btn-interaction"
               >
                 Find a Worker
@@ -164,7 +153,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           ))}
           <div className="pt-4 border-t border-slate-100 space-y-2">
             <button
-              onClick={() => { setMobileMenuOpen(false); handleNavClick('/#services'); }}
+              onClick={() => { setMobileMenuOpen(false); handleNavClick('/services'); }}
               className="w-full py-2.5 px-4 text-center font-semibold text-white bg-emerald-600 rounded-xl"
             >
               Find a Worker

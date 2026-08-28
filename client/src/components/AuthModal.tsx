@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, Mail, Lock, User, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -6,9 +6,17 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (user: { name: string; email: string; role: 'Customer' | 'Worker' | 'Admin' }) => void;
+  defaultRole?: 'Customer' | 'Worker';
+  defaultMode?: 'signin' | 'signup';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess,
+  defaultRole,
+  defaultMode
+}) => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +25,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      if (defaultRole) setSelectedRole(defaultRole);
+      if (defaultMode) setMode(defaultMode);
+    }
+  }, [isOpen, defaultRole, defaultMode]);
 
   if (!isOpen) return null;
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, ShieldCheck, Paperclip, Smile, MoreVertical, CheckCheck, ArrowLeft, ExternalLink, Circle } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { CONFIG } from '../config';
+import { encryptMessage, decryptMessage } from '../utils/crypto';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -29,7 +30,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
       const savedLocal = localStorage.getItem(storageKey);
       if (savedLocal) {
         try {
-          setMessages(JSON.parse(savedLocal));
+          const parsed = JSON.parse(savedLocal);
+          (async () => {
+            const decrypted = await Promise.all(parsed.map(async (msg: any) => {
+              const text = await decryptMessage(msg.text, booking.id);
+              return { ...msg, text };
+            }));
+            setMessages(decrypted);
+          })();
         } catch (e) {}
       }
 
@@ -38,17 +46,29 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
         socketRef.current = io(CONFIG.apiUrl);
         socketRef.current.emit('joinBooking', booking.id);
 
-        socketRef.current.on('chatHistory', (history: any[]) => {
+        socketRef.current.on('chatHistory', async (history: any[]) => {
           if (history && history.length > 0) {
-            setMessages(history);
+            const decrypted = await Promise.all(history.map(async (msg: any) => {
+              const text = await decryptMessage(msg.text, booking.id);
+              return { ...msg, text };
+            }));
+            setMessages(decrypted);
             localStorage.setItem(storageKey, JSON.stringify(history));
           }
         });
 
-        socketRef.current.on('newMessage', (message: any) => {
+        socketRef.current.on('newMessage', async (message: any) => {
+          const text = await decryptMessage(message.text, booking.id);
+          const decryptedMsg = { ...message, text };
           setMessages((prev) => {
-            const updated = [...prev, message];
-            localStorage.setItem(storageKey, JSON.stringify(updated));
+            const updated = [...prev, decryptedMsg];
+            const localRaw = localStorage.getItem(storageKey);
+            let rawList: any[] = [];
+            if (localRaw) {
+              try { rawList = JSON.parse(localRaw); } catch(e) {}
+            }
+            rawList.push(message);
+            localStorage.setItem(storageKey, JSON.stringify(rawList));
             return updated;
           });
         });
@@ -58,7 +78,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
       const handleStorageChange = (e: StorageEvent) => {
         if (e.key === storageKey && e.newValue) {
           try {
-            setMessages(JSON.parse(e.newValue));
+            const parsed = JSON.parse(e.newValue);
+            (async () => {
+              const decrypted = await Promise.all(parsed.map(async (msg: any) => {
+                const text = await decryptMessage(msg.text, booking.id);
+                return { ...msg, text };
+              }));
+              setMessages(decrypted);
+            })();
           } catch (err) {}
         }
       };
@@ -73,19 +100,23 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
   if (!isOpen) return null;
 
-  const handleSend = (e?: React.FormEvent) => {
+  const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!inputText.trim() || !booking) return;
 
     const senderName = currentUser?.name || 'User';
     const storageKey = `chat_history_${booking.id}`;
+    const textToSend = inputText.trim();
 
-    const newMsg = {
+    // Encrypt the message text
+    const encryptedText = await encryptMessage(textToSend, booking.id);
+
+    const newMsgEncrypted = {
       id: `msg-${Date.now()}`,
       bookingId: booking.id,
       senderType: currentUser?.role || 'Customer',
       senderName: senderName,
-      text: inputText.trim(),
+      text: encryptedText,
       createdAt: new Date().toISOString()
     };
 
@@ -96,14 +127,25 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
         senderId: senderName,
         senderType: currentUser?.role || 'Customer',
         senderName: senderName,
-        text: inputText.trim()
+        text: encryptedText
       });
     }
 
     // Update local state and localStorage
+    const newMsgPlaintext = {
+      ...newMsgEncrypted,
+      text: textToSend
+    };
+
     setMessages((prev) => {
-      const updated = [...prev, newMsg];
-      localStorage.setItem(storageKey, JSON.stringify(updated));
+      const updated = [...prev, newMsgPlaintext];
+      const localRaw = localStorage.getItem(storageKey);
+      let rawList: any[] = [];
+      if (localRaw) {
+        try { rawList = JSON.parse(localRaw); } catch(e) {}
+      }
+      rawList.push(newMsgEncrypted);
+      localStorage.setItem(storageKey, JSON.stringify(rawList));
       return updated;
     });
 

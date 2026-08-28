@@ -22,6 +22,11 @@ import { supabase } from './supabase';
 // @ts-ignore
 import confetti from 'canvas-confetti';
 
+import { ServicesView } from './components/ServicesView';
+import { ForWorkersView } from './components/ForWorkersView';
+import { CooperativesView } from './components/CooperativesView';
+import { HowItWorksView } from './components/HowItWorksView';
+
 export default function App() {
   const [currentPath, setCurrentPath] = useState('/');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -29,6 +34,14 @@ export default function App() {
   // User state & role management
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string } | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalRole, setAuthModalRole] = useState<'Customer' | 'Worker'>('Customer');
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
+
+  const handleOpenAuth = (role: 'Customer' | 'Worker' = 'Customer', mode: 'signin' | 'signup' = 'signin') => {
+    setAuthModalRole(role);
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
+  };
 
   useEffect(() => {
     // Hardcoded Admin Bypass
@@ -166,7 +179,7 @@ export default function App() {
         currentPath={currentPath}
         onNavigate={navigateTo}
         currentUser={currentUser}
-        onLoginClick={() => setAuthModalOpen(true)}
+        onLoginClick={() => handleOpenAuth('Customer', 'signin')}
         onLogoutClick={() => {
           localStorage.removeItem('demoUser');
           localStorage.removeItem('mockAdmin');
@@ -207,6 +220,29 @@ export default function App() {
           <AboutView onNavigate={navigateTo} />
         )}
 
+        {currentPath === '/services' && (
+          <ServicesView
+            onSelectCategory={(category) => {
+              setSelectedCategory(category);
+              navigateTo('/workers');
+            }}
+          />
+        )}
+
+        {currentPath === '/for-workers' && (
+          <ForWorkersView
+            onRegisterClick={() => handleOpenAuth('Worker', 'signup')}
+          />
+        )}
+
+        {currentPath === '/cooperatives' && (
+          <CooperativesView />
+        )}
+
+        {currentPath === '/how-it-works' && (
+          <HowItWorksView />
+        )}
+
         {currentPath === '/contact' && (
           <ContactView />
         )}
@@ -227,6 +263,7 @@ export default function App() {
                 onOpenPayment={handleOpenPayment}
                 onOpenReview={handleOpenReview}
                 onVerifyQrCode={handleVerifyQrCode}
+                onNavigate={navigateTo}
               />
             )}
 
@@ -259,6 +296,8 @@ export default function App() {
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
+        defaultRole={authModalRole}
+        defaultMode={authModalMode}
         onSuccess={(user) => {
           const demoUser = {
             id: 'demo-' + Date.now(),

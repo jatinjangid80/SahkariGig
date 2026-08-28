@@ -124,10 +124,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
             <button
-              onClick={() => {
-                const elem = document.getElementById('for-workers');
-                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => onNavigate && onNavigate('/for-workers')}
               className="w-full sm:w-auto px-8 py-4 text-base font-bold text-slate-700 bg-white border border-slate-300 hover:border-emerald-500 hover:text-emerald-700 rounded-2xl shadow-sm transition-all flex items-center justify-center btn-interaction"
             >
               Find Work

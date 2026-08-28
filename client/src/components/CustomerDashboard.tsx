@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle, Send, CheckCheck, Lock, Circle, Smile, Paperclip, ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabase';
+import { io } from 'socket.io-client';
+import { encryptMessage, decryptMessage } from '../utils/crypto';
+import { CONFIG } from '../config';
 
 interface CustomerDashboardProps {
   currentUser?: { name: string; role: string; id: string; email: string } | null;
@@ -8,6 +11,7 @@ interface CustomerDashboardProps {
   onOpenPayment: (booking: any) => void;
   onOpenReview: (booking: any) => void;
   onVerifyQrCode: (workerId: string) => void;
+  onNavigate: (path: string) => void;
 }
 
 export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
@@ -15,15 +19,17 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onOpenChat,
   onOpenPayment,
   onOpenReview,
-  onVerifyQrCode
+  onVerifyQrCode,
+  onNavigate
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'payments'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'payments' | 'messages'>('overview');
 
   // Sample bookings with state transitions: REQUESTED -> ACCEPTED -> IN_PROGRESS -> COMPLETED -> RATED
   const [bookings, setBookings] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchBookings = async () => {
+      let loadedBookings: any[] = [];
       try {
         const apiRes = await fetch('http://localhost:5001/api/bookings', {
           headers: {
@@ -34,55 +40,210 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
 
         if (apiRes && apiRes.ok) {
           const json = await apiRes.json();
-          if (json.success && Array.isArray(json.data?.bookings)) {
-            setBookings(json.data.bookings.map((b: any) => ({
+          if (json.success && Array.isArray(json.data?.bookings) && json.data.bookings.length > 0) {
+            loadedBookings = json.data.bookings.map((b: any) => ({
               id: b.id,
               service: b.service,
               workerName: b.workerName,
               workerTrade: b.workerTrade,
               workerId: b.workerId,
-              coopName: 'Cooperative Federation',
+              coopName: 'Delhi Labour Cooperative Federation',
               date: b.bookingDate,
               time: b.bookingTime,
               address: b.address,
               amount: b.amount,
               status: b.status,
               paymentStatus: b.paymentStatus
-            })));
-            return;
+            }));
           }
         }
 
-        if (currentUser?.id) {
+        if (loadedBookings.length === 0 && currentUser?.id) {
           const { data, error } = await supabase
             .from('bookings')
             .select('*')
             .eq('customer_id', currentUser.id)
             .order('created_at', { ascending: false });
           
-          if (!error && data) {
-            setBookings(data.map(b => ({
+          if (!error && data && data.length > 0) {
+            loadedBookings = data.map(b => ({
               id: b.id,
               service: b.service,
               workerName: b.worker_name,
               workerTrade: b.worker_trade,
               workerId: b.worker_id,
-              coopName: 'Cooperative Federation',
+              coopName: 'Delhi Labour Cooperative Federation',
               date: b.booking_date,
               time: b.booking_time,
               address: b.address,
               amount: b.amount,
               status: b.status,
               paymentStatus: b.payment_status
-            })));
+            }));
           }
         }
       } catch (err) {
         console.error("Booking fetch error:", err);
       }
+
+      // Prepopulate mock data if empty
+      if (loadedBookings.length === 0) {
+        loadedBookings = [
+          {
+            id: 'BK-1001',
+            service: 'Electrical Inspection',
+            workerName: 'Rajesh Kumar',
+            workerTrade: 'Electrician',
+            workerId: 'WORKER-DEL-8901',
+            coopName: 'Delhi Labour Cooperative Federation',
+            date: '2026-08-30',
+            time: '10:00 AM',
+            address: 'Connaught Place, New Delhi',
+            amount: '₹550',
+            status: 'ACCEPTED',
+            paymentStatus: 'PENDING'
+          },
+          {
+            id: 'BK-1002',
+            service: 'Plumbing Leak Repair',
+            workerName: 'Amit Singh',
+            workerTrade: 'Plumber',
+            workerId: 'WORKER-DEL-3342',
+            coopName: 'NCR Multi-State Cooperative Society',
+            date: '2026-08-25',
+            time: '02:30 PM',
+            address: 'Dwarka Sector 12, New Delhi',
+            amount: '₹420',
+            status: 'COMPLETED',
+            paymentStatus: 'PAID'
+          },
+          {
+            id: 'BK-1003',
+            service: 'Carpenter Woodwork Repair',
+            workerName: 'Vikram Rathore',
+            workerTrade: 'Carpenter',
+            workerId: 'WORKER-DEL-4412',
+            coopName: 'Delhi Labour Cooperative Federation',
+            date: '2026-08-31',
+            time: '11:00 AM',
+            address: 'Saket, New Delhi',
+            amount: '₹800',
+            status: 'REQUESTED',
+            paymentStatus: 'PENDING'
+          }
+        ];
+      }
+
+      setBookings(loadedBookings);
     };
     fetchBookings();
   }, [currentUser]);
+
+  // Chat / Messaging states
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const socketRef = useRef<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, selectedChat, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'messages' && selectedChat) {
+      const storageKey = `chat_history_${selectedChat.id}`;
+      
+      // Load local history
+      const savedLocal = localStorage.getItem(storageKey);
+      if (savedLocal) {
+        try {
+          const parsed = JSON.parse(savedLocal);
+          (async () => {
+            const decrypted = await Promise.all(parsed.map(async (msg: any) => {
+              const text = await decryptMessage(msg.text, selectedChat.id);
+              return { ...msg, text };
+            }));
+            setChatMessages(decrypted);
+          })();
+        } catch (e) {}
+      } else {
+        setChatMessages([]);
+      }
+
+      // Socket connection
+      if (CONFIG.apiUrl) {
+        socketRef.current = io(CONFIG.apiUrl);
+        socketRef.current.emit('joinBooking', selectedChat.id);
+
+        socketRef.current.on('chatHistory', async (history: any[]) => {
+          if (history && history.length > 0) {
+            const decrypted = await Promise.all(history.map(async (msg: any) => {
+              const text = await decryptMessage(msg.text, selectedChat.id);
+              return { ...msg, text };
+            }));
+            setChatMessages(decrypted);
+            localStorage.setItem(storageKey, JSON.stringify(history));
+          }
+        });
+
+        socketRef.current.on('newMessage', async (message: any) => {
+          const text = await decryptMessage(message.text, selectedChat.id);
+          const decryptedMsg = { ...message, text };
+          setChatMessages((prev) => {
+            const updated = [...prev, decryptedMsg];
+            const localRaw = localStorage.getItem(storageKey);
+            let rawList: any[] = [];
+            if (localRaw) {
+              try { rawList = JSON.parse(localRaw); } catch(e) {}
+            }
+            rawList.push(message);
+            localStorage.setItem(storageKey, JSON.stringify(rawList));
+            return updated;
+          });
+        });
+      }
+
+      return () => {
+        socketRef.current?.disconnect();
+      };
+    }
+  }, [activeTab, selectedChat]);
+
+  const handleSendDashboardMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim() || !selectedChat) return;
+
+    const senderName = currentUser?.name || 'Customer';
+    const textToSend = chatInput.trim();
+    
+    // Encrypt
+    const encryptedText = await encryptMessage(textToSend, selectedChat.id);
+
+    const payload = {
+      bookingId: selectedChat.id,
+      senderId: currentUser?.id || 'demo-123',
+      senderType: currentUser?.role || 'Customer',
+      senderName: senderName,
+      text: encryptedText
+    };
+
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit('sendMessage', payload);
+    }
+
+    const localMsg = {
+      id: `msg-${Date.now()}`,
+      bookingId: selectedChat.id,
+      senderType: currentUser?.role || 'Customer',
+      senderName: senderName,
+      text: textToSend,
+      createdAt: new Date().toISOString()
+    };
+
+    setChatMessages((prev) => [...prev, localMsg]);
+    setChatInput('');
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -177,7 +338,10 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               ) : (
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center py-10">
                   <p className="text-slate-500 font-medium">No upcoming services scheduled.</p>
-                  <button className="mt-4 px-6 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-xl hover:bg-emerald-100 transition-colors">
+                  <button 
+                    onClick={() => onNavigate('/services')}
+                    className="mt-4 px-6 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-xl hover:bg-emerald-100 transition-colors"
+                  >
                     Book a Service
                   </button>
                 </div>
@@ -240,7 +404,10 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <div className="space-y-6">
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Quick actions</h2>
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-2 space-y-1">
-              <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group">
+              <button 
+                onClick={() => onNavigate('/services')}
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group"
+              >
                 <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
                   <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                     <Calendar className="w-4 h-4" />
@@ -261,7 +428,13 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 </div>
               </button>
               
-              <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group">
+              <button 
+                onClick={() => {
+                  setSelectedChat(bookings[0] || null);
+                  setActiveTab('messages');
+                }}
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group"
+              >
                 <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
                   <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
                     <MessageSquare className="w-4 h-4" />
@@ -270,7 +443,10 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 </div>
               </button>
               
-              <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group">
+              <button 
+                onClick={() => onVerifyQrCode('WORKER-DEL-8901')}
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group"
+              >
                 <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
                     <QrCode className="w-4 h-4" />
@@ -284,7 +460,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         )}
 
         {/* Tab-based Full Lists */}
-        {activeTab !== 'overview' && (
+        {activeTab !== 'overview' && activeTab !== 'messages' && (
           <div className="light-card p-6">
             
             <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-3">
@@ -308,6 +484,19 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   }`}
                 >
                   Completed History
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedChat(bookings[0] || null);
+                    setActiveTab('messages');
+                  }}
+                  className={`pb-2 border-b-2 transition-colors ${
+                    activeTab === 'messages'
+                      ? 'border-emerald-600 text-emerald-700'
+                      : 'border-transparent text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  Messages
                 </button>
               </div>
               <button onClick={() => setActiveTab('overview')} className="text-xs font-bold text-slate-500 hover:text-slate-800">
@@ -384,6 +573,170 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               {bookings.filter(b => activeTab === 'history' ? b.status === 'COMPLETED' : b.status !== 'COMPLETED').length === 0 && (
                 <div className="text-center py-10 text-slate-500 font-medium">
                   No bookings found for this category.
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* Embedded Messaging Tab */}
+        {activeTab === 'messages' && (
+          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xl flex flex-col md:flex-row h-[600px] max-h-[85vh]">
+            
+            {/* Left Column: Chat Room List */}
+            <div className="w-full md:w-80 border-r border-slate-200 flex flex-col bg-slate-50">
+              <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between">
+                <h3 className="font-extrabold text-slate-900 font-outfit text-base">Conversations</h3>
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-900"
+                >
+                  &larr; Back
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+                {bookings.map((booking) => {
+                  const isSelected = selectedChat?.id === booking.id;
+                  return (
+                    <div
+                      key={booking.id}
+                      onClick={() => setSelectedChat(booking)}
+                      className={`p-4 cursor-pointer hover:bg-slate-100 transition-colors flex items-center justify-between ${
+                        isSelected ? 'bg-emerald-50 border-l-4 border-emerald-600' : 'bg-white'
+                      }`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-slate-900 font-outfit">{booking.service}</span>
+                          <span className="text-[9px] font-mono text-slate-400 font-semibold">#{booking.id}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium">Worker: {booking.workerName}</p>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded uppercase">
+                          {booking.status}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+                {bookings.length === 0 && (
+                  <div className="p-6 text-center text-xs text-slate-400">
+                    No active service bookings found to chat.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Active Conversation */}
+            <div className="flex-1 flex flex-col bg-[#f0f2f5] relative">
+              {selectedChat ? (
+                <>
+                  {/* Chat Header */}
+                  <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between shadow-md">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-extrabold text-sm uppercase">
+                        {selectedChat.workerName.substring(0, 2)}
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-xs text-white leading-tight font-outfit">
+                          {selectedChat.workerName}
+                        </h4>
+                        <div className="flex items-center space-x-1.5 text-[9px] text-emerald-400 font-medium">
+                          <Circle className="w-1.5 h-1.5 fill-emerald-400 text-emerald-400 animate-pulse" />
+                          <span>Online · {selectedChat.coopName}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 text-emerald-300 font-bold text-[10px] font-mono border border-emerald-800/80 bg-emerald-950/60 px-2.5 py-1 rounded-lg">
+                      <Lock className="w-3.5 h-3.5 mr-1" />
+                      <span>E2E Encrypted</span>
+                    </div>
+                  </div>
+
+                  {/* Booking contextual status banner */}
+                  <div className="bg-emerald-950/80 border-b border-emerald-900/60 px-4 py-2 text-[10px] text-emerald-200 flex justify-between font-medium">
+                    <span>Active Booking: <strong className="text-white">{selectedChat.service}</strong></span>
+                    <span>Rate: <strong className="text-white">{selectedChat.amount}</strong></span>
+                  </div>
+
+                  {/* Chat Message list body */}
+                  <div className="flex-1 p-4 overflow-y-auto space-y-3 relative">
+                    {chatMessages.length === 0 ? (
+                      <div className="text-center text-slate-400 py-12 text-xs font-medium bg-white/60 p-6 rounded-2xl border border-slate-200/50 max-w-xs mx-auto mt-10">
+                        <ShieldCheck className="w-7 h-7 text-emerald-600 mx-auto mb-2 opacity-80" />
+                        <span>This is a secure private chat room with {selectedChat.workerName}. Type a message below to coordinate.</span>
+                      </div>
+                    ) : (
+                      chatMessages.map((msg) => {
+                        const isMe = msg.senderType === 'Customer';
+                        const timeString = msg.createdAt 
+                          ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                          >
+                            <div
+                              className={`max-w-[80%] px-3 py-2 rounded-2xl shadow-xs leading-relaxed text-xs relative ${
+                                isMe
+                                  ? 'bg-emerald-600 text-white rounded-tr-xs'
+                                  : 'bg-white text-slate-900 border border-slate-200/80 rounded-tl-xs'
+                              }`}
+                            >
+                              <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                              <div className={`flex items-center justify-end space-x-1 mt-1 text-[8px] ${isMe ? 'text-emerald-100' : 'text-slate-400'}`}>
+                                <span>{timeString}</span>
+                                {isMe && <CheckCheck className="w-3.5 h-3.5 text-emerald-200" />}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Chat input composer */}
+                  <form
+                    onSubmit={handleSendDashboardMessage}
+                    className="p-2.5 bg-slate-100 border-t border-slate-200 flex items-center space-x-2"
+                  >
+                    <textarea
+                      rows={1}
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendDashboardMessage();
+                        }
+                      }}
+                      placeholder="Type secure message... (Enter to send)"
+                      className="flex-1 px-4 py-2 bg-white border border-slate-300 rounded-2xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none font-sans"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={!chatInput.trim()}
+                      className="w-9 h-9 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-full shadow-sm transition-colors flex items-center justify-center shrink-0"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-white/70">
+                  <MessageSquare className="w-12 h-12 text-slate-300 mb-2" />
+                  <h4 className="font-bold text-slate-700 font-outfit">Your Inbox</h4>
+                  <p className="text-xs text-slate-500 max-w-xs mt-1">
+                    Select a service conversation from the left panel to coordinate with your cooperative technician in real-time.
+                  </p>
                 </div>
               )}
             </div>
