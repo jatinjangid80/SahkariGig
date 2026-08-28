@@ -177,27 +177,29 @@ export default function App() {
 
       {/* Main Page Content */}
       <main className="flex-1">
-        {currentPath === '/' && (
+        {(currentPath === '/' || currentPath === '/workers') && (
           <>
-            {/* Customer-First Hero */}
-            <HeroSection
-              onSearchService={(cat) => setSelectedCategory(cat)}
-              onNavigate={navigateTo}
-            />
+            {currentPath === '/' && (
+              <HeroSection
+                onSearchService={(cat) => setSelectedCategory(cat)}
+                onNavigate={navigateTo}
+              />
+            )}
 
             {/* Verified Worker Discovery Directory */}
-            <WorkerDirectory
-              selectedCategory={selectedCategory}
-              onSelectWorkerForBooking={handleOpenBooking}
-              onViewWorkerProfile={(worker) => {
-                setActiveWorkerIdCard(worker);
-                setWorkerIdCardModalOpen(true);
-              }}
-              onVerifyQrCode={handleVerifyQrCode}
-            />
+            <div id="workers-directory" className="py-6">
+              <WorkerDirectory
+                selectedCategory={selectedCategory}
+                onSelectWorkerForBooking={handleOpenBooking}
+                onViewWorkerProfile={(worker) => {
+                  setActiveWorkerIdCard(worker);
+                  setWorkerIdCardModalOpen(true);
+                }}
+                onVerifyQrCode={handleVerifyQrCode}
+              />
+            </div>
 
-            {/* Why SahkariGig Trust Section */}
-            <WhyCooperative />
+            {currentPath === '/' && <WhyCooperative />}
           </>
         )}
 
