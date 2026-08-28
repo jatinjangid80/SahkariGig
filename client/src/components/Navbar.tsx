@@ -5,9 +5,10 @@ import { CONFIG } from '../config';
 interface NavbarProps {
   currentPath: string;
   onNavigate: (path: string) => void;
-  currentUser?: { name: string; role: 'Customer' | 'Worker' | 'Admin' } | null;
+  currentUser?: { name: string; role: 'Customer' | 'Worker' | 'Admin' | string } | null;
   onLoginClick?: () => void;
   onLogoutClick?: () => void;
+  onSwitchRole?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,7 +16,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   currentUser,
   onLoginClick,
-  onLogoutClick
+  onLogoutClick,
+  onSwitchRole
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -23,7 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Home', path: '/' },
     { label: 'Find Services', path: '/#services' },
     { label: 'Find Work', path: '/#for-workers' },
-    { label: 'Cooperatives', path: '/#how-it-works' }, // We'll link this to how-it-works for now
+    { label: 'Cooperatives', path: '/#how-it-works' },
     { label: 'How It Works', path: '/#how-it-works' },
     { label: 'About', path: '/about' },
   ];
@@ -97,6 +99,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-[10px] text-emerald-700 font-medium capitalize">{currentUser.role}</span>
                 </div>
               </div>
+
+              {onSwitchRole && (
+                <button
+                  onClick={onSwitchRole}
+                  title="Quick Switch Role for Testing"
+                  className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-200/80 hover:bg-slate-300 rounded-lg transition-colors flex items-center space-x-1"
+                >
+                  <span>Switch Role</span>
+                </button>
+              )}
+
               <button
                 onClick={() => onNavigate('/dashboard')}
                 className="px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors"
