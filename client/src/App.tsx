@@ -218,10 +218,9 @@ export default function App() {
 
         {currentPath === '/dashboard' && (
           <div>
-
-            {currentUser?.role === 'Customer' && (
+            {(!currentUser || currentUser?.role === 'Customer') && (
               <CustomerDashboard
-                currentUser={currentUser}
+                currentUser={currentUser || { id: 'demo-123', name: 'Guest User', role: 'Customer', email: 'guest@sahkarigig.org' }}
                 onOpenChat={handleOpenChat}
                 onOpenPayment={handleOpenPayment}
                 onOpenReview={handleOpenReview}
