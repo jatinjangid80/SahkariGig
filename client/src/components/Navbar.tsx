@@ -8,7 +8,6 @@ interface NavbarProps {
   currentUser?: { name: string; role: 'Customer' | 'Worker' | 'Admin' | string } | null;
   onLoginClick?: () => void;
   onLogoutClick?: () => void;
-  onSwitchRole?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,8 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   currentUser,
   onLoginClick,
-  onLogoutClick,
-  onSwitchRole
+  onLogoutClick
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -99,16 +97,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-[10px] text-emerald-700 font-medium capitalize">{currentUser.role}</span>
                 </div>
               </div>
-
-              {onSwitchRole && (
-                <button
-                  onClick={onSwitchRole}
-                  title="Quick Switch Role for Testing"
-                  className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-200/80 hover:bg-slate-300 rounded-lg transition-colors flex items-center space-x-1"
-                >
-                  <span>Switch Role</span>
-                </button>
-              )}
 
               <button
                 onClick={() => onNavigate('/dashboard')}

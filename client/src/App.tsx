@@ -167,16 +167,6 @@ export default function App() {
         onNavigate={navigateTo}
         currentUser={currentUser}
         onLoginClick={() => setAuthModalOpen(true)}
-        onSwitchRole={() => {
-          if (!currentUser) return;
-          const roles = ['Customer', 'Worker', 'Admin'];
-          const currentIndex = roles.indexOf(currentUser.role);
-          const nextRole = roles[(currentIndex + 1) % roles.length];
-          const updated = { ...currentUser, role: nextRole };
-          localStorage.setItem('demoUser', JSON.stringify(updated));
-          setCurrentUser(updated);
-          navigateTo('/dashboard');
-        }}
         onLogoutClick={() => {
           localStorage.removeItem('demoUser');
           localStorage.removeItem('mockAdmin');
