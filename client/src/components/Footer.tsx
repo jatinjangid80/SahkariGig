@@ -1,6 +1,6 @@
 import React from 'react';
 import { CONFIG } from '../config';
-import { Github, Twitter, Linkedin, Heart, ShieldCheck, PhoneCall, CheckCircle2, ArrowUpRight } from 'lucide-react';
+import { Github, Twitter, Linkedin, ShieldCheck, PhoneCall, CheckCircle2, ArrowUpRight } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (path: string) => void;
@@ -136,11 +136,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <p className="text-[11px] text-slate-400 mt-0.5">SIH Problem Statement ID: <span className="font-semibold text-slate-300">SIH26089</span></p>
           </div>
           
-          <div className="flex items-center space-x-2 text-xs bg-gradient-to-r from-slate-800 via-slate-800/90 to-slate-800 px-4 py-2.5 rounded-full border border-slate-700/80 shadow-md">
-            <span className="text-slate-300">Designed and Deployed with</span>
-            <Heart className="w-4 h-4 text-rose-500 fill-rose-500 animate-pulse" />
-            <span className="text-slate-300">by</span>
-            <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 font-outfit tracking-wide text-sm">
+          <div className="flex items-center space-x-1.5 text-xs bg-gradient-to-r from-slate-800 via-slate-800/90 to-slate-800 px-4 py-2.5 rounded-full border border-slate-700/80 shadow-md">
+            <span className="text-slate-300">Designed and Deployed by</span>
+            <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 font-outfit tracking-wide text-sm ml-1">
               Jatin Jangid
             </span>
           </div>
