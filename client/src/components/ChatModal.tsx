@@ -216,8 +216,10 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
             </div>
           ) : (
             messages.map((msg) => {
-              const isMe = msg.senderName === currentUser?.name || msg.senderType === currentUser?.role;
-              
+              const myName = (currentUser?.name || '').trim().toLowerCase();
+              const sender = (msg.senderName || msg.senderId || '').trim().toLowerCase();
+              const isMe = Boolean(myName && sender && (sender === myName || sender.includes(myName) || myName.includes(sender)));
+
               const timeString = msg.createdAt 
                 ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
