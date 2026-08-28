@@ -102,45 +102,39 @@ if (require.main === module) {
 
     socket.on('joinBooking', async (bookingId) => {
       socket.join(bookingId);
-      // Fetch chat history from Supabase
+      
+      let chatHistory = messages.filter(m => m.bookingId === bookingId);
+
+      // Attempt to load from Supabase if available
       if (supabase) {
-        const { data: history, error } = await supabase
-          .from('chat_messages')
-          .select('*')
-          .eq('booking_id', bookingId)
-          .order('created_at', { ascending: true });
-        
-        if (!error && history) {
-          const formattedHistory = history.map(msg => ({
-            id: msg.id,
-            bookingId: msg.booking_id,
-            senderType: msg.sender_type,
-            senderId: msg.sender_id,
-            senderName: msg.sender_name,
-            text: msg.text,
-            createdAt: msg.created_at
-          }));
-          socket.emit('chatHistory', formattedHistory);
-        } else {
-          console.error("Error fetching chat history from Supabase:", error);
-          socket.emit('chatHistory', []);
+        try {
+          const { data: history, error } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .eq('booking_id', bookingId)
+            .order('created_at', { ascending: true });
+          
+          if (!error && history && history.length > 0) {
+            chatHistory = history.map(msg => ({
+              id: msg.id,
+              bookingId: msg.booking_id,
+              senderType: msg.sender_type,
+              senderId: msg.sender_id,
+              senderName: msg.sender_name,
+              text: msg.text,
+              createdAt: msg.created_at
+            }));
+          }
+        } catch (err) {
+          console.error("Supabase chat fetch fallback to in-memory:", err.message);
         }
-      } else {
-        const history = messages.filter(m => m.bookingId === bookingId);
-        socket.emit('chatHistory', history);
       }
+
+      socket.emit('chatHistory', chatHistory);
     });
 
     socket.on('sendMessage', async ({ bookingId, senderId, senderType, senderName, text }) => {
-      let newMessage = {
-        booking_id: bookingId,
-        sender_type: senderType,
-        sender_id: senderId,
-        sender_name: senderName,
-        text
-      };
-      
-      let emittedMessage = {
+      const emittedMessage = {
         id: `msg-${Date.now()}`,
         bookingId,
         senderType,
@@ -150,28 +144,21 @@ if (require.main === module) {
         createdAt: new Date().toISOString()
       };
 
+      // Always save to in-memory store for instant zero-latency room syncing
+      messages.push(emittedMessage);
+
+      // Optionally attempt Supabase insert in background
       if (supabase) {
-        const { data, error } = await supabase
+        supabase
           .from('chat_messages')
-          .insert(newMessage)
-          .select()
-          .single();
-          
-        if (!error && data) {
-           emittedMessage = {
-             id: data.id,
-             bookingId: data.booking_id,
-             senderType: data.sender_type,
-             senderId: data.sender_id,
-             senderName: data.sender_name,
-             text: data.text,
-             createdAt: data.created_at
-           };
-        } else {
-          console.error("Error saving message to Supabase:", error);
-        }
-      } else {
-        messages.push(emittedMessage);
+          .insert({
+            booking_id: bookingId,
+            sender_type: senderType,
+            sender_id: senderId,
+            sender_name: senderName,
+            text
+          })
+          .catch(err => console.error("Supabase async save notice:", err.message));
       }
       
       io.to(bookingId).emit('newMessage', emittedMessage);
