@@ -3,7 +3,7 @@ export const CONFIG = {
   appTagline: 'Cooperative gig services, owned by the people who do the work.',
   phase: 'Phase 0 · Foundation',
   version: '0.1.0-foundation',
-  apiUrl: import.meta.env.VITE_API_URL || '',
+  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:5001',
   roles: [
     {
       role: 'Customer',
