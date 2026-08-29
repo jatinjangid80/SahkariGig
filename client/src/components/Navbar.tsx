@@ -5,9 +5,11 @@ import { CONFIG } from '../config';
 interface NavbarProps {
   currentPath: string;
   onNavigate: (path: string) => void;
-  currentUser?: { name: string; role: 'Customer' | 'Worker' | 'Admin' | string } | null;
+  currentUser?: { name: string; role: 'Customer' | 'Worker' | 'Admin' | string; avatarUrl?: string } | null;
   onLoginClick?: () => void;
   onLogoutClick?: () => void;
+  workerActiveTab?: string;
+  onWorkerTabChange?: (tab: 'feed' | 'active' | 'earnings' | 'profile') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,21 +17,38 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   currentUser,
   onLoginClick,
-  onLogoutClick
+  onLogoutClick,
+  workerActiveTab,
+  onWorkerTabChange
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
+  const navLinks = currentUser?.role === 'Worker' ? [
+    { label: 'Job Feed', path: '/dashboard', tab: 'feed' },
+    { label: 'Active Job', path: '/dashboard', tab: 'active' },
+    { label: 'Earnings', path: '/dashboard', tab: 'earnings' },
+    { label: 'Profile', path: '/dashboard', tab: 'profile' },
+  ] : (currentUser?.role === 'Customer' ? [
+    { label: 'Home', path: '/' },
+    { label: 'Dashboard', path: '/dashboard' },
+    { label: 'Find Services', path: '/services' },
+    { label: 'Cooperatives', path: '/cooperatives' },
+    { label: 'How It Works', path: '/how-it-works' },
+    { label: 'About', path: '/about' },
+  ] : [
     { label: 'Home', path: '/' },
     { label: 'Find Services', path: '/services' },
     { label: 'Find Work', path: '/for-workers' },
     { label: 'Cooperatives', path: '/cooperatives' },
     { label: 'How It Works', path: '/how-it-works' },
     { label: 'About', path: '/about' },
-  ];
+  ]);
 
-  const handleNavClick = (path: string) => {
+  const handleNavClick = (path: string, tab?: string) => {
     setMobileMenuOpen(false);
+    if (tab && onWorkerTabChange) {
+      onWorkerTabChange(tab as any);
+    }
     onNavigate(path);
   };
 
@@ -61,9 +80,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           {navLinks.map((link) => (
             <button
               key={link.label}
-              onClick={() => handleNavClick(link.path)}
+              onClick={() => handleNavClick(link.path, link.tab)}
               className={`text-sm font-medium transition-colors ${
-                currentPath === link.path
+                currentPath === link.path && (!link.tab || workerActiveTab === link.tab)
                   ? 'text-emerald-700 font-semibold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -78,21 +97,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           {currentUser ? (
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
-                  {currentUser.name.charAt(0)}
-                </div>
+                {currentUser.avatarUrl ? (
+                  <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-7 h-7 rounded-full object-cover border border-emerald-500 shadow-2xs" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold font-outfit">
+                    {currentUser.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="text-left text-xs">
                   <p className="font-semibold text-slate-900 leading-tight">{currentUser.name}</p>
                   <span className="text-[10px] text-emerald-700 font-medium capitalize">{currentUser.role}</span>
                 </div>
               </div>
 
-              <button
-                onClick={() => onNavigate('/dashboard')}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors"
-              >
-                Dashboard
-              </button>
               {onLogoutClick && (
                 <button
                 onClick={() => {
@@ -145,8 +162,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           {navLinks.map((link) => (
             <button
               key={link.label}
-              onClick={() => handleNavClick(link.path)}
-              className="block w-full text-left py-2 text-base font-medium text-slate-700 hover:text-emerald-600"
+              onClick={() => handleNavClick(link.path, link.tab)}
+              className={`block w-full text-left py-2 text-base font-medium transition-colors ${
+                currentPath === link.path && (!link.tab || workerActiveTab === link.tab)
+                  ? 'text-emerald-700 font-bold'
+                  : 'text-slate-700 hover:text-emerald-600'
+              }`}
             >
               {link.label}
             </button>

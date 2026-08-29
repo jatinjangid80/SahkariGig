@@ -40,40 +40,128 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
   useEffect(() => {
     const fetchWorkers = async () => {
       setIsLoading(true);
+      let fetchedWorkers: Worker[] = [];
       try {
-        const apiRes = await fetch('http://localhost:5001/api/workers').catch(() => null);
-        if (apiRes && apiRes.ok) {
-          const json = await apiRes.json();
-          if (json.success && Array.isArray(json.data?.workers)) {
-            setWorkers(json.data.workers);
-            setIsLoading(false);
-            return;
-          }
-        }
 
         const { data, error } = await supabase.from('workers').select('*');
         if (error) throw error;
         
-        if (data) {
-          const formattedWorkers = data.map(w => ({
-            id: w.id,
-            name: w.name,
-            avatar: w.avatar || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80',
-            trade: w.trade,
-            rating: w.rating || 4.5,
-            reviewsCount: w.reviews_count || 10,
-            coopName: w.coop_name,
-            hourlyRate: w.hourly_rate,
-            distanceKm: w.distance_km || 2.0,
-            isAvailableToday: w.is_available_today,
-            isTopRated: w.is_top_rated,
-            workerId: w.worker_id
-          }));
-          setWorkers(formattedWorkers);
+        if (data && data.length > 0) {
+          const formattedWorkers = data.map(w => {
+            let finalAvatar = w.avatar;
+            if (!finalAvatar || finalAvatar.includes('1540569014015-19a7be504e3a')) {
+              finalAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(w.name || 'User')}&background=10b981&color=fff&size=150`;
+            }
+            return {
+              id: w.id,
+              name: w.name,
+              avatar: finalAvatar,
+              trade: w.trade,
+              rating: Number(w.rating) || 4.5,
+              reviewsCount: w.reviews_count || 10,
+              coopName: w.coop_name,
+              hourlyRate: w.hourly_rate,
+              distanceKm: Number(w.distance_km) || 2.0,
+              isAvailableToday: w.is_available_today,
+              isTopRated: w.is_top_rated,
+              workerId: w.worker_id
+            };
+          });
+          fetchedWorkers = [...fetchedWorkers, ...formattedWorkers];
         }
       } catch (err) {
-        console.error("Using fallback worker list:", err);
+        console.error("Failed to fetch workers from database, using local fallbacks:", err);
       } finally {
+        // Now also fetch from localStorage to ensure new demo workers show up even if DB insert failed
+        const localWorkers: Worker[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('worker_profile_')) {
+            try {
+              const profileStr = localStorage.getItem(key);
+              if (profileStr) {
+                const p = JSON.parse(profileStr);
+                const uid = key.replace('worker_profile_', '');
+                let finalLocalAvatar = p.avatarUrl;
+                if (!finalLocalAvatar || finalLocalAvatar.includes('1540569014015-19a7be504e3a')) {
+                  finalLocalAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullName || 'User')}&background=10b981&color=fff&size=150`;
+                }
+                localWorkers.push({
+                  id: uid,
+                  name: p.fullName || 'Demo Worker',
+                  avatar: finalLocalAvatar,
+                  trade: p.skill || 'Electrician',
+                  rating: 5.0,
+                  reviewsCount: 0,
+                  coopName: p.coop || 'Delhi Labour Cooperative Federation',
+                  hourlyRate: p.skill === 'Electrician' ? '₹400–₹700 / visit' : (p.skill === 'Plumber' ? '₹350–₹650 / visit' : '₹500–₹900 / visit'),
+                  distanceKm: p.radius ? p.radius / 2 : 1.5,
+                  isAvailableToday: p.availableDays?.includes('Monday') ?? true,
+                  isTopRated: true,
+                  workerId: `WORKER-DEL-${uid.slice(0, 4).toUpperCase()}`
+                });
+              }
+            } catch (e) {
+              console.error("Failed to parse local profile:", e);
+            }
+          }
+        }
+        
+        // Filter out duplicates (if the DB and local storage both have the same worker)
+        const combined = [...fetchedWorkers];
+        localWorkers.forEach(lw => {
+          if (!combined.find(w => w.id === lw.id)) {
+            combined.push(lw);
+          }
+        });
+
+        // Add dummy data if STILL empty
+        if (combined.length === 0) {
+           combined.push({
+             id: 'dummy-1',
+             name: 'Rajesh Kumar',
+             avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=10b981&color=fff&size=150',
+             trade: 'Electrician',
+             rating: 4.8,
+             reviewsCount: 124,
+             coopName: 'Delhi Labour Cooperative Federation',
+             hourlyRate: '₹400–₹700 / visit',
+             distanceKm: 2.5,
+             isAvailableToday: true,
+             isTopRated: true,
+             workerId: 'WORKER-DEL-1011'
+           });
+           combined.push({
+             id: 'dummy-2',
+             name: 'Amit Singh',
+             avatar: 'https://ui-avatars.com/api/?name=Amit+Singh&background=10b981&color=fff&size=150',
+             trade: 'Plumber',
+             rating: 4.6,
+             reviewsCount: 89,
+             coopName: 'Noida Builders Cooperative Society',
+             hourlyRate: '₹350–₹650 / visit',
+             distanceKm: 4.2,
+             isAvailableToday: true,
+             isTopRated: false,
+             workerId: 'WORKER-UP-2042'
+           });
+           combined.push({
+             id: 'dummy-3',
+             name: 'Priya Sharma',
+             avatar: 'https://ui-avatars.com/api/?name=Priya+Sharma&background=10b981&color=fff&size=150',
+             trade: 'Domestic Help',
+             rating: 4.9,
+             reviewsCount: 210,
+             coopName: 'Delhi Labour Cooperative Federation',
+             hourlyRate: '₹200–₹400 / visit',
+             distanceKm: 1.1,
+             isAvailableToday: true,
+             isTopRated: true,
+             workerId: 'WORKER-DEL-3099'
+           });
+        }
+        
+        setWorkers(combined);
         setIsLoading(false);
       }
     };

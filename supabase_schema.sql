@@ -15,23 +15,29 @@ CREATE TABLE IF NOT EXISTS public.cooperatives (
 );
 
 -- 2. Create Workers Table
-CREATE TABLE IF NOT EXISTS public.workers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id),
-    worker_id TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    trade TEXT NOT NULL,
-    coop_name TEXT NOT NULL DEFAULT 'Delhi Labour Cooperative Federation',
-    rating NUMERIC(3, 2) NOT NULL DEFAULT 4.80,
-    reviews_count INT NOT NULL DEFAULT 12,
-    hourly_rate TEXT NOT NULL DEFAULT '₹400–₹700 / visit',
-    distance_km NUMERIC(4, 2) NOT NULL DEFAULT 2.00,
-    is_available_today BOOLEAN NOT NULL DEFAULT TRUE,
-    is_top_rated BOOLEAN NOT NULL DEFAULT TRUE,
-    is_verified BOOLEAN NOT NULL DEFAULT TRUE,
-    avatar TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+DROP TABLE IF EXISTS public.workers CASCADE;
+
+create table public.workers (
+  id uuid not null default gen_random_uuid (),
+  worker_id text not null,
+  name text not null,
+  trade text not null,
+  coop_name text not null default 'Delhi Labour Cooperative Federation'::text,
+  rating numeric(3, 2) not null default 4.80,
+  reviews_count integer not null default 12,
+  hourly_rate text not null default '₹400–₹700 / visit'::text,
+  distance_km numeric(4, 2) not null default 2.00,
+  is_available_today boolean not null default true,
+  is_top_rated boolean not null default true,
+  is_verified boolean not null default true,
+  avatar text null,
+  created_at timestamp with time zone not null default now(),
+  user_id uuid null,
+  constraint workers_pkey primary key (id),
+  constraint workers_worker_id_key unique (worker_id),
+  constraint workers_user_id_fkey foreign key (user_id) references auth.users (id)
+) tablespace pg_default;
+
 
 -- 3. Create Bookings Table
 CREATE TABLE IF NOT EXISTS public.bookings (
@@ -83,7 +89,7 @@ ALTER TABLE public.contact_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public Read Cooperatives" ON public.cooperatives FOR SELECT USING (true);
-CREATE POLICY "Public Read Workers" ON public.workers FOR SELECT USING (true);
+CREATE POLICY "Public Read/Write Workers" ON public.workers FOR ALL USING (true);
 CREATE POLICY "Public Read/Write Bookings" ON public.bookings FOR ALL USING (true);
 CREATE POLICY "Public Write Contact" ON public.contact_inquiries FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Read/Write Reviews" ON public.reviews FOR ALL USING (true);
@@ -100,7 +106,7 @@ INSERT INTO public.workers (worker_id, name, trade, coop_name, rating, reviews_c
 VALUES
     ('WORKER-DEL-8901', 'Rajesh Kumar', 'Electrician', 'Delhi Labour Cooperative Federation', 4.90, 128, '₹400–₹700 / visit', 1.80, true, true, 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80'),
     ('WORKER-DEL-7652', 'Suresh Sharma', 'Plumber', 'JanSeva Plumbing Society', 4.80, 94, '₹350–₹650 / visit', 2.40, true, true, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'),
-    ('WORKER-DEL-4390', 'Vikram Singh', 'Carpenter', 'Northern Crafts Cooperative Federation', 4.70, 82, '₹500–₹900 / visit', 3.50, false, false, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80')
+    ('WORKER-DEL-4390', 'Vikram Singh', 'Carpenter', 'Northern Crafts Cooperative Federation', 4.70, 82, '₹500–₹900 / visit', 3.50, true, true, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80')
 ON CONFLICT (worker_id) DO NOTHING;
 
 -- 6. Create Chat Messages Table

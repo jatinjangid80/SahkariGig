@@ -26,13 +26,16 @@ import { ServicesView } from './components/ServicesView';
 import { ForWorkersView } from './components/ForWorkersView';
 import { CooperativesView } from './components/CooperativesView';
 import { HowItWorksView } from './components/HowItWorksView';
+import { WorkerOnboarding } from './components/WorkerOnboarding';
+import { CustomerOnboarding } from './components/CustomerOnboarding';
 
 export default function App() {
-  const [currentPath, setCurrentPath] = useState('/');
+  const [currentPath, setCurrentPath] = useState(window.location.pathname || '/');
   const [selectedCategory, setSelectedCategory] = useState('All');
   
   // User state & role management
-  const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string; avatarUrl?: string } | null>(null);
+  const [workerActiveTab, setWorkerActiveTab] = useState<'feed' | 'active' | 'earnings' | 'profile'>('feed');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalRole, setAuthModalRole] = useState<'Customer' | 'Worker'>('Customer');
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
@@ -175,18 +178,23 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-600 selection:text-white">
       
       {/* Public Header */}
-      <Navbar
-        currentPath={currentPath}
-        onNavigate={navigateTo}
-        currentUser={currentUser}
-        onLoginClick={() => handleOpenAuth('Customer', 'signin')}
-        onLogoutClick={() => {
-          localStorage.removeItem('demoUser');
-          localStorage.removeItem('mockAdmin');
-          supabase.auth.signOut();
-          setCurrentUser(null);
-        }}
-      />
+      {currentPath !== '/worker-onboarding' && currentPath !== '/customer-onboarding' && (
+        <Navbar
+          currentPath={currentPath}
+          onNavigate={navigateTo}
+          currentUser={currentUser}
+          onLoginClick={() => handleOpenAuth('Customer', 'signin')}
+          onLogoutClick={() => {
+            localStorage.removeItem('demoUser');
+            localStorage.removeItem('mockAdmin');
+            supabase.auth.signOut();
+            setCurrentUser(null);
+            navigateTo('/');
+          }}
+          workerActiveTab={workerActiveTab}
+          onWorkerTabChange={setWorkerActiveTab}
+        />
+      )}
 
       {/* Main Page Content */}
       <main className="flex-1">
@@ -254,6 +262,20 @@ export default function App() {
           />
         )}
 
+        {currentPath === '/worker-onboarding' && (
+          <WorkerOnboarding 
+            currentUser={currentUser}
+            onComplete={() => navigateTo('/dashboard')}
+          />
+        )}
+
+        {currentPath === '/customer-onboarding' && (
+          <CustomerOnboarding 
+            currentUser={currentUser}
+            onComplete={() => navigateTo('/dashboard')}
+          />
+        )}
+
         {currentPath === '/dashboard' && (
           <div>
             {(!currentUser || currentUser?.role === 'Customer') && (
@@ -270,9 +292,19 @@ export default function App() {
             {currentUser?.role === 'Worker' && (
               <WorkerDashboard
                 currentUser={currentUser}
+                activeTab={workerActiveTab}
+                onTabChange={setWorkerActiveTab}
+                onProfileUpdate={(updatedUser) => {
+                  setCurrentUser(prev => prev ? { ...prev, ...updatedUser } : null);
+                  const saved = localStorage.getItem('demoUser');
+                  if (saved) {
+                    const parsed = JSON.parse(saved);
+                    localStorage.setItem('demoUser', JSON.stringify({ ...parsed, ...updatedUser }));
+                  }
+                }}
                 onOpenChat={handleOpenChat}
-                onOpenWorkerIdCard={() => {
-                  setActiveWorkerIdCard(null);
+                onOpenWorkerIdCard={(wData) => {
+                  setActiveWorkerIdCard(wData);
                   setWorkerIdCardModalOpen(true);
                 }}
               />
@@ -290,7 +322,9 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer onNavigate={navigateTo} />
+      {currentPath !== '/worker-onboarding' && (
+        <Footer onNavigate={navigateTo} />
+      )}
 
       {/* Interactive Modals */}
       <AuthModal
@@ -298,7 +332,7 @@ export default function App() {
         onClose={() => setAuthModalOpen(false)}
         defaultRole={authModalRole}
         defaultMode={authModalMode}
-        onSuccess={(user) => {
+        onSuccess={(user, isSignup) => {
           const demoUser = {
             id: 'demo-' + Date.now(),
             name: user.name,
@@ -307,7 +341,14 @@ export default function App() {
           };
           localStorage.setItem('demoUser', JSON.stringify(demoUser));
           setCurrentUser(demoUser);
-          navigateTo('/dashboard');
+          
+          if (user.role === 'Worker') {
+            navigateTo('/worker-onboarding');
+          } else if (user.role === 'Customer' && isSignup) {
+            navigateTo('/customer-onboarding');
+          } else {
+            navigateTo('/dashboard');
+          }
           confetti({
             particleCount: 120,
             spread: 80,
