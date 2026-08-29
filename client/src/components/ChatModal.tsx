@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, ShieldCheck, Paperclip, Smile, MoreVertical, CheckCheck, ArrowLeft, ExternalLink, Circle } from 'lucide-react';
+import { X, Send, ShieldCheck, Paperclip, Smile, MoreVertical, CheckCheck, ArrowLeft, ExternalLink, Circle, Clock, AlertCircle } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { CONFIG } from '../config';
 import { encryptMessage, decryptMessage } from '../utils/crypto';
@@ -17,7 +17,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
   const [messages, setMessages] = useState<any[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [typingStatus, setTypingStatus] = useState<{ isTyping: boolean; text: string; senderName: string } | null>(null);
+  const [isPartnerOnline, setIsPartnerOnline] = useState(false);
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [isLocalTyping, setIsLocalTyping] = useState(false);
   const channelRef = useRef<any>(null);
+  const typingTimeoutRef = useRef<any>(null);
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -29,189 +34,216 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
   useEffect(() => {
     if (isOpen && booking) {
       const storageKey = `chat_history_${booking.id}`;
-      
-      const fetchHistory = async () => {
+      let activeChannel: any = null;
+      let activePresenceChannel: any = null;
+
+      const initChat = async () => {
         try {
-          // 1. Try fetching from Supabase database
-          const { data: dbHistory, error } = await supabase
-            .from('chat_messages')
+          // 1. Fetch or create a conversation matching the job (booking.id)
+          const myId = currentUser?.id || 'demo-customer';
+          const partnerId = currentUser?.role === 'Worker' 
+            ? (booking.customer_id || 'demo-customer')
+            : (booking.worker_id || 'demo-worker');
+
+          // Query conversations
+          let convoIdLocal = '';
+          const { data: convos, error: convoErr } = await supabase
+            .from('conversations')
             .select('*')
-            .eq('booking_id', booking.id)
-            .order('created_at', { ascending: true });
-          
-          if (!error && dbHistory && dbHistory.length > 0) {
-            const decrypted = await Promise.all(dbHistory.map(async (msg: any) => {
-              const text = await decryptMessage(msg.text, booking.id);
-              return {
-                id: msg.id,
-                bookingId: msg.booking_id,
-                senderType: msg.sender_type,
-                senderId: msg.sender_id,
-                senderName: msg.sender_name,
-                text,
-                createdAt: msg.created_at
-              };
-            }));
-            setMessages(decrypted);
-            localStorage.setItem(storageKey, JSON.stringify(dbHistory));
-            return;
+            .eq('job_id', booking.id);
+
+          if (!convoErr && convos && convos.length > 0) {
+            convoIdLocal = convos[0].id;
+          } else {
+            // Create a conversation
+            const { data: newConvo, error: createErr } = await supabase
+              .from('conversations')
+              .insert({
+                job_id: booking.id,
+                customer_id: currentUser?.role === 'Worker' ? partnerId : myId,
+                worker_id: currentUser?.role === 'Worker' ? myId : partnerId
+              })
+              .select();
+
+            if (!createErr && newConvo && newConvo.length > 0) {
+              convoIdLocal = newConvo[0].id;
+            }
           }
-        } catch (err) {
-          console.error("Failed to fetch chat history from Supabase:", err);
-        }
 
-        // Fallback to local storage if DB empty/fails
-        const savedLocal = localStorage.getItem(storageKey);
-        if (savedLocal) {
-          try {
-            const parsed = JSON.parse(savedLocal);
-            const decrypted = await Promise.all(parsed.map(async (msg: any) => {
-              const text = await decryptMessage(msg.text, booking.id);
-              return { ...msg, text };
-            }));
-            setMessages(decrypted);
-          } catch (e) {}
-        }
-      };
+          if (convoIdLocal) {
+            setConversationId(convoIdLocal);
 
-      fetchHistory();
+            // 2. Fetch history from messages table
+            const { data: dbHistory, error: historyErr } = await supabase
+              .from('messages')
+              .select('*')
+              .eq('conversation_id', convoIdLocal)
+              .order('created_at', { ascending: true });
 
-      // 2. Set up Socket.IO Connection
-      if (CONFIG.apiUrl) {
-        socketRef.current = io(CONFIG.apiUrl);
-        socketRef.current.emit('joinBooking', booking.id);
-
-        socketRef.current.on('chatHistory', async (history: any[]) => {
-          if (history && history.length > 0) {
-            const decrypted = await Promise.all(history.map(async (msg: any) => {
-              const text = await decryptMessage(msg.text, booking.id);
-              return { ...msg, text };
-            }));
-            setMessages(decrypted);
-            localStorage.setItem(storageKey, JSON.stringify(history));
-          }
-        });
-
-        socketRef.current.on('newMessage', (message: any) => {
-          setMessages((prev) => {
-            if (prev.some(m => m.id === message.id)) return prev;
-            
-            // Decrypt message text
-            (async () => {
-              const text = await decryptMessage(message.text, booking.id);
-              const decryptedMsg = { ...message, text };
-              setMessages(current => {
-                if (current.some(m => m.id === message.id)) return current;
-                const updated = [...current, decryptedMsg];
-                // Sync with local storage
-                const localRaw = localStorage.getItem(storageKey);
-                let rawList: any[] = [];
-                if (localRaw) {
-                  try { rawList = JSON.parse(localRaw); } catch(e) {}
-                }
-                if (!rawList.some(r => r.id === message.id)) {
-                  rawList.push(message);
-                  localStorage.setItem(storageKey, JSON.stringify(rawList));
-                }
-                return updated;
-              });
-            })();
-            
-            return prev;
-          });
-        });
-      }
-
-      // 3. Set up Supabase Realtime Subscription fallback
-      const channel = supabase
-        .channel(`chat_room_${booking.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chat_messages',
-            filter: `booking_id=eq.${booking.id}`
-          },
-          async (payload) => {
-            const newMsg = payload.new;
-            
-            // Check if already in list to avoid duplicates
-            setMessages((current) => {
-              if (current.some(m => m.id === newMsg.id)) return current;
-              
-              (async () => {
-                const text = await decryptMessage(newMsg.text, booking.id);
-                const decryptedMsg = {
-                  id: newMsg.id,
-                  bookingId: newMsg.booking_id,
-                  senderType: newMsg.sender_type,
-                  senderId: newMsg.sender_id,
-                  senderName: newMsg.sender_name,
+            if (!historyErr && dbHistory) {
+              const decrypted = await Promise.all(dbHistory.map(async (msg: any) => {
+                const text = await decryptMessage(msg.message, booking.id);
+                return {
+                  id: msg.id,
+                  bookingId: booking.id,
+                  senderType: msg.sender_id === myId ? (currentUser?.role || 'Customer') : (currentUser?.role === 'Worker' ? 'Customer' : 'Worker'),
+                  senderId: msg.sender_id,
+                  senderName: msg.sender_id === myId ? (currentUser?.name || 'User') : (currentUser?.role === 'Worker' ? (booking.customerName || 'Customer') : (booking.workerName || 'Worker')),
                   text,
-                  createdAt: newMsg.created_at
+                  createdAt: msg.created_at,
+                  readAt: msg.read_at
                 };
-                
-                setMessages(c => {
-                  if (c.some(m => m.id === newMsg.id)) return c;
-                  const updated = [...c, decryptedMsg];
-                  
-                  // Sync with local storage
-                  const localRaw = localStorage.getItem(storageKey);
-                  let rawList: any[] = [];
-                  if (localRaw) {
-                    try { rawList = JSON.parse(localRaw); } catch(e) {}
-                  }
-                  if (!rawList.some(r => r.id === newMsg.id)) {
-                    rawList.push({
-                      id: newMsg.id,
-                      booking_id: newMsg.booking_id,
-                      sender_type: newMsg.sender_type,
-                      sender_id: newMsg.sender_id,
-                      sender_name: newMsg.sender_name,
-                      text: newMsg.text,
-                      created_at: newMsg.created_at
-                    });
-                    localStorage.setItem(storageKey, JSON.stringify(rawList));
-                  }
-                  return updated;
-                });
-              })();
-              
-              return current;
-            });
-          }
-        )
-        .on('broadcast', { event: 'typing' }, (payload: any) => {
-          const { senderName, text, isTyping } = payload.payload;
-          setTypingStatus(isTyping ? { senderName, text, isTyping } : null);
-        })
-        .subscribe();
-
-      channelRef.current = channel;
-
-      // Window storage listener for cross-tab sync without socket
-      const handleStorageChange = (e: StorageEvent) => {
-        if (e.key === storageKey && e.newValue) {
-          try {
-            const parsed = JSON.parse(e.newValue);
-            (async () => {
-              const decrypted = await Promise.all(parsed.map(async (msg: any) => {
-                const text = await decryptMessage(msg.text, booking.id);
-                return { ...msg, text };
               }));
               setMessages(decrypted);
-            })();
-          } catch (err) {}
+
+              // 3. Mark unread received messages as read
+              const unreadIds = dbHistory
+                .filter(m => m.sender_id !== myId && !m.read_at)
+                .map(m => m.id);
+
+              if (unreadIds.length > 0) {
+                await supabase
+                  .from('messages')
+                  .update({ read_at: new Date().toISOString() })
+                  .in('id', unreadIds);
+              }
+            }
+
+            // 4. Set up Supabase Realtime channel for messages and typing
+            const channel = supabase
+              .channel(`convo_room_${convoIdLocal}`)
+              .on(
+                'postgres_changes',
+                {
+                  event: 'INSERT',
+                  schema: 'public',
+                  table: 'messages',
+                  filter: `conversation_id=eq.${convoIdLocal}`
+                },
+                async (payload) => {
+                  const newMsg = payload.new;
+                  setMessages((current) => {
+                    if (current.some(m => m.id === newMsg.id)) return current;
+
+                    (async () => {
+                      const text = await decryptMessage(newMsg.message, booking.id);
+                      const decryptedMsg = {
+                        id: newMsg.id,
+                        bookingId: booking.id,
+                        senderType: newMsg.sender_id === myId ? (currentUser?.role || 'Customer') : (currentUser?.role === 'Worker' ? 'Customer' : 'Worker'),
+                        senderId: newMsg.sender_id,
+                        senderName: newMsg.sender_id === myId ? (currentUser?.name || 'User') : (currentUser?.role === 'Worker' ? (booking.customerName || 'Customer') : (booking.workerName || 'Worker')),
+                        text,
+                        createdAt: newMsg.created_at,
+                        readAt: newMsg.read_at
+                      };
+
+                      setMessages(c => {
+                        if (c.some(m => m.id === newMsg.id)) return c;
+                        return [...c, decryptedMsg];
+                      });
+
+                      // Mark as read immediately if we are active
+                      if (newMsg.sender_id !== myId && !newMsg.read_at) {
+                        await supabase
+                          .from('messages')
+                          .update({ read_at: new Date().toISOString() })
+                          .eq('id', newMsg.id);
+                      }
+                    })();
+
+                    return current;
+                  });
+                }
+              )
+              .on(
+                'postgres_changes',
+                {
+                  event: 'UPDATE',
+                  schema: 'public',
+                  table: 'messages',
+                  filter: `conversation_id=eq.${convoIdLocal}`
+                },
+                (payload) => {
+                  const updatedMsg = payload.new;
+                  setMessages((prev) =>
+                    prev.map((m) => (m.id === updatedMsg.id ? { ...m, readAt: updatedMsg.read_at } : m))
+                  );
+                }
+              )
+              .on('broadcast', { event: 'typing' }, (payload: any) => {
+                const { senderName, text, isTyping } = payload.payload;
+                setTypingStatus(isTyping ? { senderName, text, isTyping } : null);
+              })
+              .on('broadcast', { event: 'header_typing' }, (payload: any) => {
+                const { isTyping } = payload.payload;
+                setIsPartnerTyping(isTyping);
+              })
+              .subscribe();
+
+            activeChannel = channel;
+            channelRef.current = channel;
+
+            // 5. Presence Tracking Channel
+            const presenceChannel = supabase.channel(`presence_${convoIdLocal}`, {
+              config: {
+                presence: { key: myId }
+              }
+            });
+
+            presenceChannel
+              .on('presence', { event: 'sync' }, () => {
+                const state = presenceChannel.presenceState();
+                const keys = Object.keys(state);
+                const isOnline = keys.some(key => key !== myId);
+                setIsPartnerOnline(isOnline);
+              })
+              .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                  await presenceChannel.track({
+                    role: currentUser?.role || 'Customer',
+                    name: currentUser?.name || 'User',
+                    online_at: new Date().toISOString()
+                  });
+                  // Update DB presence to online
+                  await supabase
+                    .from('user_presence')
+                    .upsert({
+                      user_id: myId,
+                      status: 'online',
+                      updated_at: new Date().toISOString()
+                    });
+                }
+              });
+
+            activePresenceChannel = presenceChannel;
+          }
+        } catch (err) {
+          console.error("Initialization error in ChatModal:", err);
         }
       };
-      window.addEventListener('storage', handleStorageChange);
+
+      initChat();
 
       return () => {
-        socketRef.current?.disconnect();
-        supabase.removeChannel(channel);
+        if (activeChannel) {
+          supabase.removeChannel(activeChannel);
+        }
+        if (activePresenceChannel) {
+          // Update DB presence to offline on leave
+          const myId = currentUser?.id || 'demo-customer';
+          supabase
+            .from('user_presence')
+            .upsert({
+              user_id: myId,
+              status: 'offline',
+              last_seen: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }).then(() => {});
+
+          supabase.removeChannel(activePresenceChannel);
+        }
         channelRef.current = null;
-        window.removeEventListener('storage', handleStorageChange);
       };
     }
   }, [isOpen, booking]);
@@ -220,95 +252,143 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputText.trim() || !booking) return;
+    if (!inputText.trim() || !booking || !conversationId) return;
 
-    const senderName = currentUser?.name || 'User';
-    const storageKey = `chat_history_${booking.id}`;
+    const myId = currentUser?.id || 'demo-customer';
+    const receiverId = currentUser?.role === 'Worker' 
+      ? (booking.customer_id || 'demo-customer')
+      : (booking.worker_id || 'demo-worker');
+    
     const textToSend = inputText.trim();
+    const tempId = `msg-opt-${Date.now()}`;
+
+    // 1. Optimistic UI update (append immediately to chat state)
+    const optimisticMsg = {
+      id: tempId,
+      bookingId: booking.id,
+      senderType: currentUser?.role || 'Customer',
+      senderId: myId,
+      senderName: currentUser?.name || 'User',
+      text: textToSend,
+      createdAt: new Date().toISOString(),
+      status: 'sending'
+    };
+
+    setMessages((prev) => [...prev, optimisticMsg]);
+    setInputText('');
 
     // Encrypt the message text
     const encryptedText = await encryptMessage(textToSend, booking.id);
 
-    const newMsgEncrypted = {
-      id: `msg-${Date.now()}`,
-      bookingId: booking.id,
-      senderType: currentUser?.role || 'Customer',
-      senderName: senderName,
-      text: encryptedText,
-      createdAt: new Date().toISOString()
-    };
-
-    // 1. Direct insert to Supabase DB (ensure it goes to the database immediately!)
+    // 2. Direct insert to Supabase database
     const { data: insertData, error: insertError } = await supabase
-      .from('chat_messages')
+      .from('messages')
       .insert({
-        booking_id: booking.id,
-        sender_id: currentUser?.id || senderName,
-        sender_type: currentUser?.role || 'Customer',
-        sender_name: senderName,
-        text: encryptedText
+        conversation_id: conversationId,
+        sender_id: myId,
+        receiver_id: receiverId,
+        message: encryptedText,
+        message_type: 'text'
       })
       .select();
 
-    const finalMsgId = (!insertError && insertData && insertData[0]) ? insertData[0].id : newMsgEncrypted.id;
+    if (insertError) {
+      console.error("Failed to insert message:", insertError);
+      // Mark as failed in UI to show retry trigger
+      setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
+    } else if (insertData && insertData[0]) {
+      const realMsg = insertData[0];
+      // Sync temporary message state to real database record ID
+      setMessages((prev) => prev.map(m => m.id === tempId ? { 
+        ...m, 
+        id: realMsg.id, 
+        status: 'sent', 
+        createdAt: realMsg.created_at,
+        readAt: realMsg.read_at 
+      } : m));
+    }
 
-    // 2. Emit via Socket.io if connected
+    // 3. Emit via Socket.io backup if connected
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit('sendMessage', {
-        id: finalMsgId,
+        id: tempId,
         bookingId: booking.id,
-        senderId: currentUser?.id || senderName,
+        senderId: myId,
         senderType: currentUser?.role || 'Customer',
-        senderName: senderName,
+        senderName: currentUser?.name || 'User',
         text: encryptedText
       });
     }
 
-    // 3. Update local state and localStorage
-    const newMsgPlaintext = {
-      ...newMsgEncrypted,
-      id: finalMsgId,
-      text: textToSend
-    };
-
-    setMessages((prev) => {
-      if (prev.some(m => m.id === finalMsgId)) return prev;
-      const updated = [...prev, newMsgPlaintext];
-      const localRaw = localStorage.getItem(storageKey);
-      let rawList: any[] = [];
-      if (localRaw) {
-        try { rawList = JSON.parse(localRaw); } catch(e) {}
-      }
-      if (!rawList.some(r => r.id === finalMsgId)) {
-        rawList.push({
-          id: finalMsgId,
-          booking_id: booking.id,
-          sender_type: currentUser?.role || 'Customer',
-          sender_id: currentUser?.id || senderName,
-          sender_name: senderName,
-          text: encryptedText,
-          created_at: newMsgEncrypted.createdAt
-        });
-        localStorage.setItem(storageKey, JSON.stringify(rawList));
-      }
-      return updated;
-    });
-
-    // Clear typing status on send
+    // 4. Clear typing status broadcasts
     if (channelRef.current) {
       channelRef.current.send({
         type: 'broadcast',
         event: 'typing',
         payload: {
-          senderName: senderName,
+          senderName: currentUser?.name || 'User',
           text: '',
           isTyping: false
         }
       });
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'header_typing',
+        payload: { isTyping: false }
+      });
     }
 
-    setInputText('');
     setShowEmojiPicker(false);
+  };
+
+  const handleRetry = async (msg: any) => {
+    // Remove the failed message from state
+    setMessages(prev => prev.filter(m => m.id !== msg.id));
+    
+    // Retry sending
+    const myId = currentUser?.id || 'demo-customer';
+    const receiverId = currentUser?.role === 'Worker' 
+      ? (booking.customer_id || 'demo-customer')
+      : (booking.worker_id || 'demo-worker');
+    
+    const tempId = `msg-opt-${Date.now()}`;
+    const optimisticMsg = {
+      id: tempId,
+      bookingId: booking.id,
+      senderType: currentUser?.role || 'Customer',
+      senderId: myId,
+      senderName: currentUser?.name || 'User',
+      text: msg.text,
+      createdAt: new Date().toISOString(),
+      status: 'sending'
+    };
+
+    setMessages((prev) => [...prev, optimisticMsg]);
+    const encryptedText = await encryptMessage(msg.text, booking.id);
+
+    const { data: insertData, error: insertError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationId,
+        sender_id: myId,
+        receiver_id: receiverId,
+        message: encryptedText,
+        message_type: 'text'
+      })
+      .select();
+
+    if (insertError) {
+      setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
+    } else if (insertData && insertData[0]) {
+      const realMsg = insertData[0];
+      setMessages((prev) => prev.map(m => m.id === tempId ? { 
+        ...m, 
+        id: realMsg.id, 
+        status: 'sent', 
+        createdAt: realMsg.created_at,
+        readAt: realMsg.read_at 
+      } : m));
+    }
   };
 
   const handleTypingChange = (text: string) => {
@@ -373,9 +453,15 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
               <h3 className="font-extrabold text-sm text-white font-outfit leading-tight">
                 {partnerName}
               </h3>
-              <div className="flex items-center space-x-1.5 text-[11px] text-emerald-400 font-medium">
-                <Circle className="w-2 h-2 fill-emerald-400 text-emerald-400 animate-pulse" />
-                <span>Online · Verified Cooperative Member</span>
+              <div className="flex items-center space-x-1.5 text-[11px] text-slate-300 font-medium">
+                {isPartnerTyping ? (
+                  <span className="text-emerald-400 font-bold animate-pulse">typing...</span>
+                ) : (
+                  <>
+                    <Circle className={`w-1.5 h-1.5 fill-current ${isPartnerOnline ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`} />
+                    <span>{isPartnerOnline ? 'Online' : 'Offline'} · Verified Cooperative Member</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -454,9 +540,28 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                   >
                     <p className="whitespace-pre-wrap break-words">{msg.text}</p>
                     
-                    <div className={`flex items-center justify-end space-x-1 mt-1 text-[9px] ${isMe ? 'text-emerald-100' : 'text-slate-400'}`}>
+                    <div className={`flex items-center justify-end space-x-1.5 mt-1 text-[9px] ${isMe ? 'text-emerald-100' : 'text-slate-400'}`}>
                       <span>{timeString}</span>
-                      {isMe && <CheckCheck className="w-3.5 h-3.5 text-emerald-200" />}
+                      {isMe && (
+                        <>
+                          {msg.status === 'sending' && (
+                            <Clock className="w-3 h-3 text-emerald-200 animate-spin" />
+                          )}
+                          {msg.status === 'failed' && (
+                            <button 
+                              type="button" 
+                              onClick={() => handleRetry(msg)}
+                              className="focus:outline-none"
+                              title="Failed to send. Click to retry."
+                            >
+                              <AlertCircle className="w-3 h-3 text-red-300 fill-red-850" />
+                            </button>
+                          )}
+                          {(msg.status === 'sent' || !msg.status) && (
+                            <CheckCheck className={`w-3.5 h-3.5 ${msg.readAt ? 'text-sky-300 font-bold' : 'text-emerald-200'}`} />
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
