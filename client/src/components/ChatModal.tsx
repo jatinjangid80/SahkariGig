@@ -16,7 +16,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
+  const [typingStatus, setTypingStatus] = useState<{ isTyping: boolean; text: string; senderName: string } | null>(null);
+  const channelRef = useRef<any>(null);
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -181,7 +182,13 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
             });
           }
         )
+        .on('broadcast', { event: 'typing' }, (payload: any) => {
+          const { senderName, text, isTyping } = payload.payload;
+          setTypingStatus(isTyping ? { senderName, text, isTyping } : null);
+        })
         .subscribe();
+
+      channelRef.current = channel;
 
       // Window storage listener for cross-tab sync without socket
       const handleStorageChange = (e: StorageEvent) => {
@@ -203,6 +210,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
       return () => {
         socketRef.current?.disconnect();
         supabase.removeChannel(channel);
+        channelRef.current = null;
         window.removeEventListener('storage', handleStorageChange);
       };
     }
@@ -286,8 +294,36 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
       return updated;
     });
 
+    // Clear typing status on send
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {
+          senderName: senderName,
+          text: '',
+          isTyping: false
+        }
+      });
+    }
+
     setInputText('');
     setShowEmojiPicker(false);
+  };
+
+  const handleTypingChange = (text: string) => {
+    setInputText(text);
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {
+          senderName: currentUser?.name || 'User',
+          text: text,
+          isTyping: text.trim().length > 0
+        }
+      });
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -307,7 +343,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
   const partnerName = getChatPartnerName();
 
   const addEmoji = (emoji: string) => {
-    setInputText(prev => prev + emoji);
+    const nextText = inputText + emoji;
+    handleTypingChange(nextText);
   };
 
   return (
@@ -427,10 +464,18 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
             })
           )}
 
-          {isTyping && (
-            <div className="flex items-start">
-              <div className="bg-white border border-slate-200/80 text-slate-500 text-xs px-3.5 py-2 rounded-xl rounded-tl-xs italic shadow-xs">
-                {partnerName} is typing...
+          {typingStatus && typingStatus.isTyping && (
+            <div className="flex items-start animate-fade-in">
+              <div className="bg-white border border-slate-200/80 text-slate-600 text-xs px-3.5 py-2.5 rounded-2xl rounded-tl-xs shadow-xs flex items-center space-x-2">
+                <Circle className="w-1.5 h-1.5 fill-emerald-500 text-emerald-500 animate-pulse" />
+                <span className="font-medium text-slate-500">
+                  <strong className="text-slate-700">{typingStatus.senderName}</strong> is typing
+                  {typingStatus.text ? (
+                    <span>: <span className="italic text-emerald-600 font-semibold">"{typingStatus.text}"</span></span>
+                  ) : (
+                    "..."
+                  )}
+                </span>
               </div>
             </div>
           )}
