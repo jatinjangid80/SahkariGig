@@ -154,24 +154,55 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
     if (activeTab === 'messages' && selectedChat) {
       const storageKey = `chat_history_${selectedChat.id}`;
       
-      // Load local history
-      const savedLocal = localStorage.getItem(storageKey);
-      if (savedLocal) {
+      const fetchHistory = async () => {
         try {
-          const parsed = JSON.parse(savedLocal);
-          (async () => {
+          // 1. Fetch history from Supabase database
+          const { data: dbHistory, error } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .eq('booking_id', selectedChat.id)
+            .order('created_at', { ascending: true });
+          
+          if (!error && dbHistory && dbHistory.length > 0) {
+            const decrypted = await Promise.all(dbHistory.map(async (msg: any) => {
+              const text = await decryptMessage(msg.text, selectedChat.id);
+              return {
+                id: msg.id,
+                bookingId: msg.booking_id,
+                senderType: msg.sender_type,
+                senderId: msg.sender_id,
+                senderName: msg.sender_name,
+                text,
+                createdAt: msg.created_at
+              };
+            }));
+            setChatMessages(decrypted);
+            localStorage.setItem(storageKey, JSON.stringify(dbHistory));
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to fetch history from Supabase:", err);
+        }
+
+        // Fallback to local storage if DB empty/fails
+        const savedLocal = localStorage.getItem(storageKey);
+        if (savedLocal) {
+          try {
+            const parsed = JSON.parse(savedLocal);
             const decrypted = await Promise.all(parsed.map(async (msg: any) => {
               const text = await decryptMessage(msg.text, selectedChat.id);
               return { ...msg, text };
             }));
             setChatMessages(decrypted);
-          })();
-        } catch (e) {}
-      } else {
-        setChatMessages([]);
-      }
+          } catch (e) {}
+        } else {
+          setChatMessages([]);
+        }
+      };
 
-      // Socket connection
+      fetchHistory();
+
+      // 2. Set up Socket.IO backend connection
       if (CONFIG.apiUrl) {
         socketRef.current = io(CONFIG.apiUrl);
         socketRef.current.emit('joinBooking', selectedChat.id);
@@ -187,25 +218,100 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           }
         });
 
-        socketRef.current.on('newMessage', async (message: any) => {
-          const text = await decryptMessage(message.text, selectedChat.id);
-          const decryptedMsg = { ...message, text };
+        socketRef.current.on('newMessage', (message: any) => {
           setChatMessages((prev) => {
-            const updated = [...prev, decryptedMsg];
-            const localRaw = localStorage.getItem(storageKey);
-            let rawList: any[] = [];
-            if (localRaw) {
-              try { rawList = JSON.parse(localRaw); } catch(e) {}
-            }
-            rawList.push(message);
-            localStorage.setItem(storageKey, JSON.stringify(rawList));
-            return updated;
+            if (prev.some(m => m.id === message.id)) return prev;
+            
+            (async () => {
+              const text = await decryptMessage(message.text, selectedChat.id);
+              const decryptedMsg = { ...message, text };
+              setChatMessages(current => {
+                if (current.some(m => m.id === message.id)) return current;
+                const updated = [...current, decryptedMsg];
+                // Sync with local storage
+                const localRaw = localStorage.getItem(storageKey);
+                let rawList: any[] = [];
+                if (localRaw) {
+                  try { rawList = JSON.parse(localRaw); } catch(e) {}
+                }
+                if (!rawList.some(r => r.id === message.id)) {
+                  rawList.push(message);
+                  localStorage.setItem(storageKey, JSON.stringify(rawList));
+                }
+                return updated;
+              });
+            })();
+            
+            return prev;
           });
         });
       }
 
+      // 3. Set up Supabase Realtime Subscription fallback
+      const channel = supabase
+        .channel(`chat_room_dash_${selectedChat.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `booking_id=eq.${selectedChat.id}`
+          },
+          async (payload) => {
+            const newMsg = payload.new;
+            
+            // Check duplicate
+            setChatMessages((current) => {
+              if (current.some(m => m.id === newMsg.id)) return current;
+              
+              (async () => {
+                const text = await decryptMessage(newMsg.text, selectedChat.id);
+                const decryptedMsg = {
+                  id: newMsg.id,
+                  bookingId: newMsg.booking_id,
+                  senderType: newMsg.sender_type,
+                  senderId: newMsg.sender_id,
+                  senderName: newMsg.sender_name,
+                  text,
+                  createdAt: newMsg.created_at
+                };
+                
+                setChatMessages(c => {
+                  if (c.some(m => m.id === newMsg.id)) return c;
+                  const updated = [...c, decryptedMsg];
+                  
+                  // Sync local storage
+                  const localRaw = localStorage.getItem(storageKey);
+                  let rawList: any[] = [];
+                  if (localRaw) {
+                    try { rawList = JSON.parse(localRaw); } catch(e) {}
+                  }
+                  if (!rawList.some(r => r.id === newMsg.id)) {
+                    rawList.push({
+                      id: newMsg.id,
+                      booking_id: newMsg.booking_id,
+                      sender_type: newMsg.sender_type,
+                      sender_id: newMsg.sender_id,
+                      sender_name: newMsg.sender_name,
+                      text: newMsg.text,
+                      created_at: newMsg.created_at
+                    });
+                    localStorage.setItem(storageKey, JSON.stringify(rawList));
+                  }
+                  return updated;
+                });
+              })();
+              
+              return current;
+            });
+          }
+        )
+        .subscribe();
+
       return () => {
         socketRef.current?.disconnect();
+        supabase.removeChannel(channel);
       };
     }
   }, [activeTab, selectedChat]);
@@ -216,24 +322,40 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
 
     const senderName = currentUser?.name || 'Customer';
     const textToSend = chatInput.trim();
+    const storageKey = `chat_history_${selectedChat.id}`;
     
     // Encrypt
     const encryptedText = await encryptMessage(textToSend, selectedChat.id);
 
-    const payload = {
-      bookingId: selectedChat.id,
-      senderId: currentUser?.id || 'demo-123',
-      senderType: currentUser?.role || 'Customer',
-      senderName: senderName,
-      text: encryptedText
-    };
+    // 1. Direct insert to Supabase DB
+    const { data: insertData, error: insertError } = await supabase
+      .from('chat_messages')
+      .insert({
+        booking_id: selectedChat.id,
+        sender_id: currentUser?.id || 'demo-123',
+        sender_type: currentUser?.role || 'Customer',
+        sender_name: senderName,
+        text: encryptedText
+      })
+      .select();
 
+    const finalMsgId = (!insertError && insertData && insertData[0]) ? insertData[0].id : `msg-${Date.now()}`;
+
+    // 2. Emit via Socket.io if connected
     if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('sendMessage', payload);
+      socketRef.current.emit('sendMessage', {
+        id: finalMsgId,
+        bookingId: selectedChat.id,
+        senderId: currentUser?.id || 'demo-123',
+        senderType: currentUser?.role || 'Customer',
+        senderName: senderName,
+        text: encryptedText
+      });
     }
 
-    const localMsg = {
-      id: `msg-${Date.now()}`,
+    // 3. Update local state and local storage cache
+    const newMsgPlaintext = {
+      id: finalMsgId,
       bookingId: selectedChat.id,
       senderType: currentUser?.role || 'Customer',
       senderName: senderName,
@@ -241,7 +363,30 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       createdAt: new Date().toISOString()
     };
 
-    setChatMessages((prev) => [...prev, localMsg]);
+    setChatMessages((prev) => {
+      if (prev.some(m => m.id === finalMsgId)) return prev;
+      const updated = [...prev, newMsgPlaintext];
+      
+      const localRaw = localStorage.getItem(storageKey);
+      let rawList: any[] = [];
+      if (localRaw) {
+        try { rawList = JSON.parse(localRaw); } catch(e) {}
+      }
+      if (!rawList.some(r => r.id === finalMsgId)) {
+        rawList.push({
+          id: finalMsgId,
+          booking_id: selectedChat.id,
+          sender_type: currentUser?.role || 'Customer',
+          sender_id: currentUser?.id || 'demo-123',
+          sender_name: senderName,
+          text: encryptedText,
+          created_at: newMsgPlaintext.createdAt
+        });
+        localStorage.setItem(storageKey, JSON.stringify(rawList));
+      }
+      return updated;
+    });
+
     setChatInput('');
   };
 

@@ -3,6 +3,7 @@ import { X, Send, ShieldCheck, Paperclip, Smile, MoreVertical, CheckCheck, Arrow
 import { io, Socket } from 'socket.io-client';
 import { CONFIG } from '../config';
 import { encryptMessage, decryptMessage } from '../utils/crypto';
+import { supabase } from '../supabase';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -27,21 +28,54 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
   useEffect(() => {
     if (isOpen && booking) {
       const storageKey = `chat_history_${booking.id}`;
-      const savedLocal = localStorage.getItem(storageKey);
-      if (savedLocal) {
+      
+      const fetchHistory = async () => {
         try {
-          const parsed = JSON.parse(savedLocal);
-          (async () => {
+          // 1. Try fetching from Supabase database
+          const { data: dbHistory, error } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .eq('booking_id', booking.id)
+            .order('created_at', { ascending: true });
+          
+          if (!error && dbHistory && dbHistory.length > 0) {
+            const decrypted = await Promise.all(dbHistory.map(async (msg: any) => {
+              const text = await decryptMessage(msg.text, booking.id);
+              return {
+                id: msg.id,
+                bookingId: msg.booking_id,
+                senderType: msg.sender_type,
+                senderId: msg.sender_id,
+                senderName: msg.sender_name,
+                text,
+                createdAt: msg.created_at
+              };
+            }));
+            setMessages(decrypted);
+            localStorage.setItem(storageKey, JSON.stringify(dbHistory));
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to fetch chat history from Supabase:", err);
+        }
+
+        // Fallback to local storage if DB empty/fails
+        const savedLocal = localStorage.getItem(storageKey);
+        if (savedLocal) {
+          try {
+            const parsed = JSON.parse(savedLocal);
             const decrypted = await Promise.all(parsed.map(async (msg: any) => {
               const text = await decryptMessage(msg.text, booking.id);
               return { ...msg, text };
             }));
             setMessages(decrypted);
-          })();
-        } catch (e) {}
-      }
+          } catch (e) {}
+        }
+      };
 
-      // Connect to Socket.IO backend if valid URL
+      fetchHistory();
+
+      // 2. Set up Socket.IO Connection
       if (CONFIG.apiUrl) {
         socketRef.current = io(CONFIG.apiUrl);
         socketRef.current.emit('joinBooking', booking.id);
@@ -57,22 +91,97 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
           }
         });
 
-        socketRef.current.on('newMessage', async (message: any) => {
-          const text = await decryptMessage(message.text, booking.id);
-          const decryptedMsg = { ...message, text };
+        socketRef.current.on('newMessage', (message: any) => {
           setMessages((prev) => {
-            const updated = [...prev, decryptedMsg];
-            const localRaw = localStorage.getItem(storageKey);
-            let rawList: any[] = [];
-            if (localRaw) {
-              try { rawList = JSON.parse(localRaw); } catch(e) {}
-            }
-            rawList.push(message);
-            localStorage.setItem(storageKey, JSON.stringify(rawList));
-            return updated;
+            if (prev.some(m => m.id === message.id)) return prev;
+            
+            // Decrypt message text
+            (async () => {
+              const text = await decryptMessage(message.text, booking.id);
+              const decryptedMsg = { ...message, text };
+              setMessages(current => {
+                if (current.some(m => m.id === message.id)) return current;
+                const updated = [...current, decryptedMsg];
+                // Sync with local storage
+                const localRaw = localStorage.getItem(storageKey);
+                let rawList: any[] = [];
+                if (localRaw) {
+                  try { rawList = JSON.parse(localRaw); } catch(e) {}
+                }
+                if (!rawList.some(r => r.id === message.id)) {
+                  rawList.push(message);
+                  localStorage.setItem(storageKey, JSON.stringify(rawList));
+                }
+                return updated;
+              });
+            })();
+            
+            return prev;
           });
         });
       }
+
+      // 3. Set up Supabase Realtime Subscription fallback
+      const channel = supabase
+        .channel(`chat_room_${booking.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `booking_id=eq.${booking.id}`
+          },
+          async (payload) => {
+            const newMsg = payload.new;
+            
+            // Check if already in list to avoid duplicates
+            setMessages((current) => {
+              if (current.some(m => m.id === newMsg.id)) return current;
+              
+              (async () => {
+                const text = await decryptMessage(newMsg.text, booking.id);
+                const decryptedMsg = {
+                  id: newMsg.id,
+                  bookingId: newMsg.booking_id,
+                  senderType: newMsg.sender_type,
+                  senderId: newMsg.sender_id,
+                  senderName: newMsg.sender_name,
+                  text,
+                  createdAt: newMsg.created_at
+                };
+                
+                setMessages(c => {
+                  if (c.some(m => m.id === newMsg.id)) return c;
+                  const updated = [...c, decryptedMsg];
+                  
+                  // Sync with local storage
+                  const localRaw = localStorage.getItem(storageKey);
+                  let rawList: any[] = [];
+                  if (localRaw) {
+                    try { rawList = JSON.parse(localRaw); } catch(e) {}
+                  }
+                  if (!rawList.some(r => r.id === newMsg.id)) {
+                    rawList.push({
+                      id: newMsg.id,
+                      booking_id: newMsg.booking_id,
+                      sender_type: newMsg.sender_type,
+                      sender_id: newMsg.sender_id,
+                      sender_name: newMsg.sender_name,
+                      text: newMsg.text,
+                      created_at: newMsg.created_at
+                    });
+                    localStorage.setItem(storageKey, JSON.stringify(rawList));
+                  }
+                  return updated;
+                });
+              })();
+              
+              return current;
+            });
+          }
+        )
+        .subscribe();
 
       // Window storage listener for cross-tab sync without socket
       const handleStorageChange = (e: StorageEvent) => {
@@ -93,6 +202,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
       return () => {
         socketRef.current?.disconnect();
+        supabase.removeChannel(channel);
         window.removeEventListener('storage', handleStorageChange);
       };
     }
@@ -120,32 +230,59 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
       createdAt: new Date().toISOString()
     };
 
-    // Emit via Socket.io if connected
+    // 1. Direct insert to Supabase DB (ensure it goes to the database immediately!)
+    const { data: insertData, error: insertError } = await supabase
+      .from('chat_messages')
+      .insert({
+        booking_id: booking.id,
+        sender_id: currentUser?.id || senderName,
+        sender_type: currentUser?.role || 'Customer',
+        sender_name: senderName,
+        text: encryptedText
+      })
+      .select();
+
+    const finalMsgId = (!insertError && insertData && insertData[0]) ? insertData[0].id : newMsgEncrypted.id;
+
+    // 2. Emit via Socket.io if connected
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit('sendMessage', {
+        id: finalMsgId,
         bookingId: booking.id,
-        senderId: senderName,
+        senderId: currentUser?.id || senderName,
         senderType: currentUser?.role || 'Customer',
         senderName: senderName,
         text: encryptedText
       });
     }
 
-    // Update local state and localStorage
+    // 3. Update local state and localStorage
     const newMsgPlaintext = {
       ...newMsgEncrypted,
+      id: finalMsgId,
       text: textToSend
     };
 
     setMessages((prev) => {
+      if (prev.some(m => m.id === finalMsgId)) return prev;
       const updated = [...prev, newMsgPlaintext];
       const localRaw = localStorage.getItem(storageKey);
       let rawList: any[] = [];
       if (localRaw) {
         try { rawList = JSON.parse(localRaw); } catch(e) {}
       }
-      rawList.push(newMsgEncrypted);
-      localStorage.setItem(storageKey, JSON.stringify(rawList));
+      if (!rawList.some(r => r.id === finalMsgId)) {
+        rawList.push({
+          id: finalMsgId,
+          booking_id: booking.id,
+          sender_type: currentUser?.role || 'Customer',
+          sender_id: currentUser?.id || senderName,
+          sender_name: senderName,
+          text: encryptedText,
+          created_at: newMsgEncrypted.createdAt
+        });
+        localStorage.setItem(storageKey, JSON.stringify(rawList));
+      }
       return updated;
     });
 
