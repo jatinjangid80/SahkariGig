@@ -202,6 +202,7 @@ export default function App() {
           <>
             {currentPath === '/' && (
               <HeroSection
+                currentUser={currentUser}
                 onSearchService={(cat) => setSelectedCategory(cat)}
                 onNavigate={navigateTo}
               />

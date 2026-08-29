@@ -758,6 +758,50 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           </div>
         </div>
 
+        {/* Global Tabs */}
+        <div className="flex items-center space-x-6 border-b border-slate-200 mt-6 pb-0">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
+              activeTab === 'overview'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
+              activeTab === 'bookings'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            My Bookings
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
+              activeTab === 'history'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            History
+          </button>
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
+              activeTab === 'messages'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            Messages
+          </button>
+        </div>
+
         {/* Task-Centric Layout (Only shown on Overview) */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -939,47 +983,6 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         {activeTab !== 'overview' && activeTab !== 'messages' && (
           <div className="light-card p-6">
             
-            <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-3">
-              <div className="flex items-center space-x-6 text-sm font-semibold">
-                <button
-                  onClick={() => setActiveTab('bookings')}
-                  className={`pb-2 border-b-2 transition-colors ${
-                    activeTab === 'bookings'
-                      ? 'border-emerald-600 text-emerald-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  My Bookings
-                </button>
-                <button
-                  onClick={() => setActiveTab('history')}
-                  className={`pb-2 border-b-2 transition-colors ${
-                    activeTab === 'history'
-                      ? 'border-emerald-600 text-emerald-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  Completed History
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedChat(bookings[0] || null);
-                    setActiveTab('messages');
-                  }}
-                  className={`pb-2 border-b-2 transition-colors ${
-                    activeTab === 'messages'
-                      ? 'border-emerald-600 text-emerald-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  Messages
-                </button>
-              </div>
-              <button onClick={() => setActiveTab('overview')} className="text-xs font-bold text-slate-500 hover:text-slate-800">
-                &larr; Back to Overview
-              </button>
-            </div>
-
             {/* Bookings List */}
             <div className="space-y-4">
               {bookings.filter(b => activeTab === 'history' ? b.status === 'COMPLETED' : b.status !== 'COMPLETED').map((booking) => (

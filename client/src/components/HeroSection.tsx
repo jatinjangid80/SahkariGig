@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Search, ShieldCheck, Sparkles, QrCode, Zap, ArrowRight, CheckCircle, Star } from 'lucide-react';
 
 interface HeroSectionProps {
+  currentUser?: { name: string; role: string; id: string; email: string } | null;
   onSearchService?: (query: string) => void;
   onNavigate?: (path: string) => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNavigate }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ currentUser, onSearchService, onNavigate }) => {
   const [aiPrompt, setAiPrompt] = useState('');
   const [isClassifying, setIsClassifying] = useState(false);
   const [aiResult, setAiResult] = useState<{
@@ -105,13 +106,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
         {/* Hero Main Heading & Copy */}
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-5xl sm:text-6xl lg:text-[72px] font-extrabold text-slate-900 tracking-tight leading-[1.1] font-outfit">
-            Find trusted local work. <br />
+            {currentUser?.role === 'Worker' ? 'Find trusted local work.' : 'Find trusted local workers.'} <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">
-              Build your cooperative workforce.
+              {currentUser?.role === 'Worker' ? 'Build your cooperative workforce.' : 'Get your job done right.'}
             </span>
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-slate-600 leading-relaxed font-medium max-w-2xl mx-auto">
-            A community-centric marketplace where verified local professionals and cooperatives connect with households and businesses.
+            {currentUser?.role === 'Customer' 
+              ? 'Connect directly with verified local cooperative professionals for all your household and business needs.'
+              : 'A community-centric marketplace where verified local professionals and cooperatives connect with households and businesses.'}
           </p>
 
           {/* Primary Action Buttons */}
@@ -123,12 +126,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchService, onNav
               Hire Workers
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
-            <button
-              onClick={() => onNavigate && onNavigate('/for-workers')}
-              className="w-full sm:w-auto px-8 py-4 text-base font-bold text-slate-700 bg-white border border-slate-300 hover:border-emerald-500 hover:text-emerald-700 rounded-2xl shadow-sm transition-all flex items-center justify-center btn-interaction"
-            >
-              Find Work
-            </button>
+            {currentUser?.role !== 'Customer' && (
+              <button
+                onClick={() => onNavigate && onNavigate('/for-workers')}
+                className="w-full sm:w-auto px-8 py-4 text-base font-bold text-slate-700 bg-white border border-slate-300 hover:border-emerald-500 hover:text-emerald-700 rounded-2xl shadow-sm transition-all flex items-center justify-center btn-interaction"
+              >
+                Find Work
+              </button>
+            )}
           </div>
 
           {/* Trust Indicators */}
