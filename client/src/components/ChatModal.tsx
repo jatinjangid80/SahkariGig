@@ -47,12 +47,17 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
           // Query conversations
           let convoIdLocal = '';
+          let useLegacyFallback = false;
+
           const { data: convos, error: convoErr } = await supabase
             .from('conversations')
             .select('*')
             .eq('job_id', booking.id);
 
-          if (!convoErr && convos && convos.length > 0) {
+          if (convoErr) {
+            console.warn("Conversations table not found, using legacy chat_messages fallback.");
+            useLegacyFallback = true;
+          } else if (convos && convos.length > 0) {
             convoIdLocal = convos[0].id;
           } else {
             // Create a conversation
@@ -65,12 +70,128 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
               })
               .select();
 
-            if (!createErr && newConvo && newConvo.length > 0) {
+            if (createErr) {
+              console.warn("Create conversation failed (might not be migrated), using legacy fallback:", createErr);
+              useLegacyFallback = true;
+            } else if (newConvo && newConvo.length > 0) {
               convoIdLocal = newConvo[0].id;
             }
           }
 
-          if (convoIdLocal) {
+          if (useLegacyFallback) {
+            setConversationId('legacy');
+
+            // Load history from legacy table
+            const { data: dbHistory, error: historyErr } = await supabase
+              .from('chat_messages')
+              .select('*')
+              .eq('booking_id', booking.id)
+              .order('created_at', { ascending: true });
+
+            if (!historyErr && dbHistory) {
+              const decrypted = await Promise.all(dbHistory.map(async (msg: any) => {
+                const text = await decryptMessage(msg.text, booking.id);
+                return {
+                  id: msg.id,
+                  bookingId: booking.id,
+                  senderType: msg.sender_type,
+                  senderId: msg.sender_id,
+                  senderName: msg.sender_name,
+                  text,
+                  createdAt: msg.created_at,
+                  readAt: null
+                };
+              }));
+              setMessages(decrypted);
+            }
+
+            // Realtime setup for legacy table
+            const channel = supabase
+              .channel(`chat_room_${booking.id}`)
+              .on(
+                'postgres_changes',
+                {
+                  event: 'INSERT',
+                  schema: 'public',
+                  table: 'chat_messages',
+                  filter: `booking_id=eq.${booking.id}`
+                },
+                async (payload) => {
+                  const newMsg = payload.new;
+                  setMessages((current) => {
+                    if (current.some(m => m.id === newMsg.id)) return current;
+
+                    (async () => {
+                      const text = await decryptMessage(newMsg.text, booking.id);
+                      const decryptedMsg = {
+                        id: newMsg.id,
+                        bookingId: booking.id,
+                        senderType: newMsg.sender_type,
+                        senderId: newMsg.sender_id,
+                        senderName: newMsg.sender_name,
+                        text,
+                        createdAt: newMsg.created_at,
+                        readAt: null
+                      };
+
+                      setMessages(c => {
+                        if (c.some(m => m.id === newMsg.id)) return c;
+                        return [...c, decryptedMsg];
+                      });
+                    })();
+
+                    return current;
+                  });
+                }
+              )
+              .on('broadcast', { event: 'typing' }, (payload: any) => {
+                const { senderName, text, isTyping } = payload.payload;
+                setTypingStatus(isTyping ? { senderName, text, isTyping } : null);
+              })
+              .on('broadcast', { event: 'header_typing' }, (payload: any) => {
+                const { isTyping } = payload.payload;
+                setIsPartnerTyping(isTyping);
+              })
+              .subscribe();
+
+            activeChannel = channel;
+            channelRef.current = channel;
+
+            // Presence fallback using booking.id as key
+            const presenceChannel = supabase.channel(`presence_${booking.id}`, {
+              config: {
+                presence: { key: myId }
+              }
+            });
+
+            presenceChannel
+              .on('presence', { event: 'sync' }, () => {
+                const state = presenceChannel.presenceState();
+                const keys = Object.keys(state);
+                const isOnline = keys.some(key => key !== myId);
+                setIsPartnerOnline(isOnline);
+              })
+              .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                  await presenceChannel.track({
+                    role: currentUser?.role || 'Customer',
+                    name: currentUser?.name || 'User',
+                    online_at: new Date().toISOString()
+                  });
+                  
+                  // Gracefully upsert DB presence (if table exists)
+                  await supabase
+                    .from('user_presence')
+                    .upsert({
+                      user_id: myId,
+                      status: 'online',
+                      updated_at: new Date().toISOString()
+                    }).select().then(() => {}, () => {});
+                }
+              });
+
+            activePresenceChannel = presenceChannel;
+          } else if (convoIdLocal) {
             setConversationId(convoIdLocal);
 
             // 2. Fetch history from messages table
@@ -212,7 +333,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                       user_id: myId,
                       status: 'online',
                       updated_at: new Date().toISOString()
-                    });
+                    }).select().then(() => {}, () => {});
                 }
               });
 
@@ -280,32 +401,57 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
     // Encrypt the message text
     const encryptedText = await encryptMessage(textToSend, booking.id);
 
-    // 2. Direct insert to Supabase database
-    const { data: insertData, error: insertError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        sender_id: myId,
-        receiver_id: receiverId,
-        message: encryptedText,
-        message_type: 'text'
-      })
-      .select();
+    // 2. Direct insert to Supabase database (conditional on legacy fallback)
+    if (conversationId === 'legacy') {
+      const { data: insertData, error: insertError } = await supabase
+        .from('chat_messages')
+        .insert({
+          booking_id: booking.id,
+          sender_id: myId,
+          sender_type: currentUser?.role || 'Customer',
+          sender_name: currentUser?.name || 'User',
+          text: encryptedText
+        })
+        .select();
 
-    if (insertError) {
-      console.error("Failed to insert message:", insertError);
-      // Mark as failed in UI to show retry trigger
-      setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
-    } else if (insertData && insertData[0]) {
-      const realMsg = insertData[0];
-      // Sync temporary message state to real database record ID
-      setMessages((prev) => prev.map(m => m.id === tempId ? { 
-        ...m, 
-        id: realMsg.id, 
-        status: 'sent', 
-        createdAt: realMsg.created_at,
-        readAt: realMsg.read_at 
-      } : m));
+      if (insertError) {
+        console.error("Failed to insert message:", insertError);
+        setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
+      } else if (insertData && insertData[0]) {
+        const realMsg = insertData[0];
+        setMessages((prev) => prev.map(m => m.id === tempId ? { 
+          ...m, 
+          id: realMsg.id, 
+          status: 'sent', 
+          createdAt: realMsg.created_at,
+          readAt: null 
+        } : m));
+      }
+    } else {
+      const { data: insertData, error: insertError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: myId,
+          receiver_id: receiverId,
+          message: encryptedText,
+          message_type: 'text'
+        })
+        .select();
+
+      if (insertError) {
+        console.error("Failed to insert message:", insertError);
+        setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
+      } else if (insertData && insertData[0]) {
+        const realMsg = insertData[0];
+        setMessages((prev) => prev.map(m => m.id === tempId ? { 
+          ...m, 
+          id: realMsg.id, 
+          status: 'sent', 
+          createdAt: realMsg.created_at,
+          readAt: realMsg.read_at 
+        } : m));
+      }
     }
 
     // 3. Emit via Socket.io backup if connected
@@ -366,28 +512,54 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
     setMessages((prev) => [...prev, optimisticMsg]);
     const encryptedText = await encryptMessage(msg.text, booking.id);
 
-    const { data: insertData, error: insertError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        sender_id: myId,
-        receiver_id: receiverId,
-        message: encryptedText,
-        message_type: 'text'
-      })
-      .select();
+    if (conversationId === 'legacy') {
+      const { data: insertData, error: insertError } = await supabase
+        .from('chat_messages')
+        .insert({
+          booking_id: booking.id,
+          sender_id: myId,
+          sender_type: currentUser?.role || 'Customer',
+          sender_name: currentUser?.name || 'User',
+          text: encryptedText
+        })
+        .select();
 
-    if (insertError) {
-      setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
-    } else if (insertData && insertData[0]) {
-      const realMsg = insertData[0];
-      setMessages((prev) => prev.map(m => m.id === tempId ? { 
-        ...m, 
-        id: realMsg.id, 
-        status: 'sent', 
-        createdAt: realMsg.created_at,
-        readAt: realMsg.read_at 
-      } : m));
+      if (insertError) {
+        setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
+      } else if (insertData && insertData[0]) {
+        const realMsg = insertData[0];
+        setMessages((prev) => prev.map(m => m.id === tempId ? { 
+          ...m, 
+          id: realMsg.id, 
+          status: 'sent', 
+          createdAt: realMsg.created_at,
+          readAt: null 
+        } : m));
+      }
+    } else {
+      const { data: insertData, error: insertError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: myId,
+          receiver_id: receiverId,
+          message: encryptedText,
+          message_type: 'text'
+        })
+        .select();
+
+      if (insertError) {
+        setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
+      } else if (insertData && insertData[0]) {
+        const realMsg = insertData[0];
+        setMessages((prev) => prev.map(m => m.id === tempId ? { 
+          ...m, 
+          id: realMsg.id, 
+          status: 'sent', 
+          createdAt: realMsg.created_at,
+          readAt: realMsg.read_at 
+        } : m));
+      }
     }
   };
 
