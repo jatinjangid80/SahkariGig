@@ -122,6 +122,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   useEffect(() => {
     const fetchRequests = async () => {
       try {
+        let loadedRequests: any[] = [];
         const apiRes = await fetch('http://localhost:5001/api/bookings', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
@@ -131,21 +132,45 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
         if (apiRes && apiRes.ok) {
           const json = await apiRes.json();
-          if (json.success && Array.isArray(json.data?.bookings)) {
-            setRequests(json.data.bookings.map((b: any) => ({
+          if (json.success && Array.isArray(json.data?.bookings) && json.data.bookings.length > 0) {
+            loadedRequests = json.data.bookings.map((b: any) => ({
               id: b.id,
               service: b.service,
               customerName: b.customerName,
+              customer_id: 'demo-customer',
+              worker_id: b.workerId || currentUser?.id,
               address: b.address,
               dateTime: `${b.bookingDate}, ${b.bookingTime}`,
               amount: b.amount,
               status: b.status
-            })));
-            return;
+            }));
           }
         }
 
-        setRequests([]);
+        if (loadedRequests.length === 0 && currentUser?.id) {
+          const workerId = `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`;
+          const { data, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('worker_id', workerId)
+            .order('created_at', { ascending: false });
+            
+          if (!error && data && data.length > 0) {
+            loadedRequests = data.map(b => ({
+              id: b.id,
+              service: b.service,
+              customerName: b.customer_name,
+              customer_id: b.customer_id,
+              worker_id: b.worker_id,
+              address: b.address,
+              dateTime: `${b.booking_date}, ${b.booking_time}`,
+              amount: b.amount,
+              status: b.status
+            }));
+          }
+        }
+
+        setRequests(loadedRequests);
       } catch (err) {
         console.error("Worker booking fetch error:", err);
         setRequests([]);

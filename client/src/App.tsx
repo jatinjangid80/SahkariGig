@@ -368,6 +368,7 @@ export default function App() {
           if (currentUser?.id) {
             const { error } = await supabase.from('bookings').insert({
               id: newBooking.id,
+              booking_code: newBooking.id,
               customer_id: currentUser.id,
               worker_id: newBooking.workerId,
               worker_name: newBooking.workerName,

@@ -126,11 +126,15 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
         });
 
         // Insert booking
+        const bookingId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
         await supabase.from('bookings').insert({
+          id: crypto.randomUUID(),
+          booking_code: bookingId,
           customer_id: currentUser.id,
           service: `${requestDetails.category} Service`,
           worker_trade: requestDetails.category,
           worker_name: 'Pending Assignment',
+          worker_id: 'PENDING',
           address: requestDetails.location,
           booking_date: requestDetails.date,
           booking_time: requestDetails.timeWindow,

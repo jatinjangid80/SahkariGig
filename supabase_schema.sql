@@ -102,13 +102,6 @@ VALUES
     ('Northern Crafts Cooperative Federation', 'COOP/DEL/2020/1903', 'Delhi', 'APPROVED')
 ON CONFLICT (registration_number) DO NOTHING;
 
-INSERT INTO public.workers (worker_id, name, trade, coop_name, rating, reviews_count, hourly_rate, distance_km, is_available_today, is_top_rated, avatar)
-VALUES
-    ('WORKER-DEL-8901', 'Rajesh Kumar', 'Electrician', 'Delhi Labour Cooperative Federation', 4.90, 128, '₹400–₹700 / visit', 1.80, true, true, 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80'),
-    ('WORKER-DEL-7652', 'Suresh Sharma', 'Plumber', 'JanSeva Plumbing Society', 4.80, 94, '₹350–₹650 / visit', 2.40, true, true, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'),
-    ('WORKER-DEL-4390', 'Vikram Singh', 'Carpenter', 'Northern Crafts Cooperative Federation', 4.70, 82, '₹500–₹900 / visit', 3.50, true, true, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80')
-ON CONFLICT (worker_id) DO NOTHING;
-
 -- 6. Create Chat Messages Table
 CREATE TABLE IF NOT EXISTS public.chat_messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

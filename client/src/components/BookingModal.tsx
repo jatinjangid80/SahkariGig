@@ -38,6 +38,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingCode, setBookingCode] = useState('');
 
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStep(1);
+      setServiceType(worker?.trade || 'Electrician');
+      setBookingDate('Tomorrow');
+      setBookingTime('10:00 AM');
+      setAddress('Flat 402, Green Park Apartments, New Delhi');
+      setNotes(worker?.trade === 'Cleaner' ? 'Please bring standard cleaning supplies.' : 'Please bring standard tools and replacements.');
+      setIsSubmitting(false);
+      setBookingCode('');
+    }
+  }, [isOpen, worker]);
+
   if (!isOpen) return null;
 
   const defaultWorker: Worker = worker || {
