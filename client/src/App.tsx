@@ -364,8 +364,26 @@ export default function App() {
         isOpen={bookingModalOpen}
         onClose={() => setBookingModalOpen(false)}
         worker={selectedWorkerForBooking}
-        onBookingSuccess={() => {
-          // Booking dispatched
+        onBookingSuccess={async (newBooking) => {
+          if (currentUser?.id) {
+            const { error } = await supabase.from('bookings').insert({
+              id: newBooking.id,
+              customer_id: currentUser.id,
+              worker_id: newBooking.workerId,
+              worker_name: newBooking.workerName,
+              worker_trade: newBooking.workerTrade,
+              service: newBooking.service,
+              booking_date: newBooking.date,
+              booking_time: newBooking.time,
+              address: newBooking.address,
+              amount: newBooking.estimatedCost,
+              status: 'REQUESTED',
+              payment_status: 'PENDING'
+            });
+            if (error) {
+              console.error('Failed to save booking:', error);
+            }
+          }
         }}
       />
 
