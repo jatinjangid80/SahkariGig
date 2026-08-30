@@ -89,8 +89,8 @@ ALTER TABLE public.contact_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public Read Cooperatives" ON public.cooperatives FOR SELECT USING (true);
-CREATE POLICY "Public Read/Write Workers" ON public.workers FOR ALL USING (true);
-CREATE POLICY "Public Read/Write Bookings" ON public.bookings FOR ALL USING (true);
+CREATE POLICY "Public Read/Write Workers" ON public.workers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Read/Write Bookings" ON public.bookings FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Write Contact" ON public.contact_inquiries FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Read/Write Reviews" ON public.reviews FOR ALL USING (true);
 

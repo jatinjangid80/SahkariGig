@@ -383,6 +383,7 @@ export default function App() {
             });
             if (error) {
               console.error('Failed to save booking:', error);
+              alert('Database Error: ' + error.message);
             }
           }
         }}
