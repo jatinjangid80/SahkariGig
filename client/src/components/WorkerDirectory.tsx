@@ -110,7 +110,7 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
         // Filter out duplicates (if the DB and local storage both have the same worker)
         const combined = [...fetchedWorkers];
         localWorkers.forEach(lw => {
-          if (!combined.find(w => w.id === lw.id)) {
+          if (!combined.find(w => w.id === lw.id || w.workerId === lw.workerId || w.name === lw.name)) {
             combined.push(lw);
           }
         });
