@@ -22,7 +22,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onVerifyQrCode,
   onNavigate
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'payments' | 'messages'>('overview');
+  const [activeTab, setActiveTab] = useState<'book_service' | 'my_jobs' | 'pay_review' | 'profile' | 'messages'>('book_service');
 
   // Sample bookings with state transitions: REQUESTED -> ACCEPTED -> IN_PROGRESS -> COMPLETED -> RATED
   const [bookings, setBookings] = useState<any[]>([]);
@@ -86,53 +86,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         console.error("Booking fetch error:", err);
       }
 
-      // Prepopulate mock data if empty
-      if (loadedBookings.length === 0) {
-        loadedBookings = [
-          {
-            id: 'BK-1001',
-            service: 'Electrical Inspection',
-            workerName: 'Rajesh Kumar',
-            workerTrade: 'Electrician',
-            workerId: 'WORKER-DEL-8901',
-            coopName: 'Delhi Labour Cooperative Federation',
-            date: '2026-08-30',
-            time: '10:00 AM',
-            address: 'Connaught Place, New Delhi',
-            amount: '₹550',
-            status: 'ACCEPTED',
-            paymentStatus: 'PENDING'
-          },
-          {
-            id: 'BK-1002',
-            service: 'Plumbing Leak Repair',
-            workerName: 'Amit Singh',
-            workerTrade: 'Plumber',
-            workerId: 'WORKER-DEL-3342',
-            coopName: 'NCR Multi-State Cooperative Society',
-            date: '2026-08-25',
-            time: '02:30 PM',
-            address: 'Dwarka Sector 12, New Delhi',
-            amount: '₹420',
-            status: 'COMPLETED',
-            paymentStatus: 'PAID'
-          },
-          {
-            id: 'BK-1003',
-            service: 'Carpenter Woodwork Repair',
-            workerName: 'Vikram Rathore',
-            workerTrade: 'Carpenter',
-            workerId: 'WORKER-DEL-4412',
-            coopName: 'Delhi Labour Cooperative Federation',
-            date: '2026-08-31',
-            time: '11:00 AM',
-            address: 'Saket, New Delhi',
-            amount: '₹800',
-            status: 'REQUESTED',
-            paymentStatus: 'PENDING'
-          }
-        ];
-      }
+      // Remove prepopulate mock data if empty
 
       setBookings(loadedBookings);
     };
@@ -761,301 +715,251 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         {/* Global Tabs */}
         <div className="flex items-center space-x-6 border-b border-slate-200 mt-6 pb-0">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => setActiveTab('book_service')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'overview'
+              activeTab === 'book_service'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
-            Overview
+            Book Service
           </button>
           <button
-            onClick={() => setActiveTab('bookings')}
+            onClick={() => setActiveTab('my_jobs')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'bookings'
+              activeTab === 'my_jobs'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
-            My Bookings
+            My Jobs
           </button>
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab('pay_review')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'history'
+              activeTab === 'pay_review'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
-            History
+            Pay & Review
           </button>
           <button
-            onClick={() => setActiveTab('messages')}
+            onClick={() => setActiveTab('profile')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'messages'
+              activeTab === 'profile'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
-            Messages
+            Profile
           </button>
         </div>
 
-        {/* Task-Centric Layout (Only shown on Overview) */}
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Main Task Area */}
-            <div className="lg:col-span-2 space-y-8">
-            
-            {/* Upcoming Service Highlight */}
-            <div>
-              <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Upcoming service</h2>
-              {bookings.filter(b => b.status === 'ACCEPTED' || b.status === 'REQUESTED' || b.status === 'IN_PROGRESS').length > 0 ? (
-                <div className="bg-white rounded-2xl border border-emerald-200 shadow-md p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100 rounded-full blur-3xl -mr-10 -mt-10 opacity-50 pointer-events-none" />
-                  
-                  {bookings.filter(b => b.status === 'ACCEPTED' || b.status === 'REQUESTED' || b.status === 'IN_PROGRESS').slice(0, 1).map(upcoming => (
-                    <div key={upcoming.id} className="relative z-10">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
-                            ⚡
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-slate-900 font-outfit">{upcoming.service}</h3>
-                            <p className="text-sm font-medium text-slate-600 mt-0.5">{upcoming.workerName}</p>
-                          </div>
-                        </div>
-                        {getStatusBadge(upcoming.status)}
+        {/* Book Service Tab */}
+        {activeTab === 'book_service' && (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 text-center flex flex-col items-center justify-center min-h-[400px]">
+            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-6">
+              <Calendar className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 font-outfit mb-3">Need a service?</h2>
+            <p className="text-slate-500 max-w-md mx-auto mb-8">
+              Book a verified professional from the cooperative for your electrical, plumbing, carpentry, and other household needs.
+            </p>
+            <button 
+              onClick={() => onNavigate('/services')}
+              className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"
+            >
+              <span>Book a Service Now</span>
+            </button>
+          </div>
+        )}
+
+        {/* My Jobs Tab (All Bookings) */}
+        {activeTab === 'my_jobs' && (
+          <div className="light-card p-6 min-h-[400px]">
+            <div className="space-y-4">
+              {bookings.length > 0 ? (
+                bookings.map((booking) => (
+                  <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
+                    
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-3">
+                        <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
+                        {getStatusBadge(booking.status)}
                       </div>
                       
-                      <div className="mt-6 flex items-center space-x-6 text-sm text-slate-600">
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-2 text-emerald-600" />
-                          <span className="font-semibold">{upcoming.date} · {upcoming.time}</span>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 pt-5 border-t border-slate-100 flex gap-3">
-                        <button
-                          onClick={() => onVerifyQrCode(upcoming.workerId)}
-                          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm"
-                        >
-                          Verify Worker ID
-                        </button>
-                        <button
-                          onClick={() => onOpenChat(upcoming)}
-                          className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-colors"
-                        >
-                          Message
-                        </button>
+                      <p className="text-xs text-slate-600">
+                        Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
+                      </p>
+                      
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
+                        <span className="flex items-center">
+                          <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                          {booking.date}, {booking.time}
+                        </span>
+                        <span className="flex items-center">
+                          <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                          {booking.address}
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => onVerifyQrCode(booking.workerId)}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                      >
+                        <QrCode className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Verify QR</span>
+                      </button>
+
+                      <button
+                        onClick={() => onOpenChat(booking)}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
+                        <span>Chat</span>
+                      </button>
+
+                      {booking.status === 'COMPLETED' ? (
+                        <button
+                          onClick={() => onOpenReview(booking)}
+                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-white" />
+                          <span>Review</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onOpenPayment(booking)}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors flex items-center space-x-1"
+                        >
+                          <CreditCard className="w-3.5 h-3.5" />
+                          <span>Pay ({booking.amount})</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
               ) : (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center py-10">
-                  <p className="text-slate-500 font-medium">No upcoming services scheduled.</p>
+                <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-4">
+                    <Clock className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 font-outfit mb-2">No Jobs Yet</h3>
+                  <p className="text-slate-500 mb-6">You haven't booked any services yet.</p>
                   <button 
-                    onClick={() => onNavigate('/services')}
-                    className="mt-4 px-6 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-xl hover:bg-emerald-100 transition-colors"
+                    onClick={() => setActiveTab('book_service')}
+                    className="px-6 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-xl hover:bg-emerald-100 transition-colors"
                   >
                     Book a Service
                   </button>
                 </div>
               )}
             </div>
-
-            {/* Recent Services List */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Recent services</h2>
-                <button 
-                  onClick={() => setActiveTab('history')}
-                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
-                >
-                  View All
-                </button>
-              </div>
-              
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="divide-y divide-slate-100">
-                  {bookings.filter(b => b.status === 'COMPLETED').slice(0, 3).map(booking => (
-                    <div key={booking.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                      <div>
-                        <p className="font-bold text-slate-900 text-sm font-outfit">{booking.service}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{booking.date} · {booking.workerName}</p>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xs font-bold text-slate-900">{booking.amount}</span>
-                        {booking.paymentStatus === 'PENDING' ? (
-                          <button
-                            onClick={() => onOpenPayment(booking)}
-                            className="px-3 py-1.5 bg-amber-100 text-amber-800 hover:bg-amber-200 font-bold text-xs rounded-lg transition-colors"
-                          >
-                            Pay Now
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => onOpenReview(booking)}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition-colors flex items-center"
-                          >
-                            <Star className="w-3 h-3 mr-1" /> Review
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {bookings.filter(b => b.status === 'COMPLETED').length === 0 && (
-                    <div className="p-6 text-center text-sm text-slate-500">
-                      No completed services yet.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            
           </div>
+        )}
 
-          {/* Sidebar / Quick Actions */}
-          <div className="space-y-6">
-            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Quick actions</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-2 space-y-1">
-              <button 
-                onClick={() => onNavigate('/services')}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group"
-              >
-                <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <Calendar className="w-4 h-4" />
+        {/* Pay & Review Tab */}
+        {activeTab === 'pay_review' && (
+          <div className="light-card p-6 min-h-[400px]">
+            <div className="space-y-4">
+              {bookings.filter(b => b.status === 'COMPLETED' || b.paymentStatus === 'PENDING').length > 0 ? (
+                bookings.filter(b => b.status === 'COMPLETED' || b.paymentStatus === 'PENDING').map((booking) => (
+                  <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
+                    
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-3">
+                        <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
+                        {getStatusBadge(booking.status)}
+                      </div>
+                      
+                      <p className="text-xs text-slate-600">
+                        Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span>
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {booking.paymentStatus === 'PENDING' && (
+                        <button
+                          onClick={() => onOpenPayment(booking)}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-lg shadow-sm transition-colors flex items-center space-x-2"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          <span>Pay {booking.amount}</span>
+                        </button>
+                      )}
+                      
+                      {booking.status === 'COMPLETED' && (
+                        <button
+                          onClick={() => onOpenReview(booking)}
+                          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-lg transition-colors flex items-center space-x-2"
+                        >
+                          <Star className="w-4 h-4 fill-white" />
+                          <span>Leave Review</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <span>Book a Service</span>
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => setActiveTab('bookings')}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group"
-              >
-                <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600">
-                    <Clock className="w-4 h-4" />
+                ))
+              ) : (
+                <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+                  <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mx-auto mb-4">
+                    <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <span>My Bookings</span>
+                  <h3 className="text-lg font-bold text-slate-900 font-outfit mb-2">All Caught Up!</h3>
+                  <p className="text-slate-500">You have no pending payments or unreviewed jobs.</p>
                 </div>
-              </button>
-              
-              <button 
-                onClick={() => {
-                  setSelectedChat(bookings[0] || null);
-                  setActiveTab('messages');
-                }}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group"
-              >
-                <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
-                  <span>Messages</span>
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => onVerifyQrCode('WORKER-DEL-8901')}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors group"
-              >
-                <div className="flex items-center space-x-3 text-slate-700 group-hover:text-emerald-700 font-medium text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                    <QrCode className="w-4 h-4" />
-                  </div>
-                  <span>Verify Worker ID</span>
-                </div>
-              </button>
-            </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Tab-based Full Lists */}
-        {activeTab !== 'overview' && activeTab !== 'messages' && (
-          <div className="light-card p-6">
-            
-            {/* Bookings List */}
-            <div className="space-y-4">
-              {bookings.filter(b => activeTab === 'history' ? b.status === 'COMPLETED' : b.status !== 'COMPLETED').map((booking) => (
-                <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
-                  
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
-                      {getStatusBadge(booking.status)}
-                    </div>
-                    
-                    <p className="text-xs text-slate-600">
-                      Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
-                    </p>
-                    
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
-                      <span className="flex items-center">
-                        <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                        {booking.date}, {booking.time}
-                      </span>
-                      <span className="flex items-center">
-                        <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                        {booking.address}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={() => onVerifyQrCode(booking.workerId)}
-                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                    >
-                      <QrCode className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Verify QR</span>
-                    </button>
-
-                    <button
-                      onClick={() => onOpenChat(booking)}
-                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
-                      <span>Chat</span>
-                    </button>
-
-                    {booking.status === 'COMPLETED' ? (
-                      <button
-                        onClick={() => onOpenReview(booking)}
-                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                      >
-                        <Star className="w-3.5 h-3.5 fill-white" />
-                        <span>Review</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => onOpenPayment(booking)}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors flex items-center space-x-1"
-                      >
-                        <CreditCard className="w-3.5 h-3.5" />
-                        <span>Pay ({booking.amount})</span>
-                      </button>
-                    )}
-                  </div>
+        {/* Profile Tab */}
+        {activeTab === 'profile' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-1 space-y-6">
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 text-center">
+                <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full text-white font-extrabold text-3xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+                  {firstName.charAt(0).toUpperCase()}
                 </div>
-              ))}
-              
-              {bookings.filter(b => activeTab === 'history' ? b.status === 'COMPLETED' : b.status !== 'COMPLETED').length === 0 && (
-                <div className="text-center py-10 text-slate-500 font-medium">
-                  No bookings found for this category.
-                </div>
-              )}
+                <h3 className="text-xl font-bold text-slate-900 font-outfit">{currentUser?.name}</h3>
+                <p className="text-slate-500 text-sm mb-4">{currentUser?.email || 'customer@example.com'}</p>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+                  Verified Customer
+                </span>
+              </div>
             </div>
-
+            
+            <div className="md:col-span-2 space-y-6">
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                <h3 className="text-lg font-bold text-slate-900 font-outfit mb-6 border-b border-slate-100 pb-4">Account Details</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Full Name</label>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900">
+                      {currentUser?.name}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email Address</label>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900">
+                      {currentUser?.email || 'Not provided'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Role</label>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900 capitalize">
+                      {currentUser?.role || 'Customer'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

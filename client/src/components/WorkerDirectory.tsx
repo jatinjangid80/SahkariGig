@@ -22,13 +22,15 @@ interface WorkerDirectoryProps {
   onSelectWorkerForBooking: (worker: Worker) => void;
   onViewWorkerProfile: (worker: Worker) => void;
   onVerifyQrCode: (workerId: string) => void;
+  currentUserId?: string;
 }
 
 export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
   selectedCategory = 'All',
   onSelectWorkerForBooking,
   onViewWorkerProfile,
-  onVerifyQrCode
+  onVerifyQrCode,
+  currentUserId
 }) => {
   const [filterTrade, setFilterTrade] = useState(selectedCategory);
   const [minRating, setMinRating] = useState(4.0);
@@ -170,6 +172,11 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
   }, []);
 
   const filteredWorkers = workers.filter((worker) => {
+    // Hide the currently logged-in user from the directory
+    if (currentUserId && worker.id === currentUserId) {
+      return false;
+    }
+
     const matchesTrade = filterTrade === 'All' || filterTrade === '' || worker.trade.toLowerCase() === filterTrade.toLowerCase();
     const matchesRating = worker.rating >= minRating;
     const matchesDistance = worker.distanceKm <= maxDistance;

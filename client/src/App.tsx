@@ -212,6 +212,7 @@ export default function App() {
             <div id="workers-directory" className="py-6">
               <WorkerDirectory
                 selectedCategory={selectedCategory}
+                currentUserId={currentUser?.id}
                 onSelectWorkerForBooking={handleOpenBooking}
                 onViewWorkerProfile={(worker) => {
                   setActiveWorkerIdCard(worker);
