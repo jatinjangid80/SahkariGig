@@ -172,13 +172,54 @@ export const Navbar: React.FC<NavbarProps> = ({
               {link.label}
             </button>
           ))}
-          <div className="pt-4 border-t border-slate-100 space-y-2">
-            <button
-              onClick={() => { setMobileMenuOpen(false); handleNavClick('/services'); }}
-              className="w-full py-2.5 px-4 text-center font-semibold text-white bg-emerald-600 rounded-xl"
-            >
-              Find a Worker
-            </button>
+          <div className="pt-4 border-t border-slate-100 space-y-3 mt-4">
+            {currentUser ? (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {currentUser.avatarUrl ? (
+                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shadow-sm" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold font-outfit">
+                      {currentUser.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="text-left">
+                    <p className="font-bold text-slate-900 text-sm leading-tight">{currentUser.name}</p>
+                    <span className="text-[11px] text-emerald-700 font-medium capitalize">{currentUser.role} Account</span>
+                  </div>
+                </div>
+                {onLogoutClick && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      localStorage.removeItem('mockAdmin');
+                      onLogoutClick();
+                    }}
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Log Out"
+                  >
+                    <LogIn className="w-5 h-5 rotate-180" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); if (onLoginClick) onLoginClick(); else onNavigate('/dashboard'); }}
+                  className="w-full py-2.5 px-4 text-center font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center space-x-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In</span>
+                </button>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); handleNavClick('/services'); }}
+                  className="w-full py-2.5 px-4 text-center font-semibold text-white bg-emerald-600 rounded-xl shadow-md flex items-center justify-center space-x-2"
+                >
+                  <span>Find a Worker</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
