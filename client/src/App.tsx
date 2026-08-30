@@ -343,7 +343,7 @@ export default function App() {
           localStorage.setItem('demoUser', JSON.stringify(demoUser));
           setCurrentUser(demoUser);
           
-          if (user.role === 'Worker') {
+          if (user.role === 'Worker' && isSignup) {
             navigateTo('/worker-onboarding');
           } else if (user.role === 'Customer' && isSignup) {
             navigateTo('/customer-onboarding');
