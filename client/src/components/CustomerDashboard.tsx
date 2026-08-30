@@ -60,7 +60,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           }
         }
 
-        if (loadedBookings.length === 0 && currentUser?.id) {
+        if (currentUser?.id) {
           const { data, error } = await supabase
             .from('bookings')
             .select('*')
