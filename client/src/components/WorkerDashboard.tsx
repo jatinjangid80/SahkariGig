@@ -384,7 +384,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">Live feed connected</span>
               </div>
 
-              {requests.filter(r => r.status === 'PENDING').map(req => (
+              {requests.filter(r => r.status === 'REQUESTED').map(req => (
                 <div key={req.id} className="bg-white rounded-3xl border border-emerald-200 shadow-md p-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60 pointer-events-none" />
                   
@@ -421,7 +421,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 </div>
               ))}
 
-              {requests.filter(r => r.status === 'PENDING').length === 0 && (
+              {requests.filter(r => r.status === 'REQUESTED').length === 0 && (
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-8 text-center py-12">
                   <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-2" />
                   <p className="text-slate-600 font-bold text-sm font-outfit">Your Inbox is Clear</p>
