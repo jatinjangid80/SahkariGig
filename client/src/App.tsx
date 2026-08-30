@@ -370,6 +370,7 @@ export default function App() {
               id: crypto.randomUUID(),
               booking_code: newBooking.id,
               customer_id: currentUser.id,
+              customer_name: currentUser.name,
               worker_id: newBooking.workerId,
               worker_name: newBooking.workerName,
               worker_trade: newBooking.workerTrade,
