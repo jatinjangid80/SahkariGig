@@ -335,7 +335,7 @@ export default function App() {
         defaultMode={authModalMode}
         onSuccess={(user, isSignup) => {
           const demoUser = {
-            id: 'demo-' + Date.now(),
+            id: user.id || 'demo-' + Date.now(),
             name: user.name,
             email: user.email,
             role: user.role
