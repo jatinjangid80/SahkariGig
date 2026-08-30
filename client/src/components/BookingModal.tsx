@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, CheckCircle, Calendar, MapPin, ShieldCheck, Star, Clock, ArrowRight, ArrowLeft, Printer, Zap, Droplet, Hammer, Paintbrush, Home, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, CheckCircle, Calendar, MapPin, ShieldCheck, Star, Clock, ArrowRight, ArrowLeft, Printer, Zap, Droplet, Hammer, Paintbrush, Home, Heart, HeartHandshake, Car, Trees, Sparkles, Cog } from 'lucide-react';
 // @ts-ignore
 import confetti from 'canvas-confetti';
 
@@ -191,7 +191,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     'Carpenter': <Hammer className="w-5 h-5 mb-1.5 opacity-80" />,
     'Painter': <Paintbrush className="w-5 h-5 mb-1.5 opacity-80" />,
     'Domestic Help': <Home className="w-5 h-5 mb-1.5 opacity-80" />,
-    'Caregiver': <Heart className="w-5 h-5 mb-1.5 opacity-80" />
+    'Domestic Helper': <Home className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Caregiver': <HeartHandshake className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Driver': <Car className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Gardener': <Trees className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Cleaner': <Sparkles className="w-5 h-5 mb-1.5 opacity-80" />,
+    'Technician': <Cog className="w-5 h-5 mb-1.5 opacity-80" />
   };
 
   return (
@@ -296,7 +301,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               <div className="space-y-5">
                 <h3 className="text-base font-bold text-slate-900 font-outfit">Select Required Trade</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {['Electrician', 'Plumber', 'Carpenter', 'Painter', 'Domestic Help', 'Caregiver'].map((trade) => (
+                  {['Electrician', 'Plumber', 'Carpenter', 'Painter', 'Domestic Helper', 'Caregiver', 'Driver', 'Gardener', 'Cleaner', 'Technician'].map((trade) => (
                     <button
                       key={trade}
                       onClick={() => setServiceType(trade)}

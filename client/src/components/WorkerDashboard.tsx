@@ -147,7 +147,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           }
         }
 
-        if (loadedRequests.length === 0 && currentUser?.id) {
+        if (currentUser?.id) {
           const workerId = `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`;
           const { data, error } = await supabase
             .from('bookings')

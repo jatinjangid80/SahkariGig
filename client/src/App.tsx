@@ -367,7 +367,7 @@ export default function App() {
         onBookingSuccess={async (newBooking) => {
           if (currentUser?.id) {
             const { error } = await supabase.from('bookings').insert({
-              id: newBooking.id,
+              id: crypto.randomUUID(),
               booking_code: newBooking.id,
               customer_id: currentUser.id,
               worker_id: newBooking.workerId,
