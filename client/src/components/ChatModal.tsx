@@ -152,6 +152,33 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                 const { isTyping } = payload.payload;
                 setIsPartnerTyping(isTyping);
               })
+              .on('broadcast', { event: 'new_message' }, (payload: any) => {
+                const newMsg = payload.payload;
+                setMessages((current) => {
+                  if (current.some(m => m.id === newMsg.id)) return current;
+
+                  (async () => {
+                    const text = await decryptMessage(newMsg.text, booking.id);
+                    const decryptedMsg = {
+                      id: newMsg.id,
+                      bookingId: booking.id,
+                      senderType: newMsg.sender_type,
+                      senderId: newMsg.sender_id,
+                      senderName: newMsg.sender_name,
+                      text,
+                      createdAt: newMsg.created_at,
+                      readAt: newMsg.read_at
+                    };
+
+                    setMessages(c => {
+                      if (c.some(m => m.id === newMsg.id)) return c;
+                      return [...c, decryptedMsg];
+                    });
+                  })();
+
+                  return current;
+                });
+              })
               .subscribe();
 
             activeChannel = channel;
@@ -300,6 +327,41 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                 const { isTyping } = payload.payload;
                 setIsPartnerTyping(isTyping);
               })
+              .on('broadcast', { event: 'new_message' }, (payload: any) => {
+                const newMsg = payload.payload;
+                setMessages((current) => {
+                  if (current.some(m => m.id === newMsg.id)) return current;
+
+                  (async () => {
+                    const text = await decryptMessage(newMsg.text, booking.id);
+                    const decryptedMsg = {
+                      id: newMsg.id,
+                      bookingId: booking.id,
+                      senderType: newMsg.sender_type,
+                      senderId: newMsg.sender_id,
+                      senderName: newMsg.sender_name,
+                      text,
+                      createdAt: newMsg.created_at,
+                      readAt: newMsg.read_at
+                    };
+
+                    setMessages(c => {
+                      if (c.some(m => m.id === newMsg.id)) return c;
+                      return [...c, decryptedMsg];
+                    });
+
+                    // Mark as read immediately if we are active
+                    if (newMsg.sender_id !== myId && !newMsg.read_at) {
+                      await supabase
+                        .from('messages')
+                        .update({ read_at: new Date().toISOString() })
+                        .eq('id', newMsg.id);
+                    }
+                  })();
+
+                  return current;
+                });
+              })
               .subscribe();
 
             activeChannel = channel;
@@ -426,6 +488,22 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
           createdAt: realMsg.created_at,
           readAt: null 
         } : m));
+        
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'new_message',
+            payload: {
+              id: realMsg.id,
+              sender_id: myId,
+              sender_type: currentUser?.role || 'Customer',
+              sender_name: currentUser?.name || 'User',
+              text: encryptedText,
+              created_at: realMsg.created_at,
+              read_at: null
+            }
+          });
+        }
       }
     } else {
       const { data: insertData, error: insertError } = await supabase
@@ -451,6 +529,22 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
           createdAt: realMsg.created_at,
           readAt: realMsg.read_at 
         } : m));
+        
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'new_message',
+            payload: {
+              id: realMsg.id,
+              sender_id: myId,
+              sender_type: currentUser?.role || 'Customer',
+              sender_name: currentUser?.name || 'User',
+              text: encryptedText,
+              created_at: realMsg.created_at,
+              read_at: realMsg.read_at || null
+            }
+          });
+        }
       }
     }
 
@@ -535,6 +629,22 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
           createdAt: realMsg.created_at,
           readAt: null 
         } : m));
+        
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'new_message',
+            payload: {
+              id: realMsg.id,
+              sender_id: myId,
+              sender_type: currentUser?.role || 'Customer',
+              sender_name: currentUser?.name || 'User',
+              text: encryptedText,
+              created_at: realMsg.created_at,
+              read_at: null
+            }
+          });
+        }
       }
     } else {
       const { data: insertData, error: insertError } = await supabase
@@ -559,6 +669,22 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
           createdAt: realMsg.created_at,
           readAt: realMsg.read_at 
         } : m));
+        
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'new_message',
+            payload: {
+              id: realMsg.id,
+              sender_id: myId,
+              sender_type: currentUser?.role || 'Customer',
+              sender_name: currentUser?.name || 'User',
+              text: encryptedText,
+              created_at: realMsg.created_at,
+              read_at: realMsg.read_at || null
+            }
+          });
+        }
       }
     }
   };
