@@ -129,31 +129,6 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        let loadedRequests: any[] = [];
-        const apiRes = await fetch('http://localhost:5001/api/bookings', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
-            'x-user-role': 'Worker'
-          }
-        }).catch(() => null);
-
-        if (apiRes && apiRes.ok) {
-          const json = await apiRes.json();
-          if (json.success && Array.isArray(json.data?.bookings) && json.data.bookings.length > 0) {
-            loadedRequests = json.data.bookings.map((b: any) => ({
-              id: b.id,
-              service: b.service,
-              customerName: b.customerName,
-              customer_id: 'demo-customer',
-              worker_id: b.workerId || currentUser?.id,
-              address: b.address,
-              dateTime: `${b.bookingDate}, ${b.bookingTime}`,
-              amount: b.amount,
-              status: b.status
-            }));
-          }
-        }
-
         if (currentUser?.id) {
           const workerId = `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`;
           const { data, error } = await supabase
@@ -162,8 +137,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             .or(`worker_id.eq.${workerId},worker_name.eq."${currentUser.name}"`)
             .order('created_at', { ascending: false });
             
-          if (!error && data && data.length > 0) {
-            loadedRequests = data.map(b => ({
+          if (!error && data) {
+            const loadedRequests = data.map(b => ({
               id: b.id,
               service: b.service,
               customerName: b.customer_name,
@@ -193,20 +168,45 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               date: c.dateTime ? c.dateTime.split(',')[0] : 'Recently',
               amount: c.amount
             })));
+
+            setRequests(loadedRequests);
           } else {
              setCompletedJobsCount(0);
              setWeeklyBalance(0);
              setPayoutHistory([]);
+             setRequests([]);
           }
         }
-
-        setRequests(loadedRequests);
       } catch (err) {
         console.error("Worker booking fetch error:", err);
         setRequests([]);
       }
     };
+    
     fetchRequests();
+
+    // Set up realtime subscription
+    if (currentUser?.id) {
+      const channel = supabase
+        .channel(`bookings_worker_${currentUser.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'bookings'
+            // We can't use an OR filter in realtime postgres_changes easily, so we just listen to all changes and let fetchRequests filter, or we could just refetch on any change. Since it's a demo, fetching on any booking change is fine, but we can try to filter by worker_id.
+          },
+          () => {
+            fetchRequests(); // Refetch on any change
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [currentUser, refreshTrigger]);
 
   const handleAccept = async (id: string) => {

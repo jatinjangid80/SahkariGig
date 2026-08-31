@@ -31,37 +31,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
 
   useEffect(() => {
     const fetchBookings = async () => {
-      let loadedBookings: any[] = [];
       try {
-        const apiRes = await fetch('http://localhost:5001/api/bookings', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
-            'x-user-role': 'Customer'
-          }
-        }).catch(() => null);
-
-        if (apiRes && apiRes.ok) {
-          const json = await apiRes.json();
-          if (json.success && Array.isArray(json.data?.bookings) && json.data.bookings.length > 0) {
-            loadedBookings = json.data.bookings.map((b: any) => ({
-              id: b.id,
-              service: b.service,
-              workerName: b.workerName,
-              workerTrade: b.workerTrade,
-              workerId: b.workerId,
-              worker_id: b.workerId,
-              customer_id: currentUser?.id,
-              coopName: 'Delhi Labour Cooperative Federation',
-              date: b.bookingDate,
-              time: b.bookingTime,
-              address: b.address,
-              amount: b.amount,
-              status: b.status,
-              paymentStatus: b.paymentStatus
-            }));
-          }
-        }
-
         if (currentUser?.id) {
           const { data, error } = await supabase
             .from('bookings')
@@ -69,8 +39,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             .eq('customer_id', currentUser.id)
             .order('created_at', { ascending: false });
           
-          if (!error && data && data.length > 0) {
-            loadedBookings = data.map(b => ({
+          if (!error && data) {
+            const loadedBookings = data.map(b => ({
               id: b.id,
               service: b.service,
               workerName: b.worker_name,
@@ -86,17 +56,38 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               status: b.status,
               paymentStatus: b.payment_status
             }));
+            setBookings(loadedBookings);
           }
         }
       } catch (err) {
         console.error("Booking fetch error:", err);
       }
-
-      // Remove prepopulate mock data if empty
-
-      setBookings(loadedBookings);
     };
+    
     fetchBookings();
+
+    // Set up realtime subscription
+    if (currentUser?.id) {
+      const channel = supabase
+        .channel(`bookings_customer_${currentUser.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'bookings',
+            filter: `customer_id=eq.${currentUser.id}`
+          },
+          () => {
+            fetchBookings(); // Refetch on any change
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [currentUser, refreshTrigger]);
 
   // Chat / Messaging states
