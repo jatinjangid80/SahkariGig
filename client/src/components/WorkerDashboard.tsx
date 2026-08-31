@@ -159,7 +159,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           const { data, error } = await supabase
             .from('bookings')
             .select('*')
-            .eq('worker_id', workerId)
+            .or(`worker_id.eq.${workerId},worker_name.eq.${encodeURIComponent(currentUser.name)}`)
             .order('created_at', { ascending: false });
             
           if (!error && data && data.length > 0) {

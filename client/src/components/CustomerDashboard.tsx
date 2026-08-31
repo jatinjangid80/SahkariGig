@@ -828,7 +828,9 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                         <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
                         <span>Chat</span>
                       </button>
+                    </div>
 
+                    <div className="text-right">
                       {booking.status === 'COMPLETED' ? (
                         <button
                           onClick={() => onOpenReview(booking)}
@@ -838,10 +840,13 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                           <span>Review</span>
                         </button>
                       ) : booking.paymentStatus === 'PAID' ? (
-                        <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold text-xs rounded-lg flex items-center space-x-1 border border-emerald-200">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Paid</span>
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-semibold text-xs rounded-lg flex items-center space-x-1 border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Paid</span>
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-medium">Awaiting Completion</span>
+                        </div>
                       ) : (
                         <button
                           onClick={() => onOpenPayment(booking)}
@@ -877,8 +882,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         {activeTab === 'pay_review' && (
           <div className="light-card p-6 min-h-[400px]">
             <div className="space-y-4">
-              {bookings.filter(b => b.status === 'COMPLETED' || b.paymentStatus === 'PENDING').length > 0 ? (
-                bookings.filter(b => b.status === 'COMPLETED' || b.paymentStatus === 'PENDING').map((booking) => (
+              {bookings.filter(b => b.status === 'COMPLETED' || b.paymentStatus === 'PENDING' || b.paymentStatus === 'PAID').length > 0 ? (
+                bookings.filter(b => b.status === 'COMPLETED' || b.paymentStatus === 'PENDING' || b.paymentStatus === 'PAID').map((booking) => (
                   <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
                     
                     <div className="space-y-1">
@@ -901,6 +906,16 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                           <CreditCard className="w-4 h-4" />
                           <span>Pay {booking.amount}</span>
                         </button>
+                      )}
+
+                      {booking.paymentStatus === 'PAID' && booking.status !== 'COMPLETED' && (
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="px-4 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-lg flex items-center space-x-2 border border-emerald-200">
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Paid</span>
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-medium">Awaiting Completion to Review</span>
+                        </div>
                       )}
                       
                       {booking.status === 'COMPLETED' && (
