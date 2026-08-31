@@ -112,7 +112,7 @@ router.post('/verify', authenticate, async (req, res) => {
     if (supabase) {
       const { error: dbError } = await supabase
         .from('bookings')
-        .update({ payment_status: 'PAID' })
+        .update({ payment_status: 'PAID', status: 'COMPLETED' })
         .eq('id', bookingId);
       
       if (dbError) {

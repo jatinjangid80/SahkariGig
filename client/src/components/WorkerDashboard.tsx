@@ -218,6 +218,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     await supabase.from('bookings').update({ status: 'ACCEPTED' }).eq('id', id);
   };
 
+  const handleMarkCompleted = async (id: string) => {
+    setRequests(requests.map(r => r.id === id ? { ...r, status: 'COMPLETED' } : r));
+    await supabase.from('bookings').update({ status: 'COMPLETED' }).eq('id', id);
+  };
+
   const handleReject = async (id: string) => {
     setRequests(requests.filter(r => r.id !== id));
   };
@@ -374,7 +379,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 />
               ) : (
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-extrabold text-xl shadow-md transition-all group-hover:brightness-90 font-outfit">
-                  {profile.fullName.substring(0, 2).toUpperCase()}
+                  {profile.fullName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
                 </div>
               )}
               <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-[9px] text-white font-bold transition-all">
@@ -553,11 +558,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                     {/* Safety Verification QR Code Info */}
                     <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex items-start space-x-3">
                       <QrCode className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="text-xs font-bold text-emerald-900 leading-tight">Cooperative Safety Protocol</p>
                         <p className="text-[10px] text-emerald-700 mt-1 leading-relaxed">
                           When you arrive at the job site, present your Digital ID Card QR code to the customer. Once they scan it via their dashboard, your check-in will be logged and the escrow status will advance.
                         </p>
+                        <button
+                          onClick={() => handleMarkCompleted(req.id)}
+                          className="mt-3 w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center space-x-1"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Mark Job as Completed</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -698,7 +710,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                         />
                       ) : (
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-extrabold text-xl shadow-sm font-outfit">
-                          {profile.fullName.substring(0, 2).toUpperCase()}
+                          {profile.fullName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
                         </div>
                       )}
                       <div className="space-y-1">
