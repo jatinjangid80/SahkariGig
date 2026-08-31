@@ -101,6 +101,12 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, [currentPath]);
 
+    useEffect(() => {
+    if (currentUser && currentPath === '/') {
+      navigateTo('/dashboard');
+    }
+  }, [currentUser, currentPath]);
+
   // Modal States
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedWorkerForBooking, setSelectedWorkerForBooking] = useState<any>(null);
