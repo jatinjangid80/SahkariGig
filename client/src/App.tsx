@@ -275,6 +275,13 @@ export default function App() {
           <WorkerOnboarding 
             currentUser={currentUser}
             onComplete={() => navigateTo('/dashboard')}
+            onLogout={() => {
+              localStorage.removeItem('demoUser');
+              localStorage.removeItem('mockAdmin');
+              supabase.auth.signOut();
+              setCurrentUser(null);
+              navigateTo('/');
+            }}
           />
         )}
 

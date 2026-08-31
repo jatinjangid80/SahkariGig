@@ -5,9 +5,10 @@ import { supabase } from '../supabase';
 interface WorkerOnboardingProps {
   currentUser: { name: string; role: string; id: string; email: string; avatarUrl?: string } | null;
   onComplete: () => void;
+  onLogout?: () => void;
 }
 
-export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser, onComplete }) => {
+export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser, onComplete, onLogout }) => {
   const [step, setStep] = useState(1);
   const totalSteps = 8;
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,7 +126,16 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="w-full max-w-3xl bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+      {onLogout && (
+        <button 
+          onClick={onLogout}
+          className="absolute top-4 right-4 z-50 text-slate-400 hover:text-white flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700 hover:border-slate-500 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Log Out
+        </button>
+      )}
+      <div className="w-full max-w-3xl bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row min-h-[600px] mt-12 md:mt-0">
         
         {/* Sidebar Progress */}
         <div className="md:w-64 bg-slate-800 border-r border-slate-700/50 p-8 hidden md:block">
