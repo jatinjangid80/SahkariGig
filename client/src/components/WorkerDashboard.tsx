@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip } from 'lucide-react';
+import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../supabase';
 // @ts-ignore
 import confetti from 'canvas-confetti';
