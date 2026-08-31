@@ -413,7 +413,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                         onChange={e => setProfile({...profile, declaration: {...profile.declaration, accurate: e.target.checked}})}
                       />
                       <div className="w-5 h-5 rounded border-2 border-slate-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center transition-colors">
-                        <Check className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100" />
+                        {profile.declaration.accurate && <Check className="w-3.5 h-3.5 text-white" />}
                       </div>
                     </div>
                     <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
@@ -430,7 +430,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                         onChange={e => setProfile({...profile, declaration: {...profile.declaration, affiliated: e.target.checked}})}
                       />
                       <div className="w-5 h-5 rounded border-2 border-slate-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center transition-colors">
-                        <Check className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100" />
+                        {profile.declaration.affiliated && <Check className="w-3.5 h-3.5 text-white" />}
                       </div>
                     </div>
                     <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
@@ -447,7 +447,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                         onChange={e => setProfile({...profile, declaration: {...profile.declaration, authorize: e.target.checked}})}
                       />
                       <div className="w-5 h-5 rounded border-2 border-slate-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center transition-colors">
-                        <Check className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100" />
+                        {profile.declaration.authorize && <Check className="w-3.5 h-3.5 text-white" />}
                       </div>
                     </div>
                     <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
@@ -464,7 +464,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                         onChange={e => setProfile({...profile, declaration: {...profile.declaration, genuine: e.target.checked}})}
                       />
                       <div className="w-5 h-5 rounded border-2 border-slate-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center transition-colors">
-                        <Check className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100" />
+                        {profile.declaration.genuine && <Check className="w-3.5 h-3.5 text-white" />}
                       </div>
                     </div>
                     <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
@@ -481,7 +481,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                         onChange={e => setProfile({...profile, declaration: {...profile.declaration, terms: e.target.checked}})}
                       />
                       <div className="w-5 h-5 rounded border-2 border-slate-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center transition-colors">
-                        <Check className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100" />
+                        {profile.declaration.terms && <Check className="w-3.5 h-3.5 text-white" />}
                       </div>
                     </div>
                     <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
