@@ -151,29 +151,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               paymentStatus: b.payment_status
             }));
             
-            // Calculate dynamic stats from completed bookings
-            const completed = loadedRequests.filter(r => r.status === 'COMPLETED' || r.paymentStatus === 'PAID');
-            setCompletedJobsCount(completed.length);
-            
-            const totalBalance = completed.reduce((sum, req) => {
-              const numStr = String(req.amount).replace(/[^0-9.]/g, '');
-              return sum + (parseFloat(numStr) || 0);
-            }, 0);
-            setWeeklyBalance(totalBalance);
-            
-            setPayoutHistory(completed.map(c => ({
-              jobId: c.id,
-              service: c.service,
-              customer: c.customerName,
-              date: c.dateTime ? c.dateTime.split(',')[0] : 'Recently',
-              amount: c.amount
-            })));
-
             setRequests(loadedRequests);
           } else {
-             setCompletedJobsCount(0);
-             setWeeklyBalance(0);
-             setPayoutHistory([]);
              setRequests([]);
           }
         }
@@ -198,16 +177,36 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             // We can't use an OR filter in realtime postgres_changes easily, so we just listen to all changes and let fetchRequests filter, or we could just refetch on any change. Since it's a demo, fetching on any booking change is fine, but we can try to filter by worker_id.
           },
           () => {
-            fetchRequests(); // Refetch on any change
+            fetchRequests(); 
           }
         )
         .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
+        channel.unsubscribe();
       };
     }
   }, [currentUser, refreshTrigger]);
+
+  // Recalculate stats whenever requests change
+  useEffect(() => {
+    const completed = requests.filter(r => r.status === 'COMPLETED' || r.paymentStatus === 'PAID');
+    setCompletedJobsCount(completed.length);
+    
+    const totalBalance = completed.reduce((sum, req) => {
+      const numStr = String(req.amount).replace(/[^0-9.]/g, '');
+      return sum + (parseFloat(numStr) || 0);
+    }, 0);
+    setWeeklyBalance(totalBalance);
+    
+    setPayoutHistory(completed.map(c => ({
+      jobId: c.id.slice(0, 8).toUpperCase(),
+      service: c.service,
+      customer: c.customerName,
+      date: c.dateTime ? c.dateTime.split(',')[0] : 'Recently',
+      amount: c.amount
+    })));
+  }, [requests]);
 
   const handleAccept = async (id: string) => {
     // Update local state optimistically
@@ -664,7 +663,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                     <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                       {payoutHistory.length > 0 ? payoutHistory.map((ph, idx) => (
                         <tr key={idx}>
-                          <td className="p-4 font-mono text-[10px]">{ph.jobId?.substring(0, 8) || `BK-${1000+idx}`}</td>
+                          <td className="p-4 font-mono text-[10px]">
+                            {`BK-${(ph.jobId?.replace(/[^0-9a-fA-F]/g, '').substring(0, 4) || '001').toUpperCase()}`}
+                          </td>
                           <td className="p-4 font-bold text-slate-900">{ph.service}</td>
                           <td className="p-4">{ph.customer}</td>
                           <td className="p-4">{ph.date}</td>
