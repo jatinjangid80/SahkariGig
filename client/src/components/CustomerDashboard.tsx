@@ -811,51 +811,53 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => onVerifyQrCode(booking.workerId)}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                      >
-                        <QrCode className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Verify QR</span>
-                      </button>
-
-                      <button
-                        onClick={() => onOpenChat(booking)}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
-                        <span>Chat</span>
-                      </button>
-                    </div>
-
-                    <div className="text-right">
-                      {booking.status === 'COMPLETED' ? (
+                    <div className="flex flex-wrap items-center justify-end gap-4">
+                      {/* Actions */}
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
-                          onClick={() => onOpenReview(booking)}
-                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                          onClick={() => onVerifyQrCode(booking.workerId)}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
                         >
-                          <Star className="w-3.5 h-3.5 fill-white" />
-                          <span>Review</span>
+                          <QrCode className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Verify QR</span>
                         </button>
-                      ) : booking.paymentStatus === 'PAID' ? (
-                        <div className="flex flex-col items-end gap-1">
-                          <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-semibold text-xs rounded-lg flex items-center space-x-1 border border-emerald-200">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Paid</span>
-                          </span>
-                          <span className="text-[10px] text-slate-500 font-medium">Awaiting Completion</span>
-                        </div>
-                      ) : (
+
                         <button
-                          onClick={() => onOpenPayment(booking)}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors flex items-center space-x-1"
+                          onClick={() => onOpenChat(booking)}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
                         >
-                          <CreditCard className="w-3.5 h-3.5" />
-                          <span>Pay ({booking.amount})</span>
+                          <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
+                          <span>Chat</span>
                         </button>
-                      )}
+                      </div>
+
+                      <div className="text-right">
+                        {booking.status === 'COMPLETED' ? (
+                          <button
+                            onClick={() => onOpenReview(booking)}
+                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                          >
+                            <Star className="w-3.5 h-3.5 fill-white" />
+                            <span>Review</span>
+                          </button>
+                        ) : booking.paymentStatus === 'PAID' ? (
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-semibold text-xs rounded-lg flex items-center space-x-1 border border-emerald-200">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Paid</span>
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-medium">Awaiting Completion</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => onOpenPayment(booking)}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors flex items-center space-x-1"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>Pay ({booking.amount})</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))
