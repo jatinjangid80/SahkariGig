@@ -79,4 +79,4 @@ router.patch('/:id/status', authenticate, (req, res) => {
   return sendSuccess(res, { booking }, 'Booking status updated.');
 });
 
-module.exports = router;
+module.exports = { router, bookings };

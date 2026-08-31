@@ -11,6 +11,7 @@ interface WorkerDashboardProps {
   onProfileUpdate?: (updatedUser: { avatarUrl?: string; name?: string }) => void;
   onOpenWorkerIdCard?: (worker: any) => void;
   onOpenChat?: (booking: any) => void;
+  refreshTrigger?: number;
 }
 
 export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ 
@@ -19,7 +20,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   onTabChange, 
   onProfileUpdate,
   onOpenWorkerIdCard, 
-  onOpenChat 
+  onOpenChat,
+  refreshTrigger
 }) => {
   const [localTab, setLocalTab] = useState<'feed' | 'active' | 'earnings' | 'profile'>('feed');
   const currentTab = activeTab || localTab;
@@ -29,6 +31,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [payoutSuccess, setPayoutSuccess] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  
+  // Dynamic Supabase Stats
+  const [weeklyBalance, setWeeklyBalance] = useState(0);
+  const [completedJobsCount, setCompletedJobsCount] = useState(0);
+  const [payoutHistory, setPayoutHistory] = useState<any[]>([]);
 
   // Worker Profile States (aligned with Screenshot 1)
   const [profile, setProfile] = useState({
@@ -165,8 +172,31 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               address: b.address,
               dateTime: `${b.booking_date}, ${b.booking_time}`,
               amount: b.amount,
-              status: b.status
+              status: b.status,
+              paymentStatus: b.payment_status
             }));
+            
+            // Calculate dynamic stats from completed bookings
+            const completed = loadedRequests.filter(r => r.status === 'COMPLETED' || r.paymentStatus === 'PAID');
+            setCompletedJobsCount(completed.length);
+            
+            const totalBalance = completed.reduce((sum, req) => {
+              const numStr = String(req.amount).replace(/[^0-9.]/g, '');
+              return sum + (parseFloat(numStr) || 0);
+            }, 0);
+            setWeeklyBalance(totalBalance);
+            
+            setPayoutHistory(completed.map(c => ({
+              jobId: c.id,
+              service: c.service,
+              customer: c.customerName,
+              date: c.dateTime ? c.dateTime.split(',')[0] : 'Recently',
+              amount: c.amount
+            })));
+          } else {
+             setCompletedJobsCount(0);
+             setWeeklyBalance(0);
+             setPayoutHistory([]);
           }
         }
 
@@ -177,7 +207,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
       }
     };
     fetchRequests();
-  }, [currentUser]);
+  }, [currentUser, refreshTrigger]);
 
   const handleAccept = async (id: string) => {
     // Update local state optimistically
@@ -190,11 +220,33 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     setRequests(requests.filter(r => r.id !== id));
   };
 
-  const handleTriggerPayout = () => {
+  const handleTriggerPayout = async () => {
     setPayoutLoading(true);
     setPayoutSuccess(false);
-    setTimeout(() => {
-      setPayoutLoading(false);
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/payments/payout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
+        body: JSON.stringify({
+          workerId: currentUser?.id || 'demo-worker',
+          amount: 4500 // Extract from dashboard context
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to process payout.');
+      }
+      
+      if (data.data?.razorpayUrl) {
+         window.open(data.data.razorpayUrl, '_blank');
+      }
+
       setPayoutSuccess(true);
       confetti({
         particleCount: 80,
@@ -203,7 +255,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         colors: ['#10b981', '#3b82f6', '#f59e0b']
       });
       setTimeout(() => setPayoutSuccess(false), 5000);
-    }, 2000);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'An error occurred during transfer.');
+    } finally {
+      setPayoutLoading(false);
+    }
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -527,9 +584,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <div className="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-2 text-emerald-600">
                     <IndianRupee className="w-5 h-5" />
                   </div>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Weekly Balance</p>
-                  <p className="text-2xl font-extrabold text-slate-900 font-outfit mt-1">₹4,500</p>
-                  <p className="text-[10px] font-semibold text-emerald-600 mt-1">+12% from last week</p>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Balance</p>
+                  <p className="text-2xl font-extrabold text-slate-900 font-outfit mt-1">₹{weeklyBalance.toLocaleString()}</p>
+                  <p className="text-[10px] font-semibold text-emerald-600 mt-1">Based on completed jobs</p>
                 </div>
 
                 <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 text-center">
@@ -537,8 +594,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                     <Briefcase className="w-5 h-5" />
                   </div>
                   <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Completed Jobs</p>
-                  <p className="text-2xl font-extrabold text-slate-900 font-outfit mt-1">18 Jobs</p>
-                  <p className="text-[10px] font-semibold text-slate-500 mt-1">Delhi Cooperative Federation</p>
+                  <p className="text-2xl font-extrabold text-slate-900 font-outfit mt-1">{completedJobsCount} Jobs</p>
+                  <p className="text-[10px] font-semibold text-slate-500 mt-1">{profile.coop}</p>
                 </div>
 
                 <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 text-center">
@@ -591,27 +648,19 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-                      <tr>
-                        <td className="p-4 font-mono">BK-0912</td>
-                        <td className="p-4 font-bold text-slate-900">Residential Wiring</td>
-                        <td className="p-4">Preeti Sharma</td>
-                        <td className="p-4">Aug 25, 2026</td>
-                        <td className="p-4 text-right text-emerald-700 font-bold">₹1,800</td>
-                      </tr>
-                      <tr>
-                        <td className="p-4 font-mono">BK-0899</td>
-                        <td className="p-4 font-bold text-slate-900">AC Switch Repair</td>
-                        <td className="p-4">Manish Gupta</td>
-                        <td className="p-4">Aug 22, 2026</td>
-                        <td className="p-4 text-right text-emerald-700 font-bold">₹850</td>
-                      </tr>
-                      <tr>
-                        <td className="p-4 font-mono">BK-0845</td>
-                        <td className="p-4 font-bold text-slate-900">Appliance Setup</td>
-                        <td className="p-4">Sunita Devi</td>
-                        <td className="p-4">Aug 18, 2026</td>
-                        <td className="p-4 text-right text-emerald-700 font-bold">₹1,850</td>
-                      </tr>
+                      {payoutHistory.length > 0 ? payoutHistory.map((ph, idx) => (
+                        <tr key={idx}>
+                          <td className="p-4 font-mono text-[10px]">{ph.jobId?.substring(0, 8) || `BK-${1000+idx}`}</td>
+                          <td className="p-4 font-bold text-slate-900">{ph.service}</td>
+                          <td className="p-4">{ph.customer}</td>
+                          <td className="p-4">{ph.date}</td>
+                          <td className="p-4 text-right text-emerald-700 font-bold">{String(ph.amount).startsWith('₹') ? ph.amount : `₹${ph.amount}`}</td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-slate-500">No completed jobs yet to generate payouts.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

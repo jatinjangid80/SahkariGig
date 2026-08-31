@@ -39,6 +39,7 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalRole, setAuthModalRole] = useState<'Customer' | 'Worker'>('Customer');
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleOpenAuth = (role: 'Customer' | 'Worker' = 'Customer', mode: 'signin' | 'signup' = 'signin') => {
     setAuthModalRole(role);
@@ -288,6 +289,7 @@ export default function App() {
                 onOpenReview={handleOpenReview}
                 onVerifyQrCode={handleVerifyQrCode}
                 onNavigate={navigateTo}
+                refreshTrigger={refreshTrigger}
               />
             )}
 
@@ -309,6 +311,7 @@ export default function App() {
                   setActiveWorkerIdCard(wData);
                   setWorkerIdCardModalOpen(true);
                 }}
+                refreshTrigger={refreshTrigger}
               />
             )}
 
@@ -401,6 +404,11 @@ export default function App() {
         isOpen={paymentModalOpen}
         onClose={() => setPaymentModalOpen(false)}
         booking={activeBookingForPayment}
+        onPaymentSubmitted={(status) => {
+          if (status === 'PAID') {
+            setRefreshTrigger(prev => prev + 1);
+          }
+        }}
       />
 
       <ReviewModal

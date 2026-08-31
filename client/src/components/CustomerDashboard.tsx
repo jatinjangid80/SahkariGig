@@ -12,6 +12,7 @@ interface CustomerDashboardProps {
   onOpenReview: (booking: any) => void;
   onVerifyQrCode: (workerId: string) => void;
   onNavigate: (path: string) => void;
+  refreshTrigger?: number;
 }
 
 export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
@@ -20,7 +21,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onOpenPayment,
   onOpenReview,
   onVerifyQrCode,
-  onNavigate
+  onNavigate,
+  refreshTrigger
 }) => {
   const [activeTab, setActiveTab] = useState<'book_service' | 'my_jobs' | 'pay_review' | 'profile' | 'messages'>('book_service');
 
@@ -95,7 +97,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       setBookings(loadedBookings);
     };
     fetchBookings();
-  }, [currentUser]);
+  }, [currentUser, refreshTrigger]);
 
   // Chat / Messaging states
   const [selectedChat, setSelectedChat] = useState<any>(null);
@@ -835,6 +837,11 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                           <Star className="w-3.5 h-3.5 fill-white" />
                           <span>Review</span>
                         </button>
+                      ) : booking.paymentStatus === 'PAID' ? (
+                        <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold text-xs rounded-lg flex items-center space-x-1 border border-emerald-200">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Paid</span>
+                        </span>
                       ) : (
                         <button
                           onClick={() => onOpenPayment(booking)}
