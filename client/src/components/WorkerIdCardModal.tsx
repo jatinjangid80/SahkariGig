@@ -27,8 +27,12 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
     distanceKm: 1.8,
     isAvailableToday: true,
     validUntil: '31-DEC-2027',
-    avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80'
+    avatar: ''
   };
+
+  const finalAvatar = w.avatar && !w.avatar.includes('1540569014015') 
+    ? w.avatar 
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(w.name || 'User')}&background=10b981&color=fff&size=150`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
@@ -48,7 +52,7 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
         {/* Profile Info Header */}
         <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center space-x-4">
           <img
-            src={w.avatar}
+            src={finalAvatar}
             alt={w.name}
             className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm"
           />
