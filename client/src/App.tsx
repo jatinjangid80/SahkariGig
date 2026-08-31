@@ -344,7 +344,7 @@ export default function App() {
             email: user.email,
             role: user.role
           };
-          localStorage.setItem('demoUser', JSON.stringify(demoUser));
+          if (user.email === 'google.user@example.com') { localStorage.setItem('demoUser', JSON.stringify(demoUser)); }
           setCurrentUser(demoUser);
           
           if (user.role === 'Worker' && isSignup) {

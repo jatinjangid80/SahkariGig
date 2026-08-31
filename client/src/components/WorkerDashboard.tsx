@@ -67,62 +67,54 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
   useEffect(() => {
     if (currentUser?.id) {
-      const savedProfile = localStorage.getItem(`worker_profile_${currentUser.id}`);
-      if (savedProfile) {
-        try {
-          const parsed = JSON.parse(savedProfile);
-          // Auto-fill uploadedDocs if missing from legacy saves
-          if (!parsed.uploadedDocs) {
-            parsed.uploadedDocs = {
-              aadhaar: '',
-              membership: '',
-              skill: '',
-              background: ''
-            };
+      const fetchProfile = async () => {
+        // First try local storage
+        const savedProfile = localStorage.getItem(`worker_profile_${currentUser.id}`);
+        if (savedProfile) {
+          try {
+            const parsed = JSON.parse(savedProfile);
+            if (!parsed.uploadedDocs) parsed.uploadedDocs = { aadhaar: '', membership: '', skill: '', background: '' };
+            if (!parsed.bankDetails) parsed.bankDetails = { accountName: '', bankName: '', accountNumber: '', ifscCode: '', upiId: '' };
+            setProfile(parsed);
+            return;
+          } catch (e) {
+            console.error("Failed to parse saved profile:", e);
           }
-          if (!parsed.bankDetails) {
-            parsed.bankDetails = {
-              accountName: '',
-              bankName: '',
-              accountNumber: '',
-              ifscCode: '',
-              upiId: ''
-            };
-          }
-          setProfile(parsed);
-          return;
-        } catch (e) {
-          console.error("Failed to parse saved profile:", e);
         }
-      }
+
+        // Then try Supabase
+        const { data, error } = await supabase
+          .from('workers')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .single();
+          
+        if (data && !error) {
+          const loadedProfile = {
+            fullName: data.name || currentUser.name || '',
+            skill: data.trade || 'Electrician',
+            coop: data.coop_name || 'Delhi Labour Cooperative Federation',
+            location: data.location || '',
+            phone: data.phone || '',
+            experience: data.experience || '1-3 years',
+            language: data.language || 'English',
+            avatarUrl: data.avatar || currentUser.avatarUrl || '',
+            verified: data.is_verified ?? true,
+            radius: 15,
+            availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            timeWindow: '9:00 AM - 6:00 PM',
+            uploadedDocs: { aadhaar: '', membership: '', skill: '', background: '' },
+            bankDetails: { accountName: '', bankName: '', accountNumber: '', ifscCode: '', upiId: '' }
+          };
+          setProfile(loadedProfile);
+          localStorage.setItem(`worker_profile_${currentUser.id}`, JSON.stringify(loadedProfile));
+        } else {
+          // If no profile exists locally OR in Supabase, they must finish onboarding!
+          window.location.href = '/worker-onboarding';
+        }
+      };
       
-      // Fallback: Populate name from register auth state, empty rest
-      setProfile({
-        fullName: currentUser.name || '',
-        phone: '',
-        language: 'English',
-        skill: 'Electrician',
-        coop: 'Delhi Labour Cooperative Federation',
-        location: '',
-        radius: 15,
-        availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-        timeWindow: '9:00 AM - 6:00 PM',
-        verified: true,
-        avatarUrl: currentUser.avatarUrl || '',
-        uploadedDocs: {
-          aadhaar: '',
-          membership: '',
-          skill: '',
-          background: ''
-        },
-        bankDetails: {
-          accountName: '',
-          bankName: '',
-          accountNumber: '',
-          ifscCode: '',
-          upiId: ''
-        }
-      });
+      fetchProfile();
     }
   }, [currentUser]);
 

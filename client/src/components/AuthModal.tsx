@@ -130,7 +130,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             email: data.user.email || '',
             role: selectedRole
           };
-          localStorage.setItem('demoUser', JSON.stringify(loggedInUser));
           setSuccessMsg('Account created successfully! Welcome to SahkariGig.');
           onSuccess(loggedInUser, true);
           setTimeout(() => onClose(), 1500);
@@ -150,7 +149,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             email: data.user.email || '',
             role: data.user.user_metadata?.role || selectedRole
           };
-          localStorage.setItem('demoUser', JSON.stringify(loggedInUser));
           setSuccessMsg('Signed in successfully! Redirecting...');
           onSuccess(loggedInUser, false);
           setTimeout(() => onClose(), 1500);
