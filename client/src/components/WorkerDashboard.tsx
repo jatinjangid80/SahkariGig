@@ -212,6 +212,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const handleAccept = async (id: string) => {
     // Update local state optimistically
     setRequests(requests.map(r => r.id === id ? { ...r, status: 'ACCEPTED' } : r));
+    // Switch to active tab
+    setCurrentTab('active');
     // Update DB
     await supabase.from('bookings').update({ status: 'ACCEPTED' }).eq('id', id);
   };
