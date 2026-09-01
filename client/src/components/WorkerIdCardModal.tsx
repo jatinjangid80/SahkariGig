@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, ShieldCheck, Download, Building, Star, Clock, MapPin, IndianRupee, Smartphone, CalendarDays, Map } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
 interface WorkerIdCardModalProps {
@@ -54,8 +54,13 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
     if (!idCardRef.current) return;
     setIsDownloading(true);
     try {
-      const canvas = await html2canvas(idCardRef.current, { scale: 3, useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = await htmlToImage.toPng(idCardRef.current, { pixelRatio: 3 });
+      
+      const img = new Image();
+      img.src = imgData;
+      await new Promise((resolve) => (img.onload = resolve));
+      
+      const canvas = { width: img.width, height: img.height };
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
