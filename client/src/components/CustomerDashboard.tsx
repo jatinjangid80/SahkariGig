@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle, Send, CheckCheck, Lock, Circle, Smile, Paperclip, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle, Send, CheckCheck, Lock, Circle, Smile, Paperclip, ArrowLeft, Camera } from 'lucide-react';
 import { supabase } from '../supabase';
 import { io } from 'socket.io-client';
 import { encryptMessage, decryptMessage } from '../utils/crypto';
@@ -24,7 +24,28 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onNavigate,
   refreshTrigger
 }) => {
-  const [activeTab, setActiveTab] = useState<'book_service' | 'my_jobs' | 'pay_review' | 'profile' | 'messages' | 'history'>('book_service');
+  const [activeTab, setActiveTab] = useState<'my_jobs' | 'pay_review' | 'history' | 'profile' | 'messages'>('my_jobs');
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editName, setEditName] = useState(currentUser?.name || '');
+  const [editEmail, setEditEmail] = useState(currentUser?.email || '');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (currentUser) {
+      setEditName(currentUser.name || '');
+      setEditEmail(currentUser.email || '');
+    }
+  }, [currentUser]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setAvatarUrl(url);
+    }
+  };
 
   // Sample bookings with state transitions: REQUESTED -> ACCEPTED -> IN_PROGRESS -> COMPLETED -> RATED
   const [bookings, setBookings] = useState<any[]>([]);
@@ -38,7 +59,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             .select('*')
             .eq('customer_id', currentUser.id)
             .order('created_at', { ascending: false });
-          
+
           if (!error && data) {
             const loadedBookings = data.map(b => ({
               id: b.id,
@@ -63,7 +84,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         console.error("Booking fetch error:", err);
       }
     };
-    
+
     fetchBookings();
 
     // Set up realtime subscription
@@ -253,7 +274,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                     name: currentUser?.name || 'Customer',
                     online_at: new Date().toISOString()
                   });
-                  
+
                   // Gracefully upsert DB presence (if table exists)
                   await supabase
                     .from('user_presence')
@@ -261,7 +282,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                       user_id: myId,
                       status: 'online',
                       updated_at: new Date().toISOString()
-                    }).select().then(() => {}, () => {});
+                    }).select().then(() => { }, () => { });
                 }
               });
 
@@ -408,7 +429,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                       user_id: myId,
                       status: 'online',
                       updated_at: new Date().toISOString()
-                    }).select().then(() => {}, () => {});
+                    }).select().then(() => { }, () => { });
                 }
               });
 
@@ -435,7 +456,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               status: 'offline',
               last_seen: new Date().toISOString(),
               updated_at: new Date().toISOString()
-            }).then(() => {});
+            }).then(() => { });
 
           supabase.removeChannel(activePresenceChannel);
         }
@@ -450,7 +471,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
 
     const myId = currentUser?.id || 'demo-customer';
     const partnerId = selectedChat.worker_id || 'demo-worker';
-    
+
     const textToSend = chatInput.trim();
     const tempId = `msg-opt-${Date.now()}`;
 
@@ -490,12 +511,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         setChatMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
       } else if (insertData && insertData[0]) {
         const realMsg = insertData[0];
-        setChatMessages((prev) => prev.map(m => m.id === tempId ? { 
-          ...m, 
-          id: realMsg.id, 
-          status: 'sent', 
+        setChatMessages((prev) => prev.map(m => m.id === tempId ? {
+          ...m,
+          id: realMsg.id,
+          status: 'sent',
           createdAt: realMsg.created_at,
-          readAt: null 
+          readAt: null
         } : m));
       }
     } else {
@@ -515,12 +536,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         setChatMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
       } else if (insertData && insertData[0]) {
         const realMsg = insertData[0];
-        setChatMessages((prev) => prev.map(m => m.id === tempId ? { 
-          ...m, 
-          id: realMsg.id, 
-          status: 'sent', 
+        setChatMessages((prev) => prev.map(m => m.id === tempId ? {
+          ...m,
+          id: realMsg.id,
+          status: 'sent',
           createdAt: realMsg.created_at,
-          readAt: realMsg.read_at 
+          readAt: realMsg.read_at
         } : m));
       }
     }
@@ -559,11 +580,11 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   const handleRetryDashboardMessage = async (msg: any) => {
     // Remove the failed message from state
     setChatMessages(prev => prev.filter(m => m.id !== msg.id));
-    
+
     // Retry sending
     const myId = currentUser?.id || 'demo-customer';
     const partnerId = selectedChat.worker_id || 'demo-worker';
-    
+
     const tempId = `msg-opt-${Date.now()}`;
     const optimisticMsg = {
       id: tempId,
@@ -595,12 +616,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         setChatMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
       } else if (insertData && insertData[0]) {
         const realMsg = insertData[0];
-        setChatMessages((prev) => prev.map(m => m.id === tempId ? { 
-          ...m, 
-          id: realMsg.id, 
-          status: 'sent', 
+        setChatMessages((prev) => prev.map(m => m.id === tempId ? {
+          ...m,
+          id: realMsg.id,
+          status: 'sent',
           createdAt: realMsg.created_at,
-          readAt: null 
+          readAt: null
         } : m));
       }
     } else {
@@ -619,12 +640,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         setChatMessages((prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
       } else if (insertData && insertData[0]) {
         const realMsg = insertData[0];
-        setChatMessages((prev) => prev.map(m => m.id === tempId ? { 
-          ...m, 
-          id: realMsg.id, 
-          status: 'sent', 
+        setChatMessages((prev) => prev.map(m => m.id === tempId ? {
+          ...m,
+          id: realMsg.id,
+          status: 'sent',
           createdAt: realMsg.created_at,
-          readAt: realMsg.read_at 
+          readAt: realMsg.read_at
         } : m));
       }
     }
@@ -692,7 +713,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   return (
     <div className="py-8 bg-slate-50 min-h-[calc(100vh-4rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
+
         {/* Dashboard Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -712,94 +733,61 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         {/* Global Tabs */}
         <div className="flex items-center space-x-6 border-b border-slate-200 mt-6 pb-0">
           <button
-            onClick={() => setActiveTab('book_service')}
-            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'book_service'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            Book Service
-          </button>
-          <button
             onClick={() => setActiveTab('my_jobs')}
-            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'my_jobs'
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'my_jobs'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
-            }`}
+              }`}
           >
             My Jobs
           </button>
           <button
             onClick={() => setActiveTab('pay_review')}
-            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'pay_review'
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'pay_review'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
-            }`}
+              }`}
           >
             Pay & Review
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'history'
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'history'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
-            }`}
+              }`}
           >
             History
           </button>
           <button
             onClick={() => setActiveTab('profile')}
-            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${
-              activeTab === 'profile'
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'profile'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
-            }`}
+              }`}
           >
             Profile
           </button>
         </div>
 
-        {/* Book Service Tab */}
-        {activeTab === 'book_service' && (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 text-center flex flex-col items-center justify-center min-h-[400px]">
-            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-6">
-              <Calendar className="w-10 h-10" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 font-outfit mb-3">Need a service?</h2>
-            <p className="text-slate-500 max-w-md mx-auto mb-8">
-              Book a verified professional from the cooperative for your electrical, plumbing, carpentry, and other household needs.
-            </p>
-            <button 
-              onClick={() => onNavigate('/services')}
-              className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"
-            >
-              <span>Book a Service Now</span>
-            </button>
-          </div>
-        )}
-
-        {/* My Jobs Tab (Active Bookings) */}
+        {/* My Jobs Tab (All Bookings) */}
         {activeTab === 'my_jobs' && (
           <div className="light-card p-6 min-h-[400px]">
             <div className="space-y-4">
-              {bookings.filter(b => b.status !== 'COMPLETED').length > 0 ? (
-                bookings.filter(b => b.status !== 'COMPLETED').map((booking) => (
+              {bookings.length > 0 ? (
+                bookings.map((booking) => (
                   <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
-                    
+
                     <div className="space-y-1">
                       <div className="flex items-center space-x-3">
                         <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
                         {getStatusBadge(booking.status)}
                       </div>
-                      
+
                       <p className="text-xs text-slate-600">
                         Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
                       </p>
-                      
+
                       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
                         <span className="flex items-center">
                           <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
@@ -869,69 +857,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 font-outfit mb-2">No Jobs Yet</h3>
                   <p className="text-slate-500 mb-6">You haven't booked any services yet.</p>
-                  <button 
+                  <button
                     onClick={() => setActiveTab('book_service')}
                     className="px-6 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-xl hover:bg-emerald-100 transition-colors"
                   >
                     Book a Service
                   </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* History Tab */}
-        {activeTab === 'history' && (
-          <div className="light-card p-6 min-h-[400px]">
-            <div className="space-y-4">
-              {bookings.filter(b => b.status === 'COMPLETED').length > 0 ? (
-                bookings.filter(b => b.status === 'COMPLETED').map((booking) => (
-                  <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
-                    
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
-                        {getStatusBadge(booking.status)}
-                      </div>
-                      
-                      <p className="text-xs text-slate-600">
-                        Completed by: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
-                      </p>
-                      
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
-                        <span className="flex items-center">
-                          <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                          {booking.date}, {booking.time}
-                        </span>
-                        <span className="flex items-center">
-                          <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                          {booking.address}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-end gap-4">
-                      {/* Actions */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          onClick={() => onOpenReview(booking)}
-                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
-                        >
-                          <Star className="w-3.5 h-3.5 fill-white" />
-                          <span>Review</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-4">
-                    <CheckCheck className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 font-outfit mb-2">No History Yet</h3>
-                  <p className="text-slate-500">You haven't completed any bookings yet.</p>
                 </div>
               )}
             </div>
@@ -945,13 +876,13 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               {bookings.filter(b => b.status === 'COMPLETED' || b.paymentStatus === 'PENDING' || b.paymentStatus === 'PAID').length > 0 ? (
                 bookings.filter(b => b.status === 'COMPLETED' || b.paymentStatus === 'PENDING' || b.paymentStatus === 'PAID').map((booking) => (
                   <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
-                    
+
                     <div className="space-y-1">
                       <div className="flex items-center space-x-3">
                         <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
                         {getStatusBadge(booking.status)}
                       </div>
-                      
+
                       <p className="text-xs text-slate-600">
                         Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span>
                       </p>
@@ -977,7 +908,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                           <span className="text-[10px] text-slate-500 font-medium">Awaiting Completion to Review</span>
                         </div>
                       )}
-                      
+
                       {booking.status === 'COMPLETED' && (
                         <button
                           onClick={() => onOpenReview(booking)}
@@ -1003,43 +934,160 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           </div>
         )}
 
+        {/* History Tab */}
+        {activeTab === 'history' && (
+          <div className="light-card p-6 min-h-[400px]">
+            <div className="space-y-4">
+              {bookings.filter(b => b.status === 'COMPLETED' || b.status === 'RATED').length > 0 ? (
+                bookings.filter(b => b.status === 'COMPLETED' || b.status === 'RATED').map((booking) => (
+                  <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-3">
+                        <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
+                        {getStatusBadge(booking.status)}
+                      </div>
+                      <p className="text-xs text-slate-600">
+                        Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
+                        <span className="flex items-center">
+                          <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                          {booking.date}, {booking.time}
+                        </span>
+                        <span className="flex items-center">
+                          <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                          {booking.address}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-4">
+                    <Clock className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 font-outfit mb-2">No History</h3>
+                  <p className="text-slate-500">You don't have any past bookings.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-1 space-y-6">
               <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full text-white font-extrabold text-3xl flex items-center justify-center mx-auto mb-4 shadow-inner">
-                  {firstName.charAt(0).toUpperCase()}
+                <div 
+                  className="w-24 h-24 rounded-full mx-auto mb-4 relative group overflow-hidden shadow-inner flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-700"
+                  onClick={() => isEditingProfile && fileInputRef.current?.click()}
+                >
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-white font-extrabold text-3xl">{(editName.charAt(0) || firstName.charAt(0)).toUpperCase()}</span>
+                  )}
+                  {isEditingProfile && (
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <Camera className="w-6 h-6 text-white mb-1" />
+                      <span className="text-white text-[10px] font-bold">Upload</span>
+                    </div>
+                  )}
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 font-outfit">{currentUser?.name}</h3>
-                <p className="text-slate-500 text-sm mb-4">{currentUser?.email || 'customer@example.com'}</p>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleImageUpload} 
+                  accept="image/*" 
+                  className="hidden" 
+                />
+                <h3 className="text-xl font-bold text-slate-900 font-outfit">{isEditingProfile ? editName : (currentUser?.name || editName)}</h3>
+                <p className="text-slate-500 text-sm mb-4">{isEditingProfile ? editEmail : (currentUser?.email || editEmail || 'customer@example.com')}</p>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 mb-4">
                   <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
                   Verified Customer
                 </span>
+                
+                {!isEditingProfile && (
+                  <button 
+                    onClick={() => setIsEditingProfile(true)}
+                    className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition-colors text-sm"
+                  >
+                    Edit Profile
+                  </button>
+                )}
               </div>
             </div>
-            
+
             <div className="md:col-span-2 space-y-6">
               <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-                <h3 className="text-lg font-bold text-slate-900 font-outfit mb-6 border-b border-slate-100 pb-4">Account Details</h3>
-                
+                <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                  <h3 className="text-lg font-bold text-slate-900 font-outfit">Account Details</h3>
+                  {isEditingProfile && (
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => {
+                          setIsEditingProfile(false);
+                          setEditName(currentUser?.name || '');
+                          setEditEmail(currentUser?.email || '');
+                          setAvatarUrl('');
+                        }}
+                        className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setIsEditingProfile(false);
+                          if (currentUser) {
+                            currentUser.name = editName;
+                            currentUser.email = editEmail;
+                          }
+                        }}
+                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition-colors"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Full Name</label>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900">
-                      {currentUser?.name}
-                    </div>
+                    {isEditingProfile ? (
+                      <input 
+                        type="text" 
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full p-3 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      />
+                    ) : (
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900">
+                        {editName || currentUser?.name}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email Address</label>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900">
-                      {currentUser?.email || 'Not provided'}
-                    </div>
+                    {isEditingProfile ? (
+                      <input 
+                        type="email" 
+                        value={editEmail}
+                        onChange={(e) => setEditEmail(e.target.value)}
+                        className="w-full p-3 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      />
+                    ) : (
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900">
+                        {editEmail || currentUser?.email || 'Not provided'}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Role</label>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900 capitalize">
+                    <div className={`p-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-900 capitalize ${isEditingProfile ? 'text-slate-500 cursor-not-allowed' : ''}`}>
                       {currentUser?.role || 'Customer'}
                     </div>
                   </div>
@@ -1052,7 +1100,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         {/* Embedded Messaging Tab */}
         {activeTab === 'messages' && (
           <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xl flex flex-col md:flex-row h-[600px] max-h-[85vh]">
-            
+
             {/* Left Column: Chat Room List */}
             <div className={`w-full md:w-80 border-r border-slate-200 flex flex-col bg-slate-50 ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
               <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between">
@@ -1072,9 +1120,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                     <div
                       key={booking.id}
                       onClick={() => setSelectedChat(booking)}
-                      className={`p-4 cursor-pointer hover:bg-slate-100 transition-colors flex items-center justify-between ${
-                        isSelected ? 'bg-emerald-50 border-l-4 border-emerald-600' : 'bg-white'
-                      }`}
+                      className={`p-4 cursor-pointer hover:bg-slate-100 transition-colors flex items-center justify-between ${isSelected ? 'bg-emerald-50 border-l-4 border-emerald-600' : 'bg-white'
+                        }`}
                     >
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
@@ -1155,7 +1202,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                     ) : (
                       chatMessages.map((msg) => {
                         const isMe = msg.senderType === 'Customer';
-                        const timeString = msg.createdAt 
+                        const timeString = msg.createdAt
                           ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                           : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -1165,11 +1212,10 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                             className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                           >
                             <div
-                              className={`max-w-[80%] px-3 py-2 rounded-2xl shadow-xs leading-relaxed text-xs relative ${
-                                isMe
+                              className={`max-w-[80%] px-3 py-2 rounded-2xl shadow-xs leading-relaxed text-xs relative ${isMe
                                   ? 'bg-emerald-600 text-white rounded-tr-xs'
                                   : 'bg-white text-slate-900 border border-slate-200/80 rounded-tl-xs'
-                              }`}
+                                }`}
                             >
                               <p className="whitespace-pre-wrap break-words">{msg.text}</p>
                               <div className={`flex items-center justify-end space-x-1.5 mt-1 text-[8px] ${isMe ? 'text-emerald-100' : 'text-slate-400'}`}>
@@ -1180,8 +1226,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                                       <Clock className="w-3 h-3 text-emerald-200 animate-spin" />
                                     )}
                                     {msg.status === 'failed' && (
-                                      <button 
-                                        type="button" 
+                                      <button
+                                        type="button"
                                         onClick={() => handleRetryDashboardMessage(msg)}
                                         className="focus:outline-none"
                                         title="Failed to send. Click to retry."
