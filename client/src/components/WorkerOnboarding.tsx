@@ -309,10 +309,32 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer">
-                    <Upload className="w-8 h-8 text-slate-500 mx-auto mb-3" />
-                    <h4 className="text-slate-900 font-medium">Upload Aadhaar Card</h4>
-                    <p className="text-xs text-slate-500 mt-1">JPG, PNG or PDF (Max 5MB)</p>
+                  <div 
+                    onClick={() => aadhaarInputRef.current?.click()}
+                    className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative"
+                  >
+                    <input 
+                      type="file" 
+                      ref={aadhaarInputRef} 
+                      className="hidden" 
+                      accept=".jpg,.jpeg,.png,.pdf" 
+                      onChange={handleAadhaarUpload} 
+                    />
+                    {profile.aadhaar ? (
+                      <>
+                        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Check className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <h4 className="text-emerald-700 font-medium">{profile.aadhaar}</h4>
+                        <p className="text-xs text-emerald-600 mt-1">Uploaded successfully</p>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-slate-500 mx-auto mb-3" />
+                        <h4 className="text-slate-900 font-medium">Upload Aadhaar Card</h4>
+                        <p className="text-xs text-slate-500 mt-1">JPG, PNG or PDF (Max 5MB)</p>
+                      </>
+                    )}
                   </div>
                   
                   <div>
