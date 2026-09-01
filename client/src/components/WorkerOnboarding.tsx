@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Check, CheckCircle, ChevronRight, ShieldCheck, Upload, Banknote, FileText, IndianRupee } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -63,6 +63,19 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
       terms: false
     }
   });
+
+  useEffect(() => {
+    if (currentUser) {
+      setProfile(prev => ({
+        ...prev,
+        fullName: prev.fullName || currentUser.name || ''
+      }));
+      if (currentUser.avatarUrl && !avatarUrl) {
+        setAvatarUrl(currentUser.avatarUrl);
+      }
+    }
+  }, [currentUser]);
+
 
   const allDeclarationsChecked = Object.values(profile.declaration).every(Boolean);
 
