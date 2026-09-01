@@ -96,8 +96,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           {currentUser ? (
             <div className="relative group">
               <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 cursor-pointer transition-colors hover:bg-slate-200">
-                {currentUser.avatarUrl && !currentUser.avatarUrl.includes("ui-avatars.com") ? (
-                  <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-7 h-7 rounded-full object-cover border border-emerald-500 shadow-2xs" />
+                {currentUser.avatarUrl && !currentUser.avatarUrl.includes("ui-avatars.com") && !imageError ? (
+                  <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-7 h-7 rounded-full object-cover border border-emerald-500 shadow-2xs" onError={() => setImageError(true)} />
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold font-outfit">
                     {currentUser.name.charAt(0).toUpperCase()}
@@ -186,8 +186,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             {currentUser ? (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  {currentUser.avatarUrl && !currentUser.avatarUrl.includes("ui-avatars.com") ? (
-                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shadow-sm" />
+                  {currentUser.avatarUrl && !currentUser.avatarUrl.includes("ui-avatars.com") && !imageError ? (
+                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shadow-sm" onError={() => setImageError(true)} />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold font-outfit">
                       {currentUser.name.charAt(0).toUpperCase()}
