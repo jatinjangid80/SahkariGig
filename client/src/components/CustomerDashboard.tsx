@@ -991,7 +991,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   className="w-24 h-24 rounded-full mx-auto mb-4 relative group overflow-hidden shadow-inner flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-700"
                   onClick={() => isEditingProfile && fileInputRef.current?.click()}
                 >
-                  {avatarUrl ? (
+                  {avatarUrl && !avatarUrl.includes("ui-avatars.com") ? (
                     <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-white font-extrabold text-3xl">{(editName.charAt(0) || firstName.charAt(0)).toUpperCase()}</span>
