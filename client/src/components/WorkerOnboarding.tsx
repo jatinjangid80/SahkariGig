@@ -9,35 +9,21 @@ interface WorkerOnboardingProps {
 }
 
 export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser, onComplete, onLogout }) => {
-  const [step, setStep] = useState(1);
+  
+  // Load draft from localStorage
+  const draftStr = localStorage.getItem(`worker_draft_${currentUser?.id || 'demo'}`);
+  const draft = draftStr ? JSON.parse(draftStr) : null;
+
+  const [step, setStep] = useState(draft?.step || 1);
   const totalSteps = 8;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatarUrl || '');
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-
-  
   const aadhaarInputRef = useRef<HTMLInputElement>(null);
-  const handleAadhaarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProfile({...profile, aadhaar: file.name});
-    }
-  };
+  
+  const [avatarUrl, setAvatarUrl] = useState(draft?.avatarUrl || currentUser?.avatarUrl || '');
 
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState(draft?.profile || {
     fullName: currentUser?.name || '',
     phone: '',
     language: 'English',
@@ -63,6 +49,46 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
       terms: false
     }
   });
+
+  // Save draft to localStorage on any change
+  useEffect(() => {
+    if (currentUser?.id) {
+      localStorage.setItem(`worker_draft_${currentUser.id}`, JSON.stringify({
+        step,
+        avatarUrl,
+        profile
+      }));
+    }
+  }, [step, avatarUrl, profile, currentUser?.id]);
+
+  useEffect(() => {
+    if (currentUser) {
+      setProfile(prev => ({
+        ...prev,
+        fullName: prev.fullName || currentUser.name || ''
+      }));
+      if (currentUser.avatarUrl && !avatarUrl) {
+        setAvatarUrl(currentUser.avatarUrl);
+      }
+    }
+  }, [currentUser]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  const handleAadhaarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfile({...profile, aadhaar: file.name});
+    }
+  };
 
   useEffect(() => {
     if (currentUser) {
@@ -161,6 +187,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
       }
     }
     
+    localStorage.removeItem(`worker_draft_${currentUser.id}`);
     setIsSubmitting(false);
     onComplete();
   };
