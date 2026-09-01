@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, CheckCircle2, QrCode, Calendar, Award, Building, UserCheck } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, QrCode, Calendar, Award, Building, UserCheck, X } from 'lucide-react';
 import { supabase } from '../supabase';
 
 interface VerifyWorkerPageProps {
@@ -66,11 +66,19 @@ export const VerifyWorkerPage: React.FC<VerifyWorkerPageProps> = ({
   }, [workerId]);
 
   return (
-    <div className="py-12 bg-slate-50 min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-xl max-h-[95vh] overflow-y-auto rounded-2xl shadow-2xl border border-slate-200 relative">
         
         {/* Verification Header */}
-        <div className="bg-emerald-600 text-white p-6 text-center relative">
+        <div className="bg-emerald-600 text-white p-6 text-center relative rounded-t-2xl">
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-emerald-100 hover:text-white bg-emerald-700/50 hover:bg-emerald-700 p-2 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2 backdrop-blur-xs">
             <ShieldCheck className="w-7 h-7 text-white" />
           </div>
