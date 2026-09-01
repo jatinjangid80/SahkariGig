@@ -542,3 +542,4 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
     </div>
   );
 };
+

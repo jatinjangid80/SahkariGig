@@ -14,7 +14,25 @@
   "devDependencies": {
     "concurrently": "^9.1.0"
   },
-  "keywords": ["cooperative", "gig-services", "sih26089", "react", "express", "mongodb"],
+  "keywords": [
+    "cooperative",
+    "gig-services",
+    "sih26089",
+    "react",
+    "express",
+    "mongodb"
+  ],
   "author": "SIH Team",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "firebase-admin": "^14.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.4",
+    "razorpay": "^2.9.8",
+    "socket.io": "^4.8.3"
+  }
 }
