@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { X, ShieldCheck, QrCode, Building, Award, Star, Clock, MapPin, IndianRupee } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, ShieldCheck, Download, Building, Star, Clock, MapPin, IndianRupee, Smartphone, CalendarDays, Map } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface WorkerIdCardModalProps {
   isOpen: boolean;
@@ -13,6 +15,8 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
   worker
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'idcard'>('overview');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const idCardRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen) return null;
 
@@ -27,12 +31,41 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
     distanceKm: 1.8,
     isAvailableToday: true,
     validUntil: '31-DEC-2027',
-    avatar: ''
+    avatar: '',
+    // New fields requested by user
+    mobile: '+91 98765 43210',
+    age: 32,
+    stateOfBirth: 'Uttar Pradesh',
+    serviceState: 'Delhi NCR'
   };
 
   const finalAvatar = w.avatar && !w.avatar.includes('1540569014015') 
     ? w.avatar 
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(w.name || 'User')}&background=10b981&color=fff&size=150`;
+
+  const downloadPDF = async () => {
+    if (!idCardRef.current) return;
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(idCardRef.current, { scale: 3, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [85.6, 53.98] // Standard CR80 ID Card size
+      });
+      const pdfWidth = 53.98;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`SahkariGig_ID_${w.name.replace(/\s+/g, '_')}.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
@@ -55,6 +88,7 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
             src={finalAvatar}
             alt={w.name}
             className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm"
+            crossOrigin="anonymous"
           />
           <div>
             <h3 className="text-xl font-extrabold text-slate-900 font-outfit">{w.name}</h3>
@@ -131,22 +165,83 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="text-center space-y-5">
-              <div className="inline-block bg-emerald-50 text-emerald-800 text-xs font-extrabold px-3 py-1.5 rounded-full border border-emerald-200">
-                Gov. ID: {w.workerId || w.worker_id}
-              </div>
+            <div className="space-y-5">
+              
+              {/* ID Card Wrapper */}
+              <div className="flex justify-center">
+                <div 
+                  ref={idCardRef}
+                  className="bg-white border-2 border-emerald-600 rounded-xl overflow-hidden w-[260px] shadow-sm flex flex-col relative"
+                >
+                  {/* ID Card Header (Logo) */}
+                  <div className="bg-emerald-600 text-white p-3 flex flex-col items-center justify-center">
+                    <div className="flex items-center space-x-1.5">
+                      <ShieldCheck className="w-5 h-5 text-emerald-100" />
+                      <span className="font-extrabold text-sm font-outfit tracking-wide">SahkariGig</span>
+                    </div>
+                    <p className="text-[8px] text-emerald-100 mt-1 uppercase tracking-wider opacity-90">Cooperative ID Card</p>
+                  </div>
 
-              {/* Simulated QR Code */}
-              <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm max-w-[180px] mx-auto space-y-2">
-                <div className="w-32 h-32 bg-slate-900 mx-auto rounded-lg p-2 flex items-center justify-center">
-                  <QrCode className="w-28 h-28 text-white" />
+                  {/* ID Card Body */}
+                  <div className="p-4 flex flex-col items-center">
+                    <img
+                      src={finalAvatar}
+                      alt={w.name}
+                      className="w-20 h-20 rounded-full object-cover border-4 border-emerald-50 mb-3"
+                      crossOrigin="anonymous"
+                    />
+                    <h3 className="text-lg font-bold text-slate-900 leading-tight">{w.name}</h3>
+                    <p className="text-[10px] font-semibold text-emerald-700 mb-4">{w.trade}</p>
+
+                    <div className="w-full space-y-2 text-[10px]">
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-500 font-medium flex items-center space-x-1">
+                          <Smartphone className="w-3 h-3" /> <span>Mobile</span>
+                        </span>
+                        <span className="font-bold text-slate-900">{w.mobile || w.phone || '+91 98765 43210'}</span>
+                      </div>
+                      
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-500 font-medium flex items-center space-x-1">
+                          <CalendarDays className="w-3 h-3" /> <span>Age</span>
+                        </span>
+                        <span className="font-bold text-slate-900">{w.age || '32'} yrs</span>
+                      </div>
+
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-500 font-medium flex items-center space-x-1">
+                          <Map className="w-3 h-3" /> <span>Born In</span>
+                        </span>
+                        <span className="font-bold text-slate-900 text-right">{w.stateOfBirth || w.state_of_birth || 'Uttar Pradesh'}</span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium flex items-center space-x-1">
+                          <MapPin className="w-3 h-3" /> <span>Service</span>
+                        </span>
+                        <span className="font-bold text-emerald-700 text-right">{w.serviceState || w.service_state || 'Delhi NCR'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ID Card Footer */}
+                  <div className="bg-slate-50 p-2 border-t border-slate-200 text-center">
+                    <p className="text-[8px] font-mono text-slate-500">ID: {w.workerId || w.worker_id}</p>
+                    <p className="text-[7px] text-slate-400 mt-0.5">Valid until {w.validUntil || '31-DEC-2027'}</p>
+                  </div>
                 </div>
-                <p className="text-[10px] font-semibold text-slate-500 uppercase">Scan to Verify Live Status</p>
               </div>
 
-              <p className="text-[10px] text-slate-400 border-t border-slate-100 pt-4">
-                Issued under SahkariGig Labour Cooperative Framework • Valid until {w.validUntil || '31-DEC-2027'}
-              </p>
+              {/* Download Button */}
+              <button
+                onClick={downloadPDF}
+                disabled={isDownloading}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-70 text-white font-bold text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center space-x-2"
+              >
+                <Download className="w-4 h-4" />
+                <span>{isDownloading ? 'Generating PDF...' : 'Download ID Card PDF'}</span>
+              </button>
+
             </div>
           )}
         </div>
