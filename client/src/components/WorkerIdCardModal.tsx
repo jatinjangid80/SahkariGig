@@ -39,7 +39,7 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
     serviceState: 'Delhi NCR'
   };
 
-  const hasAvatar = w.avatar && !w.avatar.includes('1540569014015');
+  const hasAvatar = w.avatar && !w.avatar.includes('1540569014015') && !w.avatar.includes('ui-avatars.com');
   
   const getInitials = (name: string) => {
     if (!name) return 'U';
