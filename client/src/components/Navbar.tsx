@@ -21,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   workerActiveTab,
   onWorkerTabChange
 }) => {
+  const [imageError, setImageError] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = currentUser?.role === 'Worker' ? [
