@@ -6,13 +6,14 @@ import { encryptMessage, decryptMessage } from '../utils/crypto';
 import { CONFIG } from '../config';
 
 interface CustomerDashboardProps {
-  currentUser?: { name: string; role: string; id: string; email: string } | null;
+  currentUser?: { name: string; role: string; id: string; email: string; avatarUrl?: string } | null;
   onOpenChat: (booking: any) => void;
   onOpenPayment: (booking: any) => void;
   onOpenReview: (booking: any) => void;
   onVerifyQrCode: (workerId: string) => void;
   onNavigate: (path: string) => void;
   refreshTrigger?: number;
+  onProfileUpdate?: (updatedUser: { avatarUrl?: string; name?: string; email?: string }) => void;
 }
 
 export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
@@ -22,28 +23,34 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onOpenReview,
   onVerifyQrCode,
   onNavigate,
-  refreshTrigger
+  refreshTrigger,
+  onProfileUpdate
 }) => {
   const [activeTab, setActiveTab] = useState<'my_jobs' | 'pay_review' | 'history' | 'profile' | 'messages'>('my_jobs');
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState(currentUser?.name || '');
   const [editEmail, setEditEmail] = useState(currentUser?.email || '');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatarUrl || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (currentUser) {
       setEditName(currentUser.name || '');
       setEditEmail(currentUser.email || '');
+      if (currentUser.avatarUrl) setAvatarUrl(currentUser.avatarUrl);
     }
   }, [currentUser]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setAvatarUrl(url);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setAvatarUrl(base64String);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -735,8 +742,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <button
             onClick={() => setActiveTab('my_jobs')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'my_jobs'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-900'
               }`}
           >
             My Jobs
@@ -744,8 +751,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <button
             onClick={() => setActiveTab('pay_review')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'pay_review'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-900'
               }`}
           >
             Pay & Review
@@ -753,8 +760,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <button
             onClick={() => setActiveTab('history')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'history'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-900'
               }`}
           >
             History
@@ -762,8 +769,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <button
             onClick={() => setActiveTab('profile')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'profile'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-900'
               }`}
           >
             Profile
@@ -858,7 +865,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   <h3 className="text-lg font-bold text-slate-900 font-outfit mb-2">No Jobs Yet</h3>
                   <p className="text-slate-500 mb-6">You haven't booked any services yet.</p>
                   <button
-                    onClick={() => setActiveTab('book_service')}
+                    onClick={() => onNavigate('/services')}
                     className="px-6 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-xl hover:bg-emerald-100 transition-colors"
                   >
                     Book a Service
@@ -980,7 +987,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-1 space-y-6">
               <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 text-center">
-                <div 
+                <div
                   className="w-24 h-24 rounded-full mx-auto mb-4 relative group overflow-hidden shadow-inner flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-700"
                   onClick={() => isEditingProfile && fileInputRef.current?.click()}
                 >
@@ -996,12 +1003,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                     </div>
                   )}
                 </div>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleImageUpload} 
-                  accept="image/*" 
-                  className="hidden" 
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  className="hidden"
                 />
                 <h3 className="text-xl font-bold text-slate-900 font-outfit">{isEditingProfile ? editName : (currentUser?.name || editName)}</h3>
                 <p className="text-slate-500 text-sm mb-4">{isEditingProfile ? editEmail : (currentUser?.email || editEmail || 'customer@example.com')}</p>
@@ -1009,9 +1016,9 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
                   Verified Customer
                 </span>
-                
+
                 {!isEditingProfile && (
-                  <button 
+                  <button
                     onClick={() => setIsEditingProfile(true)}
                     className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition-colors text-sm"
                   >
@@ -1027,7 +1034,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   <h3 className="text-lg font-bold text-slate-900 font-outfit">Account Details</h3>
                   {isEditingProfile && (
                     <div className="flex space-x-2">
-                      <button 
+                      <button
                         onClick={() => {
                           setIsEditingProfile(false);
                           setEditName(currentUser?.name || '');
@@ -1038,12 +1045,11 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                       >
                         Cancel
                       </button>
-                      <button 
+                      <button
                         onClick={() => {
                           setIsEditingProfile(false);
-                          if (currentUser) {
-                            currentUser.name = editName;
-                            currentUser.email = editEmail;
+                          if (onProfileUpdate) {
+                            onProfileUpdate({ name: editName, email: editEmail, avatarUrl: avatarUrl });
                           }
                         }}
                         className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition-colors"
@@ -1058,8 +1064,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Full Name</label>
                     {isEditingProfile ? (
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         className="w-full p-3 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -1073,8 +1079,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email Address</label>
                     {isEditingProfile ? (
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         value={editEmail}
                         onChange={(e) => setEditEmail(e.target.value)}
                         className="w-full p-3 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -1213,8 +1219,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                           >
                             <div
                               className={`max-w-[80%] px-3 py-2 rounded-2xl shadow-xs leading-relaxed text-xs relative ${isMe
-                                  ? 'bg-emerald-600 text-white rounded-tr-xs'
-                                  : 'bg-white text-slate-900 border border-slate-200/80 rounded-tl-xs'
+                                ? 'bg-emerald-600 text-white rounded-tr-xs'
+                                : 'bg-white text-slate-900 border border-slate-200/80 rounded-tl-xs'
                                 }`}
                             >
                               <p className="whitespace-pre-wrap break-words">{msg.text}</p>

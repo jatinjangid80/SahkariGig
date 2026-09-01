@@ -67,7 +67,8 @@ export default function App() {
           id: session.user.id,
           email: session.user.email || '',
           name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-          role: session.user.user_metadata?.role || 'Customer'
+          role: session.user.user_metadata?.role || 'Customer',
+          avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
         });
       } else {
         // Auto-prompt login page modal on first visit of the session if not logged in
@@ -86,7 +87,8 @@ export default function App() {
           id: session.user.id,
           email: session.user.email || '',
           name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-          role: session.user.user_metadata?.role || 'Customer'
+          role: session.user.user_metadata?.role || 'Customer',
+          avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
         });
       } else {
         if (localStorage.getItem('mockAdmin') !== 'true' && !localStorage.getItem('demoUser')) {
@@ -139,8 +141,9 @@ export default function App() {
         const email = session.user.email || '';
         const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
         const role = session.user.user_metadata?.role || 'Customer';
+        const avatarUrl = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
 
-        setCurrentUser({ name, role, id: session.user.id, email });
+        setCurrentUser({ name, role, id: session.user.id, email, avatarUrl });
       }
     });
 
@@ -157,6 +160,10 @@ export default function App() {
   };
 
   const handleOpenBooking = (worker?: any) => {
+    if (!currentUser) {
+      setAuthModalOpen(true);
+      return;
+    }
     setSelectedWorkerForBooking(worker || null);
     setBookingModalOpen(true);
   };
@@ -267,7 +274,6 @@ export default function App() {
         {currentPath === '/verify' && (
           <VerifyWorkerPage
             workerId={verifyWorkerId || 'WORKER-DEL-8901'}
-            onClose={() => navigateTo('/')}
           />
         )}
 
@@ -303,6 +309,27 @@ export default function App() {
                 onVerifyQrCode={handleVerifyQrCode}
                 onNavigate={navigateTo}
                 refreshTrigger={refreshTrigger}
+                onProfileUpdate={async (updatedUser) => {
+                  setCurrentUser(prev => prev ? { ...prev, ...updatedUser } : null);
+                  const saved = localStorage.getItem('demoUser');
+                  if (saved) {
+                    const parsed = JSON.parse(saved);
+                    localStorage.setItem('demoUser', JSON.stringify({ ...parsed, ...updatedUser }));
+                  }
+                  
+                  if (currentUser?.id && !currentUser.id.startsWith('demo-') && !currentUser.id.startsWith('admin-')) {
+                    try {
+                      await supabase.auth.updateUser({
+                        data: { 
+                          full_name: updatedUser.name || currentUser.name,
+                          avatar_url: updatedUser.avatarUrl || currentUser.avatarUrl
+                        }
+                      });
+                    } catch (e) {
+                      console.error("Failed to update profile on Supabase", e);
+                    }
+                  }
+                }}
               />
             )}
 
@@ -341,7 +368,7 @@ export default function App() {
 
       {/* Footer */}
       {currentPath !== '/worker-onboarding' && (
-        <Footer onNavigate={navigateTo} />
+        <Footer onNavigate={navigateTo} currentUser={currentUser} />
       )}
 
       {/* Interactive Modals */}

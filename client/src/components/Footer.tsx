@@ -4,9 +4,10 @@ import { Github, Twitter, Linkedin, ShieldCheck, PhoneCall, CheckCircle2, ArrowU
 
 interface FooterProps {
   onNavigate: (path: string) => void;
+  currentUser?: any;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
   return (
     <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 pt-16 pb-12 font-sans relative overflow-hidden">
       {/* Background Accent Blur */}
@@ -63,16 +64,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   Find Services
                 </button>
               </li>
-              <li>
-                <button onClick={() => onNavigate('/for-workers')} className="hover:text-emerald-400 transition-colors text-slate-400 hover:underline">
-                  Join as Worker
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('/verify')} className="hover:text-emerald-400 transition-colors text-slate-400 hover:underline">
-                  Verify Worker ID
-                </button>
-              </li>
+              {!currentUser && (
+                <li>
+                  <button onClick={() => onNavigate('/for-workers')} className="hover:text-emerald-400 transition-colors text-slate-400 hover:underline">
+                    Join as Worker
+                  </button>
+                </li>
+              )}
               <li>
                 <button onClick={() => onNavigate('/about')} className="hover:text-emerald-400 transition-colors text-slate-400 hover:underline">
                   About Cooperatives
@@ -84,12 +82,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Column 2: Popular Trades */}
           <div className="space-y-4">
             <h4 className="font-bold text-white text-xs uppercase tracking-wider font-outfit">Popular Services</h4>
-            <ul className="space-y-2.5 text-sm">
-              <li><span className="text-slate-400 hover:text-white cursor-pointer">Electrical Repairs</span></li>
-              <li><span className="text-slate-400 hover:text-white cursor-pointer">Plumbing & Sanitation</span></li>
-              <li><span className="text-slate-400 hover:text-white cursor-pointer">Carpentry & Woodwork</span></li>
-              <li><span className="text-slate-400 hover:text-white cursor-pointer">Painting & Polishing</span></li>
-              <li><span className="text-slate-400 hover:text-white cursor-pointer">Home Cleaning</span></li>
+            <ul className="space-y-2.5 text-sm flex flex-col items-start">
+              <li><button onClick={() => onNavigate('/services')} className="text-slate-400 hover:text-white transition-colors hover:underline text-left">Electrical Repairs</button></li>
+              <li><button onClick={() => onNavigate('/services')} className="text-slate-400 hover:text-white transition-colors hover:underline text-left">Plumbing & Sanitation</button></li>
+              <li><button onClick={() => onNavigate('/services')} className="text-slate-400 hover:text-white transition-colors hover:underline text-left">Carpentry & Woodwork</button></li>
+              <li><button onClick={() => onNavigate('/services')} className="text-slate-400 hover:text-white transition-colors hover:underline text-left">Painting & Polishing</button></li>
+              <li><button onClick={() => onNavigate('/services')} className="text-slate-400 hover:text-white transition-colors hover:underline text-left">Home Cleaning</button></li>
             </ul>
           </div>
 
@@ -129,18 +127,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
         </div>
 
-        {/* Bottom Bar: Copyright & Jatin Jangid Creator Badge */}
-        <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-slate-400 text-center md:text-left">
+        {/* Bottom Bar: Copyright */}
+        <div className="mt-8 flex items-center justify-center">
+          <div className="text-xs text-slate-400 text-center">
             <p>© 2026 SahkariGig. All rights reserved.</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">SIH Problem Statement ID: <span className="font-semibold text-slate-300">SIH26089</span></p>
-          </div>
-          
-          <div className="flex items-center space-x-1.5 text-xs bg-gradient-to-r from-slate-800 via-slate-800/90 to-slate-800 px-4 py-2.5 rounded-full border border-slate-700/80 shadow-md">
-            <span className="text-slate-300">Designed and Deployed by</span>
-            <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 font-outfit tracking-wide text-sm ml-1">
-              Jatin Jangid
-            </span>
           </div>
         </div>
 

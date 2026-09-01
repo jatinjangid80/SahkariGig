@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, User, LogIn, Menu, X, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, User, LogIn, LogOut, Menu, X, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { CONFIG } from '../config';
 
 interface NavbarProps {
@@ -29,7 +29,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Earnings', path: '/dashboard', tab: 'earnings' },
     { label: 'Profile', path: '/dashboard', tab: 'profile' },
   ] : (currentUser?.role === 'Customer' ? [
-    { label: 'Home', path: '/' },
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Find Services', path: '/services' },
     { label: 'Cooperatives', path: '/cooperatives' },
@@ -81,7 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               key={link.label}
               onClick={() => handleNavClick(link.path, link.tab)}
-              className={`text-sm font-medium transition-colors ${
+              className={`text-sm font-medium transition-colors focus:outline-none ${
                 currentPath === link.path && (!link.tab || workerActiveTab === link.tab)
                   ? 'text-emerald-700 font-semibold'
                   : 'text-slate-600 hover:text-slate-900'
@@ -95,8 +94,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right CTA / Auth Status */}
         <div className="hidden md:flex items-center space-x-4">
           {currentUser ? (
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200">
+            <div className="relative group">
+              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 cursor-pointer transition-colors hover:bg-slate-200">
                 {currentUser.avatarUrl ? (
                   <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-7 h-7 rounded-full object-cover border border-emerald-500 shadow-2xs" />
                 ) : (
@@ -110,19 +109,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
 
-              {onLogoutClick && (
-                <button
-                onClick={() => {
-                  if (onLogoutClick) {
-                    localStorage.removeItem('mockAdmin');
-                    onLogoutClick();
-                  }
-                }}
-                className="px-4 py-2 text-slate-600 hover:text-slate-900 font-semibold text-xs transition-colors"
-              >
-                Log Out
-              </button>
-              )}
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
+                <div className="py-2">
+                  <button
+                    onClick={() => handleNavClick('/dashboard', 'profile')}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center font-medium"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </button>
+                  {onLogoutClick && (
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('mockAdmin');
+                        onLogoutClick();
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center font-medium"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Log Out
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -163,7 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               key={link.label}
               onClick={() => handleNavClick(link.path, link.tab)}
-              className={`block w-full text-left py-2 text-base font-medium transition-colors ${
+              className={`block w-full text-left py-2 text-base font-medium transition-colors focus:outline-none ${
                 currentPath === link.path && (!link.tab || workerActiveTab === link.tab)
                   ? 'text-emerald-700 font-bold'
                   : 'text-slate-700 hover:text-emerald-600'
