@@ -39,9 +39,16 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
     serviceState: 'Delhi NCR'
   };
 
-  const finalAvatar = w.avatar && !w.avatar.includes('1540569014015') 
-    ? w.avatar 
-    : `https://ui-avatars.com/api/?name=${encodeURIComponent(w.name || 'User')}&background=10b981&color=fff&size=150`;
+  const hasAvatar = w.avatar && !w.avatar.includes('1540569014015');
+  
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
 
   const downloadPDF = async () => {
     if (!idCardRef.current) return;
@@ -61,7 +68,7 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
       pdf.save(`SahkariGig_ID_${w.name.replace(/\s+/g, '_')}.pdf`);
     } catch (err) {
       console.error('Error generating PDF:', err);
-      alert('Failed to download PDF. Please try again.');
+      alert('Failed to download PDF: ' + (err.message || err));
     } finally {
       setIsDownloading(false);
     }
@@ -84,12 +91,18 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
 
         {/* Profile Info Header */}
         <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center space-x-4">
-          <img
-            src={finalAvatar}
-            alt={w.name}
-            className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm"
-            crossOrigin="anonymous"
-          />
+          {hasAvatar ? (
+            <img
+              src={w.avatar}
+              alt={w.name}
+              className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm"
+              crossOrigin={w.avatar.startsWith('data:') ? undefined : 'anonymous'}
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm bg-emerald-600 flex items-center justify-center text-white font-bold text-2xl">
+              {getInitials(w.name)}
+            </div>
+          )}
           <div>
             <h3 className="text-xl font-extrabold text-slate-900 font-outfit">{w.name}</h3>
             <p className="text-xs font-semibold text-emerald-700">{w.trade}</p>
@@ -184,12 +197,18 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
 
                   {/* ID Card Body */}
                   <div className="p-4 flex flex-col items-center">
-                    <img
-                      src={finalAvatar}
-                      alt={w.name}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-emerald-50 mb-3"
-                      crossOrigin="anonymous"
-                    />
+                    {hasAvatar ? (
+                      <img
+                        src={w.avatar}
+                        alt={w.name}
+                        className="w-20 h-20 rounded-full object-cover border-4 border-emerald-50 mb-3"
+                        crossOrigin={w.avatar.startsWith('data:') ? undefined : 'anonymous'}
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full object-cover border-4 border-emerald-50 mb-3 bg-emerald-600 flex items-center justify-center text-white font-bold text-3xl">
+                        {getInitials(w.name)}
+                      </div>
+                    )}
                     <h3 className="text-lg font-bold text-slate-900 leading-tight">{w.name}</h3>
                     <p className="text-[10px] font-semibold text-emerald-700 mb-4">{w.trade}</p>
 
