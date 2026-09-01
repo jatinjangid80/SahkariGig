@@ -173,7 +173,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
               <div key={idx} className="flex items-center space-x-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                   step > idx + 1 ? 'bg-emerald-500 text-white' : 
-                  step === idx + 1 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' : 
+                  step === idx + 1 ? 'bg-emerald-100 text-emerald-700 border border-emerald-300' : 
                   'bg-slate-100 text-slate-400'
                 }`}>
                   {step > idx + 1 ? <CheckCircle className="w-4 h-4" /> : idx + 1}
@@ -191,7 +191,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
           
           {/* Mobile Progress */}
           <div className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between">
-            <span className="text-emerald-400 font-bold text-sm">Step {step} of {totalSteps}</span>
+            <span className="text-emerald-600 font-bold text-sm">Step {step} of {totalSteps}</span>
             <span className="text-slate-900 font-medium text-sm">{stepsList[step-1]}</span>
           </div>
 
@@ -205,7 +205,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                 </div>
                 
                 <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center text-emerald-400 border border-slate-200 overflow-hidden">
+                  <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center text-emerald-600 border border-slate-200 overflow-hidden">
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
@@ -290,9 +290,9 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                       <option>Mumbai Domestic Workers Union</option>
                     </select>
                   </div>
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-start space-x-3 mt-4">
-                    <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <p className="text-sm text-emerald-100/80 leading-relaxed">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start space-x-3 mt-4">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <p className="text-sm text-emerald-800 leading-relaxed">
                       By selecting a cooperative federation, you agree that your profile will be sent to their administrative panel for verification. You must be an active member.
                     </p>
                   </div>
@@ -361,7 +361,7 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                   <div>
                     <div className="flex justify-between text-xs font-medium text-slate-500 mb-2">
                       <label>Maximum Travel Radius</label>
-                      <span className="text-emerald-400">{profile.radius} km</span>
+                      <span className="text-emerald-600">{profile.radius} km</span>
                     </div>
                     <input 
                       type="range" 
@@ -420,9 +420,9 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
                   <p className="text-slate-500 text-sm mt-1">Add your bank account to receive payments for completed jobs.</p>
                 </div>
                 
-                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-start space-x-3 mb-2">
-                  <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                  <p className="text-sm text-emerald-100/90 font-medium">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start space-x-3 mb-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-emerald-800 font-medium">
                     Your bank details are encrypted and used only for payments and account verification.
                   </p>
                 </div>
