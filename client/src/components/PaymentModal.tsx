@@ -50,8 +50,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         throw new Error('Booking ID is missing');
       }
 
+      // Determine correct API URL (relative on Vercel, localhost:5001 for local dev)
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const baseUrl = import.meta.env.VITE_API_URL || (isLocalhost ? 'http://localhost:5001' : '');
+
       // Create order
-      const apiRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/payments/create-order`, {
+      const apiRes = await fetch(`${baseUrl}/api/payments/create-order`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
@@ -78,7 +82,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         handler: async function (response: any) {
           try {
             // Verify payment
-            const verifyRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/payments/verify`, {
+            const verifyRes = await fetch(`${baseUrl}/api/payments/verify`, {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json'
