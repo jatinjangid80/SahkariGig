@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
@@ -79,12 +80,18 @@ app.post('/api/contact', (req, res) => {
   }, 'Thank you for contacting CoopGig! Our cooperative admin team will respond shortly.');
 });
 
-// 4. Global 404 Route Handler
-app.use((req, res) => {
-  return sendError(res, `Route handler for ${req.method} ${req.path} not found.`, 404);
+// 4. API 404 Handler (Only for /api/* routes)
+app.use('/api', (req, res) => {
+  return sendError(res, `API route ${req.method} ${req.path} not found.`, 404);
 });
 
-// 5. Global Error Middleware
+// 5. Serve React Frontend (Production/Render)
+app.use(express.static(path.join(__dirname, '../dist')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+});
+
+// 6. Global Error Middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled Server Error:', err);
   return sendError(res, 'Internal Server Error', 500, err.message);
