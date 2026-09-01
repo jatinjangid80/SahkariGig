@@ -28,6 +28,15 @@ export const WorkerOnboarding: React.FC<WorkerOnboardingProps> = ({ currentUser,
   };
 
 
+  
+  const aadhaarInputRef = useRef<HTMLInputElement>(null);
+  const handleAadhaarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfile({...profile, aadhaar: file.name});
+    }
+  };
+
   const [profile, setProfile] = useState({
     fullName: currentUser?.name || '',
     phone: '',
