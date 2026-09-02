@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip, CheckCircle2, Navigation, ExternalLink } from 'lucide-react';
 import { supabase } from '../supabase';
 // @ts-ignore
 import confetti from 'canvas-confetti';
@@ -214,9 +214,16 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     // Update local state optimistically
     setRequests(requests.map(r => r.id === id ? { ...r, status: 'ACCEPTED' } : r));
     // Switch to active tab
-    setCurrentTab('active');
+    setLocalTab('active');
+    if (onTabChange) {
+      onTabChange('active');
+    }
     // Update DB
-    await supabase.from('bookings').update({ status: 'ACCEPTED' }).eq('id', id);
+    try {
+      await supabase.from('bookings').update({ status: 'ACCEPTED' }).eq('id', id);
+    } catch (e) {
+      console.error('Failed to update booking to ACCEPTED:', e);
+    }
   };
 
   const handleMarkCompleted = async (id: string) => {
@@ -552,19 +559,34 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                       </div>
                     </div>
 
-                    {/* Coordinates & Location Pin */}
-                    <div className="bg-slate-100 rounded-2xl p-4 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    {/* Location Pin & Service Address (Direct Google Maps Navigation) */}
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.address || 'New Delhi')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-slate-100 hover:bg-emerald-50/80 rounded-2xl p-4 border border-slate-200/80 hover:border-emerald-300 flex items-center justify-between gap-4 transition-all group cursor-pointer shadow-2xs"
+                      title="Open in Google Maps"
+                    >
                       <div className="flex items-start space-x-2.5">
-                        <MapPin className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                        <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 group-hover:border-emerald-300 flex items-center justify-center text-emerald-600 shrink-0 shadow-2xs transition-colors">
+                          <MapPin className="w-4 h-4" />
+                        </div>
                         <div>
-                          <p className="text-xs font-bold text-slate-800 leading-tight">{req.address}</p>
-                          <p className="text-[10px] text-slate-500 mt-1">Customer coordinates verified via PostGIS GPS bounds</p>
+                          <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-900 leading-tight">
+                            {req.address}
+                          </p>
+                          <p className="text-[10px] text-slate-500 group-hover:text-emerald-700 mt-0.5 flex items-center">
+                            <span>Tap to open Google Maps navigation</span>
+                            <ExternalLink className="w-2.5 h-2.5 ml-1" />
+                          </p>
                         </div>
                       </div>
-                      <span className="text-[10px] bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-slate-600 font-bold font-mono self-start sm:self-auto shrink-0 shadow-2xs">
-                        28.6139° N, 77.2090° E
-                      </span>
-                    </div>
+
+                      <div className="px-3 py-1.5 rounded-xl bg-emerald-700 group-hover:bg-emerald-800 text-white text-[11px] font-bold flex items-center space-x-1.5 shrink-0 shadow-xs transition-colors">
+                        <Navigation className="w-3.5 h-3.5" />
+                        <span>Directions</span>
+                      </div>
+                    </a>
 
                     {/* Safety Verification QR Code Info */}
                     <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex items-start space-x-3">

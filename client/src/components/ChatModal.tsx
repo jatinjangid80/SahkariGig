@@ -24,12 +24,53 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
   const [isLocalTyping, setIsLocalTyping] = useState(false);
   
   const toggleReaction = (messageId: string, emoji: string) => {
+    let newReaction: string | undefined;
     setMessages(current => current.map(m => {
       if (m.id === messageId) {
-        return { ...m, reaction: m.reaction === emoji ? undefined : emoji };
+        newReaction = m.reaction === emoji ? undefined : emoji;
+        return { ...m, reaction: newReaction };
       }
       return m;
     }));
+
+    if (booking?.id) {
+      try {
+        const storageKey = `chat_reactions_${booking.id}`;
+        const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        if (newReaction) {
+          saved[messageId] = newReaction;
+        } else {
+          delete saved[messageId];
+        }
+        localStorage.setItem(storageKey, JSON.stringify(saved));
+      } catch (e) {
+        console.error('Error saving reaction locally:', e);
+      }
+    }
+
+    // 1. Broadcast in real time to the other party via Supabase channel
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'reaction',
+        payload: {
+          messageId,
+          reaction: newReaction,
+          senderId: currentUser?.id
+        }
+      }).catch((err: any) => console.warn('Supabase reaction broadcast error:', err));
+    }
+
+    // 2. Broadcast via Socket.io if active
+    if (socketRef.current) {
+      socketRef.current.emit('reaction', {
+        bookingId: booking?.id,
+        conversationId,
+        messageId,
+        reaction: newReaction,
+        senderId: currentUser?.id
+      });
+    }
   };
   const channelRef = useRef<any>(null);
   const typingTimeoutRef = useRef<any>(null);
@@ -99,6 +140,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
               .order('created_at', { ascending: true });
 
             if (!historyErr && dbHistory) {
+              const reactionsKey = `chat_reactions_${booking.id}`;
+              const savedReactions = JSON.parse(localStorage.getItem(reactionsKey) || '{}');
               const decrypted = await Promise.all(dbHistory.map(async (msg: any) => {
                 const text = await decryptMessage(msg.text, booking.id);
                 return {
@@ -108,6 +151,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                   senderId: msg.sender_id,
                   senderName: msg.sender_name,
                   text,
+                  reaction: msg.reaction || savedReactions[msg.id] || undefined,
                   createdAt: msg.created_at,
                   readAt: null
                 };
@@ -189,6 +233,24 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                   return current;
                 });
               })
+              .on('broadcast', { event: 'reaction' }, (payload: any) => {
+                const { messageId, reaction } = payload.payload || {};
+                if (messageId) {
+                  setMessages((current) =>
+                    current.map((m) => (m.id === messageId ? { ...m, reaction } : m))
+                  );
+                  try {
+                    const storageKey = `chat_reactions_${booking.id}`;
+                    const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                    if (reaction) {
+                      saved[messageId] = reaction;
+                    } else {
+                      delete saved[messageId];
+                    }
+                    localStorage.setItem(storageKey, JSON.stringify(saved));
+                  } catch (e) {}
+                }
+              })
               .subscribe();
 
             activeChannel = channel;
@@ -239,6 +301,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
               .order('created_at', { ascending: true });
 
             if (!historyErr && dbHistory) {
+              const reactionsKey = `chat_reactions_${booking.id}`;
+              const savedReactions = JSON.parse(localStorage.getItem(reactionsKey) || '{}');
               const decrypted = await Promise.all(dbHistory.map(async (msg: any) => {
                 const text = await decryptMessage(msg.message, booking.id);
                 return {
@@ -248,6 +312,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                   senderId: msg.sender_id,
                   senderName: msg.sender_id === myId ? (currentUser?.name || 'User') : (currentUser?.role === 'Worker' ? (booking.customerName || 'Customer') : (booking.workerName || 'Worker')),
                   text,
+                  reaction: msg.reaction || savedReactions[msg.id] || undefined,
                   createdAt: msg.created_at,
                   readAt: msg.read_at
                 };
@@ -371,6 +436,24 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
                   return current;
                 });
+              })
+              .on('broadcast', { event: 'reaction' }, (payload: any) => {
+                const { messageId, reaction } = payload.payload || {};
+                if (messageId) {
+                  setMessages((current) =>
+                    current.map((m) => (m.id === messageId ? { ...m, reaction } : m))
+                  );
+                  try {
+                    const storageKey = `chat_reactions_${booking.id}`;
+                    const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                    if (reaction) {
+                      saved[messageId] = reaction;
+                    } else {
+                      delete saved[messageId];
+                    }
+                    localStorage.setItem(storageKey, JSON.stringify(saved));
+                  } catch (e) {}
+                }
               })
               .subscribe();
 
@@ -842,8 +925,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                       <p className="whitespace-pre-wrap break-words">{msg.text}</p>
                       
                       {msg.reaction && (
-                        <div className={`absolute -bottom-3 ${isMe ? 'right-2' : 'left-2'} bg-white border border-slate-200 shadow-sm rounded-full px-1.5 py-0.5 text-xs z-10 animate-in zoom-in duration-200`}>
-                          {msg.reaction}
+                        <div 
+                          onClick={() => toggleReaction(msg.id, msg.reaction)}
+                          className={`absolute -bottom-2.5 ${isMe ? 'right-2' : 'left-2'} bg-white border border-slate-200/90 shadow-xs rounded-full px-1.5 py-0.5 text-xs z-10 animate-in zoom-in duration-150 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform`}
+                          title="Click to remove reaction"
+                        >
+                          <span>{msg.reaction}</span>
                         </div>
                       )}
                       
@@ -873,12 +960,16 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                     </div>
 
                     {/* Reaction Bar (Hover) */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-white border border-slate-200 shadow-md rounded-full px-2 py-1 flex items-center space-x-1 z-20">
+                    <div className={`opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity absolute -top-7 ${isMe ? 'right-0' : 'left-0'} bg-white border border-slate-200 shadow-md rounded-full px-2 py-0.5 flex items-center space-x-1 z-20`}>
                       {['👍', '❤️', '😊', '🙏'].map(emoji => (
                         <button
                           key={emoji}
-                          onClick={() => toggleReaction(msg.id, emoji)}
-                          className="hover:scale-125 hover:bg-slate-100 transition-all rounded-full p-1 leading-none text-base"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleReaction(msg.id, emoji);
+                          }}
+                          className={`hover:scale-125 transition-all rounded-full p-1 leading-none text-sm cursor-pointer ${msg.reaction === emoji ? 'bg-emerald-100 scale-110' : 'hover:bg-slate-100'}`}
                           title={`React with ${emoji}`}
                         >
                           {emoji}

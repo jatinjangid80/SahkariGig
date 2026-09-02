@@ -861,10 +861,16 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                           <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
                           {booking.date}, {booking.time}
                         </span>
-                        <span className="flex items-center">
-                          <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                          {booking.address}
-                        </span>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.address || 'New Delhi')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center hover:text-emerald-700 hover:underline transition-colors cursor-pointer"
+                          title="Open in Google Maps"
+                        >
+                          <MapPin className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                          <span>{booking.address}</span>
+                        </a>
                       </div>
                     </div>
 
