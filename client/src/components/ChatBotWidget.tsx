@@ -3,7 +3,7 @@ import { MessageCircle, X, Send, Bot } from 'lucide-react';
 
 export const ChatBotWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{sender: 'bot' | 'user', text: string}[]>([
+  const [messages, setMessages] = useState<{ sender: 'bot' | 'user', text: string }[]>([
     { sender: 'bot', text: 'Hi there! How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
@@ -19,9 +19,9 @@ export const ChatBotWidget: React.FC = () => {
 
     // Simulate bot response
     setTimeout(() => {
-      setMessages([...newMessages, { 
-        sender: 'bot', 
-        text: 'Thanks for reaching out! A live support agent will be with you shortly. (This is a demo)' 
+      setMessages([...newMessages, {
+        sender: 'bot',
+        text: 'Thanks for reaching out! A live support agent will be with you shortly. (This is a demo)'
       }]);
     }, 1000);
   };
@@ -60,11 +60,10 @@ export const ChatBotWidget: React.FC = () => {
           <div className="flex-1 bg-slate-50 p-4 overflow-y-auto space-y-4 min-h-[300px]">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm font-medium ${
-                  msg.sender === 'user' 
-                    ? 'bg-emerald-600 text-white rounded-br-sm' 
-                    : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm shadow-sm'
-                }`}>
+                <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm font-medium ${msg.sender === 'user'
+                  ? 'bg-emerald-600 text-white rounded-br-sm'
+                  : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm shadow-sm'
+                  }`}>
                   {msg.text}
                 </div>
               </div>
@@ -73,14 +72,14 @@ export const ChatBotWidget: React.FC = () => {
 
           {/* Input Area */}
           <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..." 
+              placeholder="Type your message..."
               className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
             />
-            <button 
+            <button
               type="submit"
               disabled={!input.trim()}
               className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-700 transition-colors"

@@ -29,10 +29,13 @@ import { HowItWorksView } from './components/HowItWorksView';
 import { WorkerOnboarding } from './components/WorkerOnboarding';
 import { CustomerOnboarding } from './components/CustomerOnboarding';
 import { ChatBotWidget } from './components/ChatBotWidget';
+import { PopularServicesSection } from './components/PopularServicesSection';
+import { HowSahkariWorksSection } from './components/HowSahkariWorksSection';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname || '/');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedLocation, setSelectedLocation] = useState('Jaipur, Rajasthan');
   
   // User state & role management
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string; avatarUrl?: string } | null>(null);
@@ -72,10 +75,14 @@ export default function App() {
           avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
         });
       } else {
-        // Auto-prompt login page modal on first visit of the session if not logged in
+        // Auto-prompt login page modal on first visit of the session if not logged in (with 5 second delay)
         if (!sessionStorage.getItem('hasPromptedLogin')) {
           sessionStorage.setItem('hasPromptedLogin', 'true');
-          setAuthModalOpen(true);
+          setTimeout(() => {
+            if (!localStorage.getItem('mockAdmin') && !localStorage.getItem('demoUser')) {
+              setAuthModalOpen(true);
+            }
+          }, 5000);
         }
       }
     });
@@ -115,6 +122,7 @@ export default function App() {
   const [selectedWorkerForBooking, setSelectedWorkerForBooking] = useState<any>(null);
   
   const [chatModalOpen, setChatModalOpen] = useState(false);
+
   const [activeBookingForChat, setActiveBookingForChat] = useState<any>(null);
   
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -236,6 +244,7 @@ export default function App() {
           onNavigate={navigateTo}
           currentUser={currentUser}
           onLoginClick={() => handleOpenAuth('Customer', 'signin')}
+          onGetStartedClick={() => handleOpenAuth('Customer', 'signup')}
           onLogoutClick={() => {
             localStorage.removeItem('demoUser');
             localStorage.removeItem('mockAdmin');
@@ -253,17 +262,45 @@ export default function App() {
         {(currentPath === '/' || currentPath === '/workers') && (
           <>
             {currentPath === '/' && (
-              <HeroSection
-                currentUser={currentUser}
-                onSearchService={(cat) => setSelectedCategory(cat)}
-                onNavigate={navigateTo}
-              />
+              <>
+                <HeroSection
+                  currentUser={currentUser}
+                  onSearchService={(cat, loc) => {
+                    setSelectedCategory(cat);
+                    if (loc) setSelectedLocation(loc);
+                    const elem = document.getElementById('workers-directory');
+                    if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  onNavigate={navigateTo}
+                  selectedLocation={selectedLocation}
+                  onLocationChange={(loc) => setSelectedLocation(loc)}
+                />
+
+                {/* Popular Services Categories */}
+                <PopularServicesSection
+                  onSelectCategory={(cat) => {
+                    setSelectedCategory(cat);
+                    const elem = document.getElementById('workers-directory');
+                    if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                />
+
+                {/* How SahkariGig Works */}
+                <HowSahkariWorksSection
+                  onNavigate={navigateTo}
+                  onExploreServices={() => {
+                    const elem = document.getElementById('popular-services');
+                    if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                />
+              </>
             )}
 
-            {/* Verified Worker Discovery Directory */}
-            <div id="workers-directory" className="py-6">
+            {/* Verified Worker Discovery Directory (Trusted workers near you) */}
+            <div id="workers-directory">
               <WorkerDirectory
                 selectedCategory={selectedCategory}
+                selectedCity={selectedLocation.split(',')[0]}
                 currentUserId={currentUser?.id}
                 onSelectWorkerForBooking={handleOpenBooking}
                 onViewWorkerProfile={(worker) => {
@@ -345,10 +382,14 @@ export default function App() {
                 onTabChange={setWorkerActiveTab as any}
                 onProfileUpdate={async (updatedUser) => {
                   setCurrentUser(prev => prev ? { ...prev, ...updatedUser } : null);
-                  const saved = localStorage.getItem('demoUser');
-                  if (saved) {
-                    const parsed = JSON.parse(saved);
-                    localStorage.setItem('demoUser', JSON.stringify({ ...parsed, ...updatedUser }));
+                  try {
+                    const saved = localStorage.getItem('demoUser');
+                    if (saved) {
+                      const parsed = JSON.parse(saved);
+                      localStorage.setItem('demoUser', JSON.stringify({ ...parsed, ...updatedUser }));
+                    }
+                  } catch (e) {
+                    console.error("Local storage update failed", e);
                   }
                   
                   if (currentUser?.id && !currentUser.id.startsWith('demo-') && !currentUser.id.startsWith('admin-')) {
@@ -374,10 +415,14 @@ export default function App() {
                 onTabChange={setWorkerActiveTab}
                 onProfileUpdate={(updatedUser) => {
                   setCurrentUser(prev => prev ? { ...prev, ...updatedUser } : null);
-                  const saved = localStorage.getItem('demoUser');
-                  if (saved) {
-                    const parsed = JSON.parse(saved);
-                    localStorage.setItem('demoUser', JSON.stringify({ ...parsed, ...updatedUser }));
+                  try {
+                    const saved = localStorage.getItem('demoUser');
+                    if (saved) {
+                      const parsed = JSON.parse(saved);
+                      localStorage.setItem('demoUser', JSON.stringify({ ...parsed, ...updatedUser }));
+                    }
+                  } catch (e) {
+                    console.error("Local storage update failed, possibly due to image size", e);
                   }
                 }}
                 onOpenChat={handleOpenChat}
@@ -440,6 +485,11 @@ export default function App() {
       <BookingModal
         isOpen={bookingModalOpen}
         onClose={() => setBookingModalOpen(false)}
+        onTrackBooking={() => {
+          setWorkerActiveTab('my_jobs' as any);
+          setRefreshTrigger(prev => prev + 1);
+          navigateTo('/dashboard');
+        }}
         worker={selectedWorkerForBooking}
         onBookingSuccess={async (newBooking) => {
           if (currentUser?.id) {
@@ -461,8 +511,8 @@ export default function App() {
             });
             if (error) {
               console.error('Failed to save booking:', error);
-              alert('Database Error: ' + error.message);
             }
+            setRefreshTrigger(prev => prev + 1);
           }
         }}
       />

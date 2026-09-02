@@ -21,13 +21,15 @@ interface BookingModalProps {
   onClose: () => void;
   worker?: Worker | null;
   onBookingSuccess: (bookingData: any) => void;
+  onTrackBooking?: () => void;
 }
 
 export const BookingModal: React.FC<BookingModalProps> = ({
   isOpen,
   onClose,
   worker,
-  onBookingSuccess
+  onBookingSuccess,
+  onTrackBooking
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [serviceType, setServiceType] = useState(worker?.trade || 'Electrician');
@@ -494,8 +496,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   <span>Print PDF</span>
                 </button>
                 <button
-                  onClick={onClose}
-                  className="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors"
+                  onClick={() => {
+                    onClose();
+                    if (onTrackBooking) {
+                      onTrackBooking();
+                    }
+                  }}
+                  className="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
                 >
                   Close & Track Booking
                 </button>

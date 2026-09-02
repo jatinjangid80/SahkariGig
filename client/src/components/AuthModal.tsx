@@ -10,9 +10,9 @@ interface AuthModalProps {
   defaultMode?: 'signin' | 'signup';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ 
-  isOpen, 
-  onClose, 
+export const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose,
   onSuccess,
   defaultRole,
   defaultMode
@@ -20,7 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   // For signup flow: 'role' selection first, then 'form'
   const [signupStep, setSignupStep] = useState<'role' | 'form'>('role');
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -37,7 +37,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setSignupStep('role');
       }
       if (defaultMode) setMode(defaultMode);
-      
+
       // Reset state on open
       setEmail('');
       setPassword('');
@@ -60,10 +60,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           redirectTo: window.location.origin
         }
       });
-      
+
       const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 3000));
       let response: any = null;
-      
+
       try {
         response = await Promise.race([supabaseCall, timeout]);
       } catch (err: any) {
@@ -77,7 +77,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
         throw err;
       }
-      
+
       if (response?.error) {
         setTimeout(() => {
           onSuccess({ name: 'Google User', email: 'google.user@example.com', role: 'Customer' });
@@ -95,7 +95,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Handle Email/Password Auth
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // HARDCODED ADMIN BYPASS
     if (email === 'admin@gmail.com') {
       localStorage.setItem('mockAdmin', 'true');
@@ -168,16 +168,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       </div>
 
       <div className="bg-white w-full max-w-[460px] rounded-2xl shadow-2xl border border-slate-100 overflow-hidden relative z-10 flex flex-col">
-        
+
         {/* Modal Header */}
         <div className="p-6 bg-white border-b border-slate-100 relative">
           <div className="flex flex-col items-center justify-center text-center space-y-3 mt-2">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-emerald-600/20">
-              Cg
+              Sg
             </div>
-            <div>
-              <h3 className="font-bold text-xl text-slate-900 font-outfit tracking-tight">SahkariGig</h3>
-              <p className="text-sm text-slate-500 mt-1">Connect with trusted cooperative workers</p>
+            <div className="flex flex-col items-center">
+              <div className="flex items-center space-x-2">
+                <h3 className="font-extrabold text-xl text-slate-900 font-outfit tracking-tight">SahkariGig</h3>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                  <ShieldCheck className="w-3 h-3 mr-1 text-emerald-600" />
+                  Cooperative
+                </span>
+              </div>
+              <p className="text-sm text-slate-500 mt-1">Worker-owned platform</p>
             </div>
           </div>
           <button
@@ -190,26 +196,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 space-y-6">
-          
+
           {/* Mode Switcher Tabs */}
           <div className="flex bg-slate-100/80 p-1.5 rounded-xl text-sm font-semibold">
             <button
               onClick={() => { setMode('signin'); setErrorMsg(''); }}
-              className={`flex-1 py-2.5 rounded-lg transition-all duration-200 ${
-                mode === 'signin'
-                  ? 'bg-white text-slate-900 shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className={`flex-1 py-2.5 rounded-lg transition-all duration-200 ${mode === 'signin'
+                ? 'bg-white text-slate-900 shadow-sm font-bold'
+                : 'text-slate-500 hover:text-slate-700'
+                }`}
             >
               Sign In
             </button>
             <button
               onClick={() => { setMode('signup'); setSignupStep('role'); setErrorMsg(''); }}
-              className={`flex-1 py-2.5 rounded-lg transition-all duration-200 ${
-                mode === 'signup'
-                  ? 'bg-white text-slate-900 shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className={`flex-1 py-2.5 rounded-lg transition-all duration-200 ${mode === 'signup'
+                ? 'bg-white text-slate-900 shadow-sm font-bold'
+                : 'text-slate-500 hover:text-slate-700'
+                }`}
             >
               Create Account
             </button>
@@ -274,7 +278,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-5">
-              
+
               <button
                 onClick={handleGoogleSignIn}
                 disabled={loading}
@@ -297,7 +301,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                
+
                 {mode === 'signup' && (
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -349,8 +353,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       className="w-full pl-10 pr-12 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow"
                     />
                     <Lock className="w-5 h-5 text-slate-400 absolute left-3 top-3" />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-3 p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
                     >
@@ -383,9 +387,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </form>
             </div>
           )}
-          
+
         </div>
-        
+
         {/* Footer */}
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col items-center justify-center text-center">
           <div className="flex items-center text-slate-600 font-medium text-xs mb-1.5">

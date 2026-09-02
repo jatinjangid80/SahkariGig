@@ -33,6 +33,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const [payoutSuccess, setPayoutSuccess] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
+  const [previewDocsData, setPreviewDocsData] = useState<Record<string, { url: string, type: string }>>({});
   
   // Dynamic Supabase Stats
   const [weeklyBalance, setWeeklyBalance] = useState(0);
@@ -332,6 +333,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const handleDocUpload = (provider: 'aadhaar' | 'membership' | 'skill' | 'background', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const fileUrl = URL.createObjectURL(file);
+      setPreviewDocsData(prev => ({
+        ...prev,
+        [provider]: { url: fileUrl, type: file.type }
+      }));
+
       setProfile(prev => {
         const updated = {
           ...prev,
@@ -966,7 +973,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           </div>
                           <div className="flex items-center space-x-3">
                             {profile.uploadedDocs?.aadhaar && (
-                              <button type="button" onClick={() => setPreviewDoc(profile.uploadedDocs.aadhaar)} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
+                              <button type="button" onClick={() => setPreviewDoc('aadhaar')} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
                             )}
                             <button
                               type="button"
@@ -982,6 +989,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
                           className="hidden"
+                          onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
                           onChange={(e) => handleDocUpload('aadhaar', e)}
                         />
                       </div>
@@ -999,7 +1007,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           </div>
                           <div className="flex items-center space-x-3">
                             {profile.uploadedDocs?.membership && (
-                              <button type="button" onClick={() => setPreviewDoc(profile.uploadedDocs.membership)} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
+                              <button type="button" onClick={() => setPreviewDoc('membership')} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
                             )}
                             <button
                               type="button"
@@ -1015,6 +1023,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
                           className="hidden"
+                          onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
                           onChange={(e) => handleDocUpload('membership', e)}
                         />
                       </div>
@@ -1032,7 +1041,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           </div>
                           <div className="flex items-center space-x-3">
                             {profile.uploadedDocs?.skill && (
-                              <button type="button" onClick={() => setPreviewDoc(profile.uploadedDocs.skill)} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
+                              <button type="button" onClick={() => setPreviewDoc('skill')} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
                             )}
                             <button
                               type="button"
@@ -1048,6 +1057,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
                           className="hidden"
+                          onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
                           onChange={(e) => handleDocUpload('skill', e)}
                         />
                       </div>
@@ -1065,7 +1075,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           </div>
                           <div className="flex items-center space-x-3">
                             {profile.uploadedDocs?.background && (
-                              <button type="button" onClick={() => setPreviewDoc(profile.uploadedDocs.background)} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
+                              <button type="button" onClick={() => setPreviewDoc('background')} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
                             )}
                             <button
                               type="button"
@@ -1081,6 +1091,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
                           className="hidden"
+                          onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
                           onChange={(e) => handleDocUpload('background', e)}
                         />
                       </div>
@@ -1111,7 +1122,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <span className="text-indigo-600 font-bold font-outfit text-sm">DOC</span>
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">{previewDoc}</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">{profile.uploadedDocs[previewDoc]}</h3>
                   <p className="text-xs text-slate-500">Document Preview</p>
                 </div>
               </div>
@@ -1122,24 +1133,37 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="flex-1 bg-slate-100 p-8 flex flex-col items-center justify-center">
-              <div className="bg-white shadow-md rounded-xl p-12 max-w-2xl w-full aspect-[1/1.414] flex flex-col items-center justify-center border border-slate-200 space-y-4">
-                <ShieldCheck className="w-16 h-16 text-emerald-500 opacity-20" />
-                <p className="text-slate-400 font-bold font-mono text-center uppercase tracking-widest">
-                  Secure Document Vault<br/>
-                  <span className="text-xs text-slate-300 font-normal normal-case tracking-normal">({previewDoc})</span>
-                </p>
-                <div className="w-full max-w-sm mt-8 space-y-3 opacity-20">
-                  <div className="h-4 bg-slate-200 rounded-full w-3/4 mx-auto"></div>
-                  <div className="h-4 bg-slate-200 rounded-full w-full"></div>
-                  <div className="h-4 bg-slate-200 rounded-full w-5/6 mx-auto"></div>
-                  <div className="h-4 bg-slate-200 rounded-full w-4/5 mx-auto"></div>
-                </div>
-              </div>
+            <div className="flex-1 bg-slate-100 p-4 flex flex-col items-center justify-center overflow-hidden">
+              {previewDocsData[previewDoc]?.url ? (
+                previewDocsData[previewDoc].type.startsWith('image/') ? (
+                  <img src={previewDocsData[previewDoc].url} alt="Document Preview" className="max-w-full max-h-full object-contain rounded-xl shadow-md border border-slate-200" />
+                ) : (
+                  <iframe src={previewDocsData[previewDoc].url} className="w-full h-full rounded-xl shadow-md border border-slate-200 bg-white" title="Document Preview" />
+                )
+              ) : (
+                // Fallback for previously uploaded documents (demo mode)
+                profile.uploadedDocs[previewDoc]?.toLowerCase().endsWith('.pdf') ? (
+                  <iframe src="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" className="w-full h-full rounded-xl shadow-md border border-slate-200 bg-white" title="Document Preview" />
+                ) : (
+                  <img src={`https://ui-avatars.com/api/?name=Document&background=0D8ABC&color=fff&size=512`} alt="Document Preview" className="max-w-full max-h-full object-contain rounded-xl shadow-md border border-slate-200" />
+                )
+              )}
             </div>
             <div className="p-4 bg-white border-t border-slate-100 flex justify-end space-x-3">
-              <button onClick={() => setPreviewDoc(null)} className="px-5 py-2 font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors text-sm">Close Preview</button>
-              <button onClick={() => alert("Downloading document...")} className="px-5 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors text-sm">Download Original</button>
+              <button 
+                onClick={() => {
+                  const url = previewDocsData[previewDoc]?.url || (profile.uploadedDocs[previewDoc]?.toLowerCase().endsWith('.pdf') ? 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' : 'https://ui-avatars.com/api/?name=Document&background=0D8ABC&color=fff&size=512');
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = profile.uploadedDocs[previewDoc] || 'Document';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }} 
+                className="px-5 py-2 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-colors text-sm"
+              >
+                Download Original
+              </button>
             </div>
           </div>
         </div>

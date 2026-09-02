@@ -742,6 +742,28 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
 
   const firstName = currentUser?.name?.split(' ')[0] || 'Customer';
 
+  const [greeting, setGreeting] = useState(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Good morning';
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
+    if (hour >= 17 && hour < 22) return 'Good evening';
+    return 'Good night';
+  });
+
+  useEffect(() => {
+    const updateGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour >= 5 && hour < 12) setGreeting('Good morning');
+      else if (hour >= 12 && hour < 17) setGreeting('Good afternoon');
+      else if (hour >= 17 && hour < 22) setGreeting('Good evening');
+      else setGreeting('Good night');
+    };
+
+    updateGreeting();
+    const interval = setInterval(updateGreeting, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="py-8 bg-slate-50 min-h-[calc(100vh-4rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -750,7 +772,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit">
-              Good morning, {firstName} 👋
+              {greeting}, {firstName} 👋
             </h1>
           </div>
 
