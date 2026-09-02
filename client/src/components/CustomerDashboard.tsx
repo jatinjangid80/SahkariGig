@@ -30,8 +30,9 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   activeTab: propActiveTab,
   onTabChange
 }) => {
-  const validTabs = ['my_jobs', 'pay_review', 'history', 'profile', 'messages'];
-  const [activeTabState, setActiveTabState] = useState<'my_jobs' | 'pay_review' | 'history' | 'profile' | 'messages'>(() => {
+  const validTabs = ['my_jobs', 'pay_review', 'history', 'profile', 'edit_account', 'settings', 'messages'];
+  const [activeTabState, setActiveTabState] = useState<'my_jobs' | 'pay_review' | 'history' | 'profile' | 'settings' | 'messages'>(() => {
+    if (propActiveTab === 'edit_account') return 'profile';
     if (propActiveTab && validTabs.includes(propActiveTab)) {
       return propActiveTab as any;
     }
@@ -39,8 +40,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   });
 
   useEffect(() => {
-    if (propActiveTab && validTabs.includes(propActiveTab)) {
+    if (propActiveTab === 'edit_account') {
+      setActiveTabState('profile');
+      setIsEditingProfile(true);
+    } else if (propActiveTab && validTabs.includes(propActiveTab)) {
       setActiveTabState(propActiveTab as any);
+      if (propActiveTab === 'profile') setIsEditingProfile(false);
     }
   }, [propActiveTab]);
 
@@ -822,6 +827,15 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           >
             Profile
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'settings'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
+          >
+            Settings
+          </button>
         </div>
 
         {/* My Jobs Tab (Active Bookings) */}
@@ -1146,6 +1160,66 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8 max-w-4xl">
+            <div>
+              <h3 className="text-xl font-extrabold text-slate-900 font-outfit">Account & Platform Settings</h3>
+              <p className="text-xs text-slate-500 mt-1">Manage notification channels, security parameters, and verified cooperative preferences.</p>
+            </div>
+
+            {/* Notification Preferences */}
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <h4 className="text-sm font-bold text-slate-900 font-outfit uppercase tracking-wider text-emerald-800">
+                Booking & Dispatch Notifications
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 cursor-pointer hover:bg-slate-100 transition-colors">
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">SMS / WhatsApp Real-Time Dispatch Alerts</p>
+                    <p className="text-[11px] text-slate-500">Receive instant updates when a cooperative worker accepts your booking or arrives.</p>
+                  </div>
+                  <input type="checkbox" defaultChecked className="w-4 h-4 accent-emerald-600 rounded" />
+                </label>
+
+                <label className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 cursor-pointer hover:bg-slate-100 transition-colors">
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Digital Escrow Invoices & Receipts</p>
+                    <p className="text-[11px] text-slate-500">Send PDF payment receipts directly to your registered email address.</p>
+                  </div>
+                  <input type="checkbox" defaultChecked className="w-4 h-4 accent-emerald-600 rounded" />
+                </label>
+              </div>
+            </div>
+
+            {/* Security & Verification Settings */}
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <h4 className="text-sm font-bold text-slate-900 font-outfit uppercase tracking-wider text-emerald-800">
+                Security & Verification
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 cursor-pointer hover:bg-slate-100 transition-colors">
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Mandatory QR Worker Arrival Scan</p>
+                    <p className="text-[11px] text-slate-500">Prompt for live QR verification on the dashboard when the worker marks arrival.</p>
+                  </div>
+                  <input type="checkbox" defaultChecked className="w-4 h-4 accent-emerald-600 rounded" />
+                </label>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => alert('Settings saved successfully!')}
+                className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Save Preferences
+              </button>
             </div>
           </div>
         )}

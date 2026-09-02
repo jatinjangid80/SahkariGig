@@ -155,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
 
                     <button
-                      onClick={() => handleNavClick('/dashboard', 'profile')}
+                      onClick={() => handleNavClick('/dashboard', 'edit_account')}
                       className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors flex items-center font-semibold cursor-pointer"
                     >
                       <UserCheck className="w-3.5 h-3.5 mr-2 text-slate-500" />
@@ -163,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
 
                     <button
-                      onClick={() => handleNavClick('/dashboard', 'profile')}
+                      onClick={() => handleNavClick('/dashboard', 'settings')}
                       className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors flex items-center font-semibold cursor-pointer"
                     >
                       <Settings className="w-3.5 h-3.5 mr-2 text-slate-500" />

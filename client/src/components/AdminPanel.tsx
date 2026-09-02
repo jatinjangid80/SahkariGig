@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, UserCheck, Check, Lock, Key, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
+import { CONFIG } from '../config';
 
 export const AdminPanel: React.FC = () => {
   const [pin, setPin] = useState('');
@@ -83,7 +84,7 @@ export const AdminPanel: React.FC = () => {
 
   const handleApprove = async (id: string) => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
-    fetch(`http://localhost:5001/api/workers/${id}/status`, {
+    fetch(`${CONFIG.apiUrl}/api/workers/${id}/status`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ export const AdminPanel: React.FC = () => {
 
   const handleReject = async (id: string) => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
-    fetch(`http://localhost:5001/api/workers/${id}/status`, {
+    fetch(`${CONFIG.apiUrl}/api/workers/${id}/status`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
