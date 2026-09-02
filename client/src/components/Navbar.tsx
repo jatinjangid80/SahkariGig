@@ -32,14 +32,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   ] : (currentUser?.role === 'Customer' ? [
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Find Services', path: '/services' },
-    { label: 'Cooperatives', path: '/cooperatives' },
+    { label: 'Help Center', path: '/help' },
     { label: 'How It Works', path: '/how-it-works' },
     { label: 'About', path: '/about' },
   ] : [
     { label: 'Home', path: '/' },
     { label: 'Find Services', path: '/services' },
     { label: 'Find Work', path: '/for-workers' },
-    { label: 'Cooperatives', path: '/cooperatives' },
+    { label: 'Help Center', path: '/help' },
     { label: 'How It Works', path: '/how-it-works' },
     { label: 'About', path: '/about' },
   ]);

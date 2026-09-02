@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, ShieldCheck, Paperclip, Smile, MoreVertical, CheckCheck, ArrowLeft, ExternalLink, Circle, Clock, AlertCircle } from 'lucide-react';
+import { X, Send, ShieldCheck, Paperclip, Smile, MoreVertical, CheckCheck, ArrowLeft, ExternalLink, Circle, Clock, AlertCircle, Heart } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { CONFIG } from '../config';
 import { encryptMessage, decryptMessage } from '../utils/crypto';
 import { supabase } from '../supabase';
+import EmojiPicker from 'emoji-picker-react';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -21,6 +22,15 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLocalTyping, setIsLocalTyping] = useState(false);
+  
+  const toggleReaction = (messageId: string, emoji: string) => {
+    setMessages(current => current.map(m => {
+      if (m.id === messageId) {
+        return { ...m, reaction: m.reaction === emoji ? undefined : emoji };
+      }
+      return m;
+    }));
+  };
   const channelRef = useRef<any>(null);
   const typingTimeoutRef = useRef<any>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -732,19 +742,13 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
         {/* WhatsApp-Style Header */}
         <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between shadow-md z-10">
           <div className="flex items-center space-x-3">
-            <button
-              onClick={onClose}
-              className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors"
-              title="Back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+
 
             <div className="relative">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-extrabold text-sm uppercase shadow-sm">
                 {partnerName.substring(0, 2)}
               </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full" />
+              <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-slate-900 rounded-full ${isPartnerOnline ? 'bg-emerald-500' : 'bg-slate-500'}`} />
             </div>
 
             <div>
@@ -785,8 +789,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
               <div>
                 <span className="font-extrabold text-white font-outfit">{booking.service || 'Service Booking'}</span>
                 <span className="mx-2 text-emerald-400">·</span>
-                <span className="text-emerald-200 font-mono text-[11px]">#{booking.id || 'BK-1001'}</span>
-                <span className="mx-2 text-emerald-400">·</span>
                 <span className="font-bold text-emerald-300">{booking.amount || '₹550'}</span>
               </div>
             </div>
@@ -812,7 +814,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
           {messages.length === 0 ? (
             <div className="text-center text-slate-400 py-12 text-xs font-medium bg-white/60 backdrop-blur-xs p-6 rounded-2xl border border-slate-200/50 max-w-xs mx-auto">
               <ShieldCheck className="w-8 h-8 text-emerald-600 mx-auto mb-2 opacity-80" />
-              <span>Direct encrypted chat room for Booking #{booking?.id || 'BK-1001'}. Say hello!</span>
+              <span>Say hello!</span>
             </div>
           ) : (
             messages.map((msg) => {
@@ -827,39 +829,61 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
               return (
                 <div
                   key={msg.id}
-                  className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                  className={`flex flex-col group relative mb-3 ${isMe ? 'items-end' : 'items-start'}`}
                 >
-                  <div
-                    className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl shadow-xs leading-relaxed text-xs relative ${
-                      isMe
-                        ? 'bg-emerald-600 text-white rounded-tr-xs'
-                        : 'bg-white text-slate-900 border border-slate-200/80 rounded-tl-xs'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-                    
-                    <div className={`flex items-center justify-end space-x-1.5 mt-1 text-[9px] ${isMe ? 'text-emerald-100' : 'text-slate-400'}`}>
-                      <span>{timeString}</span>
-                      {isMe && (
-                        <>
-                          {msg.status === 'sending' && (
-                            <Clock className="w-3 h-3 text-emerald-200 animate-spin" />
-                          )}
-                          {msg.status === 'failed' && (
-                            <button 
-                              type="button" 
-                              onClick={() => handleRetry(msg)}
-                              className="focus:outline-none"
-                              title="Failed to send. Click to retry."
-                            >
-                              <AlertCircle className="w-3 h-3 text-red-300 fill-red-850" />
-                            </button>
-                          )}
-                          {(msg.status === 'sent' || !msg.status) && (
-                            <CheckCheck className={`w-3.5 h-3.5 ${msg.readAt ? 'text-sky-300 font-bold' : 'text-emerald-200'}`} />
-                          )}
-                        </>
+                  <div className={`flex items-center gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'} max-w-full`}>
+                    <div
+                      className={`max-w-[85%] sm:max-w-[78%] px-3.5 py-2.5 rounded-2xl shadow-xs leading-relaxed text-xs relative ${
+                        isMe
+                          ? 'bg-emerald-600 text-white rounded-tr-xs'
+                          : 'bg-white text-slate-900 border border-slate-200/80 rounded-tl-xs'
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                      
+                      {msg.reaction && (
+                        <div className={`absolute -bottom-3 ${isMe ? 'right-2' : 'left-2'} bg-white border border-slate-200 shadow-sm rounded-full px-1.5 py-0.5 text-xs z-10 animate-in zoom-in duration-200`}>
+                          {msg.reaction}
+                        </div>
                       )}
+                      
+                      <div className={`flex items-center justify-end space-x-1.5 mt-1 text-[9px] ${isMe ? 'text-emerald-100' : 'text-slate-400'}`}>
+                        <span>{timeString}</span>
+                        {isMe && (
+                          <>
+                            {msg.status === 'sending' && (
+                              <Clock className="w-3 h-3 text-emerald-200 animate-spin" />
+                            )}
+                            {msg.status === 'failed' && (
+                              <button 
+                                type="button" 
+                                onClick={() => handleRetry(msg)}
+                                className="focus:outline-none"
+                                title="Failed to send. Click to retry."
+                              >
+                                <AlertCircle className="w-3 h-3 text-red-300 fill-red-850" />
+                              </button>
+                            )}
+                            {(msg.status === 'sent' || !msg.status) && (
+                              <CheckCheck className={`w-3.5 h-3.5 ${msg.readAt ? 'text-sky-300 font-bold' : 'text-emerald-200'}`} />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Reaction Bar (Hover) */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-white border border-slate-200 shadow-md rounded-full px-2 py-1 flex items-center space-x-1 z-20">
+                      {['👍', '❤️', '😊', '🙏'].map(emoji => (
+                        <button
+                          key={emoji}
+                          onClick={() => toggleReaction(msg.id, emoji)}
+                          className="hover:scale-125 hover:bg-slate-100 transition-all rounded-full p-1 leading-none text-base"
+                          title={`React with ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -886,48 +910,35 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Emoji Selector Dropdown */}
-        {showEmojiPicker && (
-          <div className="bg-slate-100 border-t border-slate-200 p-2 flex items-center space-x-2 text-lg overflow-x-auto">
-            {['👍', '😊', '🙏', '⚡', '🔧', '✅', '👋', '💯', '📍', '🚗'].map((e) => (
-              <button
-                key={e}
-                type="button"
-                onClick={() => addEmoji(e)}
-                className="p-1.5 hover:bg-white rounded-lg transition-colors"
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* WhatsApp-Style Composer Bar */}
-        <form onSubmit={handleSend} className="p-2.5 bg-slate-100 border-t border-slate-200 flex items-center space-x-2">
+        <form onSubmit={handleSend} className="p-2.5 bg-slate-100 border-t border-slate-200 flex items-center space-x-2 relative overflow-visible">
           
-          <button
-            type="button"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors shrink-0"
-            title="Add Emoji"
-          >
-            <Smile className="w-5 h-5" />
-          </button>
+          <div className="relative group">
+            <button
+              type="button"
+              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors shrink-0 focus:outline-none"
+              title="Add Emoji"
+            >
+              <Smile className="w-5 h-5" />
+            </button>
 
-          <button
-            type="button"
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors shrink-0"
-            title="Attach reference file"
-          >
-            <Paperclip className="w-5 h-5" />
-          </button>
+            {/* Emoji Selector Hover Dropdown */}
+            <div className="absolute bottom-full left-0 mb-2 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50 shadow-xl rounded-2xl w-[300px]">
+              <EmojiPicker 
+                onEmojiClick={(emojiData) => addEmoji(emojiData.emoji)}
+                emojiStyle="native"
+                width="100%"
+                height={350}
+              />
+            </div>
+          </div>
 
           <textarea
             rows={1}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message... (Enter to send, Shift+Enter for new line)"
+            placeholder="Type a message..."
             className="flex-1 px-4 py-2 bg-white border border-slate-300/80 rounded-2xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none max-h-24 font-sans"
           />
 

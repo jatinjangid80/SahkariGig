@@ -14,6 +14,8 @@ interface CustomerDashboardProps {
   onNavigate: (path: string) => void;
   refreshTrigger?: number;
   onProfileUpdate?: (updatedUser: { avatarUrl?: string; name?: string; email?: string }) => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
@@ -24,9 +26,32 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onVerifyQrCode,
   onNavigate,
   refreshTrigger,
-  onProfileUpdate
+  onProfileUpdate,
+  activeTab: propActiveTab,
+  onTabChange
 }) => {
-  const [activeTab, setActiveTab] = useState<'my_jobs' | 'pay_review' | 'history' | 'profile' | 'messages'>('my_jobs');
+  const validTabs = ['my_jobs', 'pay_review', 'history', 'profile', 'messages'];
+  const [activeTabState, setActiveTabState] = useState<'my_jobs' | 'pay_review' | 'history' | 'profile' | 'messages'>(() => {
+    if (propActiveTab && validTabs.includes(propActiveTab)) {
+      return propActiveTab as any;
+    }
+    return 'my_jobs';
+  });
+
+  useEffect(() => {
+    if (propActiveTab && validTabs.includes(propActiveTab)) {
+      setActiveTabState(propActiveTab as any);
+    }
+  }, [propActiveTab]);
+
+  const setActiveTab = (tab: any) => {
+    setActiveTabState(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
+
+  const activeTab = activeTabState;
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState(currentUser?.name || '');
@@ -75,7 +100,6 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               workerName: b.worker_name,
               workerTrade: b.worker_trade,
               workerId: b.worker_id,
-              worker_id: b.worker_id,
               customer_id: b.customer_id,
               coopName: 'Delhi Labour Cooperative Federation',
               date: b.booking_date,
@@ -778,12 +802,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           </button>
         </div>
 
-        {/* My Jobs Tab (All Bookings) */}
+        {/* My Jobs Tab (Active Bookings) */}
         {activeTab === 'my_jobs' && (
           <div className="light-card p-6 min-h-[400px]">
             <div className="space-y-4">
-              {bookings.length > 0 ? (
-                bookings.map((booking) => (
+              {bookings.filter(b => ['REQUESTED', 'ACCEPTED', 'IN_PROGRESS'].includes(b.status)).length > 0 ? (
+                bookings.filter(b => ['REQUESTED', 'ACCEPTED', 'IN_PROGRESS'].includes(b.status)).map((booking) => (
                   <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
 
                     <div className="space-y-1">

@@ -24,10 +24,11 @@ import confetti from 'canvas-confetti';
 
 import { ServicesView } from './components/ServicesView';
 import { ForWorkersView } from './components/ForWorkersView';
-import { CooperativesView } from './components/CooperativesView';
+import { HelpView } from './components/HelpView';
 import { HowItWorksView } from './components/HowItWorksView';
 import { WorkerOnboarding } from './components/WorkerOnboarding';
 import { CustomerOnboarding } from './components/CustomerOnboarding';
+import { ChatBotWidget } from './components/ChatBotWidget';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname || '/');
@@ -126,6 +127,7 @@ export default function App() {
   const [activeWorkerIdCard, setActiveWorkerIdCard] = useState<any>(null);
 
   const [verifyWorkerId, setVerifyWorkerId] = useState<string | null>(null);
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -183,9 +185,45 @@ export default function App() {
     setReviewModalOpen(true);
   };
 
+  const handleReviewSubmit = async (reviewData: { rating: number; comment: string; bookingId: string }) => {
+    try {
+      if (!currentUser) return;
+      
+      const { error } = await supabase
+        .from('reviews')
+        .insert([
+          {
+            booking_id: reviewData.bookingId,
+            customer_id: currentUser.id,
+            worker_id: activeBookingForReview?.workerId || activeBookingForReview?.worker_id || '',
+            rating: reviewData.rating,
+            comment: reviewData.comment
+          }
+        ]);
+
+      if (error) {
+        console.error('Error submitting review:', error);
+        // Fallback for UI even if backend fails (e.g., if table doesn't exist yet)
+      } else {
+        await supabase
+          .from('bookings')
+          .update({ status: 'RATED' })
+          .eq('id', reviewData.bookingId);
+      }
+      
+      // Close the modal after a short delay for success animation
+      setTimeout(() => {
+        setReviewModalOpen(false);
+        setRefreshTrigger(prev => prev + 1);
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleVerifyQrCode = (workerId: string) => {
     setVerifyWorkerId(workerId);
-    navigateTo('/verify');
+    setVerifyModalOpen(true);
   };
 
   return (
@@ -259,8 +297,8 @@ export default function App() {
           />
         )}
 
-        {currentPath === '/cooperatives' && (
-          <CooperativesView />
+        {currentPath === '/help' && (
+          <HelpView />
         )}
 
         {currentPath === '/how-it-works' && (
@@ -269,12 +307,6 @@ export default function App() {
 
         {currentPath === '/contact' && (
           <ContactView />
-        )}
-
-        {currentPath === '/verify' && (
-          <VerifyWorkerPage
-            workerId={verifyWorkerId || 'WORKER-DEL-8901'}
-          />
         )}
 
         {currentPath === '/worker-onboarding' && (
@@ -309,6 +341,8 @@ export default function App() {
                 onVerifyQrCode={handleVerifyQrCode}
                 onNavigate={navigateTo}
                 refreshTrigger={refreshTrigger}
+                activeTab={workerActiveTab}
+                onTabChange={setWorkerActiveTab as any}
                 onProfileUpdate={async (updatedUser) => {
                   setCurrentUser(prev => prev ? { ...prev, ...updatedUser } : null);
                   const saved = localStorage.getItem('demoUser');
@@ -455,6 +489,7 @@ export default function App() {
         isOpen={reviewModalOpen}
         onClose={() => setReviewModalOpen(false)}
         booking={activeBookingForReview}
+        onReviewSubmitted={handleReviewSubmit}
       />
 
       <WorkerIdCardModal
@@ -463,6 +498,15 @@ export default function App() {
         worker={activeWorkerIdCard}
       />
 
+      {verifyModalOpen && (
+        <VerifyWorkerPage
+          workerId={verifyWorkerId || 'WORKER-DEL-8901'}
+          onClose={() => setVerifyModalOpen(false)}
+        />
+      )}
+
+      {/* Global Chat Bot Widget */}
+      <ChatBotWidget />
     </div>
   );
 }

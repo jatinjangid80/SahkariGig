@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { 
-  User, 
-  Phone, 
-  MapPin, 
-  CheckCircle2, 
+import {
+  User,
+  Phone,
+  MapPin,
+  CheckCircle2,
   CalendarClock,
   ArrowRight,
   ArrowLeft,
@@ -37,7 +37,7 @@ const CATEGORIES = [
 
 export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => void }> = ({ currentUser, onComplete }) => {
   const [step, setStep] = useState(1);
-  
+
   // Tab 1: Account Information
   const [accountInfo, setAccountInfo] = useState({
     fullName: currentUser?.name || '',
@@ -56,6 +56,7 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Sync Address <-> Location for convenience if one is filled
   useEffect(() => {
@@ -65,15 +66,16 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
   }, [accountInfo.address]);
 
   const handleNext = () => {
+    setErrorMessage(null);
     if (step === 1) {
       if (!accountInfo.fullName || !accountInfo.phone || !accountInfo.address) {
-        alert("Please fill in all required fields.");
+        setErrorMessage("Please fill in all required fields.");
         return;
       }
       setStep(2);
     } else if (step === 2) {
       if (!requestDetails.category || !requestDetails.location || !requestDetails.date || !requestDetails.description) {
-        alert("Please complete your service request details.");
+        setErrorMessage("Please complete your service request details.");
         return;
       }
       setStep(3);
@@ -81,6 +83,7 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
   };
 
   const handleBack = () => {
+    setErrorMessage(null);
     setStep(Math.max(1, step - 1));
   };
 
@@ -150,14 +153,15 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
       onComplete();
     } catch (err) {
       console.error(err);
-      alert("Something went wrong saving your profile and request. Please try again.");
+      setErrorMessage("Something went wrong saving your profile and request. Please try again.");
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <header className="bg-white border-b border-slate-200 py-4 px-6 md:px-8 flex items-center justify-between sticky top-0 z-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-md overflow-y-auto">
+      <div className="bg-slate-50 w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col font-sans relative my-auto max-h-[95vh] overflow-y-auto border border-slate-200/60">
+        <header className="bg-white border-b border-slate-200 py-4 px-6 md:px-8 flex items-center justify-between sticky top-0 z-10 rounded-t-2xl sm:rounded-t-3xl">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
             <span className="text-white font-bold text-lg">Cg</span>
@@ -172,19 +176,28 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8 md:py-12">
         <div className="mb-8 text-center sm:text-left">
           <h1 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">
-            {step === 1 && "Welcome! Let's set up your account"}
-            {step === 2 && "What do you need help with?"}
-            {step === 3 && "Review your request"}
+            {step === 1 && "Complete Your Profile"}
+            {step === 2 && "Request a Service"}
+            {step === 3 && "Review & Confirm"}
           </h1>
           <p className="text-slate-500 text-lg">
-            {step === 1 && "Complete your profile so workers know who they are assisting."}
-            {step === 2 && "Create your first service request to get matched with a verified cooperative worker."}
-            {step === 3 && "Make sure everything looks good before we find you the best worker."}
+            {step === 1 && "We need a few details before you can book workers."}
+            {step === 2 && "Tell us what you need help with."}
+            {step === 3 && "Check your details and submit your request."}
           </p>
         </div>
 
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {errorMessage}
+          </div>
+        )}
+
         <div className="bg-white shadow-xl shadow-slate-200/40 rounded-2xl border border-slate-100 overflow-hidden">
-          
+
           {/* STEP 1: Account Information */}
           {step === 1 && (
             <div className="p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -251,7 +264,7 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
           {/* STEP 2: Service Request Details */}
           {step === 2 && (
             <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              
+
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-3">What kind of service do you need? <span className="text-red-500">*</span></label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
@@ -262,11 +275,10 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
                       <button
                         key={cat.id}
                         onClick={() => setRequestDetails({ ...requestDetails, category: cat.id })}
-                        className={`p-4 rounded-xl border text-center flex flex-col items-center justify-center space-y-2.5 transition-all ${
-                          isSelected 
-                            ? 'bg-emerald-50 border-emerald-500 shadow-sm ring-1 ring-emerald-500' 
+                        className={`p-4 rounded-xl border text-center flex flex-col items-center justify-center space-y-2.5 transition-all ${isSelected
+                            ? 'bg-emerald-50 border-emerald-500 shadow-sm ring-1 ring-emerald-500'
                             : 'bg-white border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/50'
-                        }`}
+                          }`}
                       >
                         <Icon className={`w-6 h-6 ${isSelected ? 'text-emerald-600' : 'text-slate-500'}`} />
                         <span className={`text-[11px] font-bold ${isSelected ? 'text-emerald-700' : 'text-slate-600'}`}>
@@ -338,7 +350,7 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
           {/* STEP 3: Summary / Success */}
           {step === 3 && (
             <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              
+
               <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-8 text-center shadow-sm">
                 <div className="w-20 h-20 bg-emerald-100/50 rounded-full flex items-center justify-center mx-auto mb-5 ring-8 ring-emerald-50">
                   <CheckCircle2 className="w-10 h-10 text-emerald-600" />
@@ -362,7 +374,7 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
                     <div>
                       <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Schedule</span>
                       <span className="block text-base font-bold text-slate-900">
-                        {requestDetails.date ? new Date(requestDetails.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : ''} 
+                        {requestDetails.date ? new Date(requestDetails.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : ''}
                       </span>
                       <span className="text-slate-500 text-sm font-medium">{requestDetails.timeWindow}</span>
                     </div>
@@ -395,16 +407,15 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
             <button
               onClick={handleBack}
               disabled={step === 1 || isSubmitting}
-              className={`flex items-center space-x-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
-                step === 1 || isSubmitting
-                  ? 'text-slate-300 cursor-not-allowed' 
+              className={`flex items-center space-x-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${step === 1 || isSubmitting
+                  ? 'text-slate-300 cursor-not-allowed'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-              }`}
+                }`}
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Back</span>
             </button>
-            
+
             {step < 3 ? (
               <button
                 onClick={handleNext}
@@ -417,9 +428,8 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`flex items-center space-x-2 px-10 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[15px] shadow-lg shadow-emerald-200 transition-all active:scale-95 ${
-                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
+                className={`flex items-center space-x-2 px-10 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[15px] shadow-lg shadow-emerald-200 transition-all active:scale-95 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
               >
                 {isSubmitting ? (
                   <>
@@ -438,9 +448,10 @@ export const CustomerOnboarding: React.FC<{ currentUser: any, onComplete: () => 
               </button>
             )}
           </div>
-          
+
         </div>
       </main>
+      </div>
     </div>
   );
 };

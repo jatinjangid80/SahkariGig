@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../supabase';
 // @ts-ignore
@@ -23,6 +23,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   onOpenChat,
   refreshTrigger
 }) => {
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [localTab, setLocalTab] = useState<'feed' | 'active' | 'earnings' | 'profile'>('feed');
   const currentTab = activeTab || localTab;
   const setTab = onTabChange || setLocalTab;
@@ -31,6 +32,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [payoutSuccess, setPayoutSuccess] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   
   // Dynamic Supabase Stats
   const [weeklyBalance, setWeeklyBalance] = useState(0);
@@ -186,18 +188,25 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     setCompletedJobsCount(completed.length);
     
     const totalBalance = completed.reduce((sum, req) => {
-      const numStr = String(req.amount).replace(/[^0-9.]/g, '');
-      return sum + (parseFloat(numStr) || 0);
+      const match = String(req.amount).match(/(\d+(\.\d+)?)/);
+      return sum + (match ? parseFloat(match[0]) : 0);
     }, 0);
     setWeeklyBalance(totalBalance);
     
-    setPayoutHistory(completed.map(c => ({
-      jobId: c.id.slice(0, 8).toUpperCase(),
-      service: c.service,
-      customer: c.customerName,
-      date: c.dateTime ? c.dateTime.split(',')[0] : 'Recently',
-      amount: c.amount
-    })));
+    setPayoutHistory(completed.map(c => {
+      const match = String(c.amount).match(/(\d+(\.\d+)?)/);
+      const amountVal = match ? match[0] : '0';
+      let displayDate = c.dateTime ? c.dateTime.split(',')[0] : 'Recently';
+      displayDate = displayDate.replace('Tomorrow', 'Yesterday').replace('Day After Tomorrow', '2 Days Ago');
+      
+      return {
+        jobId: c.id.slice(0, 8).toUpperCase(),
+        service: c.service,
+        customer: c.customerName,
+        date: displayDate,
+        amount: `₹${amountVal}`
+      };
+    }));
   }, [requests]);
 
   const handleAccept = async (id: string) => {
@@ -346,11 +355,15 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         
         {/* Hidden File Input for Avatar */}
         <input 
+          ref={avatarInputRef}
           id="avatar-upload-input" 
           type="file" 
           accept="image/*" 
           className="hidden" 
-          onChange={handleAvatarChange} 
+          onChange={(e) => {
+            handleAvatarChange(e);
+            e.target.value = ''; // Allow re-uploading the same file
+          }} 
         />
 
         {/* Worker Info Card Header */}
@@ -360,7 +373,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             {/* Avatar Image / Initials Uploader Circle */}
             <div 
               className="relative group cursor-pointer shrink-0" 
-              onClick={() => document.getElementById('avatar-upload-input')?.click()}
+              onClick={() => avatarInputRef.current?.click()}
             >
               {profile.avatarUrl ? (
                 <img 
@@ -709,7 +722,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                       <div className="space-y-1">
                         <button
                           type="button"
-                          onClick={() => document.getElementById('avatar-upload-input')?.click()}
+                          onClick={() => avatarInputRef.current?.click()}
                           className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-[10px] rounded-xl transition-all shadow-2xs cursor-pointer flex items-center space-x-1"
                         >
                           <Camera className="w-3.5 h-3.5 text-slate-500" />
@@ -951,13 +964,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                             <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="truncate">{profile.uploadedDocs?.aadhaar || 'No document attached'}</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => document.getElementById('doc-upload-aadhaar')?.click()}
-                            className="text-emerald-700 font-bold hover:underline cursor-pointer"
-                          >
-                            {profile.uploadedDocs?.aadhaar ? 'Change' : 'Attach File'}
-                          </button>
+                          <div className="flex items-center space-x-3">
+                            {profile.uploadedDocs?.aadhaar && (
+                              <button type="button" onClick={() => setPreviewDoc(profile.uploadedDocs.aadhaar)} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById('doc-upload-aadhaar')?.click()}
+                              className="text-emerald-700 font-bold hover:underline cursor-pointer"
+                            >
+                              {profile.uploadedDocs?.aadhaar ? 'Change' : 'Attach File'}
+                            </button>
+                          </div>
                         </div>
                         <input
                           id="doc-upload-aadhaar"
@@ -979,13 +997,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                             <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="truncate">{profile.uploadedDocs?.membership || 'No document attached'}</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => document.getElementById('doc-upload-membership')?.click()}
-                            className="text-emerald-700 font-bold hover:underline cursor-pointer"
-                          >
-                            {profile.uploadedDocs?.membership ? 'Change' : 'Attach File'}
-                          </button>
+                          <div className="flex items-center space-x-3">
+                            {profile.uploadedDocs?.membership && (
+                              <button type="button" onClick={() => setPreviewDoc(profile.uploadedDocs.membership)} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById('doc-upload-membership')?.click()}
+                              className="text-emerald-700 font-bold hover:underline cursor-pointer"
+                            >
+                              {profile.uploadedDocs?.membership ? 'Change' : 'Attach File'}
+                            </button>
+                          </div>
                         </div>
                         <input
                           id="doc-upload-membership"
@@ -1007,13 +1030,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                             <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="truncate">{profile.uploadedDocs?.skill || 'No document attached'}</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => document.getElementById('doc-upload-skill')?.click()}
-                            className="text-emerald-700 font-bold hover:underline cursor-pointer"
-                          >
-                            {profile.uploadedDocs?.skill ? 'Change' : 'Attach File'}
-                          </button>
+                          <div className="flex items-center space-x-3">
+                            {profile.uploadedDocs?.skill && (
+                              <button type="button" onClick={() => setPreviewDoc(profile.uploadedDocs.skill)} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById('doc-upload-skill')?.click()}
+                              className="text-emerald-700 font-bold hover:underline cursor-pointer"
+                            >
+                              {profile.uploadedDocs?.skill ? 'Change' : 'Attach File'}
+                            </button>
+                          </div>
                         </div>
                         <input
                           id="doc-upload-skill"
@@ -1035,13 +1063,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                             <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="truncate">{profile.uploadedDocs?.background || 'No document attached'}</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => document.getElementById('doc-upload-background')?.click()}
-                            className="text-emerald-700 font-bold hover:underline cursor-pointer"
-                          >
-                            {profile.uploadedDocs?.background ? 'Change' : 'Attach File'}
-                          </button>
+                          <div className="flex items-center space-x-3">
+                            {profile.uploadedDocs?.background && (
+                              <button type="button" onClick={() => setPreviewDoc(profile.uploadedDocs.background)} className="text-sky-600 font-bold hover:underline cursor-pointer">Preview</button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById('doc-upload-background')?.click()}
+                              className="text-emerald-700 font-bold hover:underline cursor-pointer"
+                            >
+                              {profile.uploadedDocs?.background ? 'Change' : 'Attach File'}
+                            </button>
+                          </div>
                         </div>
                         <input
                           id="doc-upload-background"
@@ -1065,10 +1098,52 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
             </div>
           )}
-
         </div>
-
       </div>
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <span className="text-indigo-600 font-bold font-outfit text-sm">DOC</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">{previewDoc}</h3>
+                  <p className="text-xs text-slate-500">Document Preview</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setPreviewDoc(null)}
+                className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 bg-slate-100 p-8 flex flex-col items-center justify-center">
+              <div className="bg-white shadow-md rounded-xl p-12 max-w-2xl w-full aspect-[1/1.414] flex flex-col items-center justify-center border border-slate-200 space-y-4">
+                <ShieldCheck className="w-16 h-16 text-emerald-500 opacity-20" />
+                <p className="text-slate-400 font-bold font-mono text-center uppercase tracking-widest">
+                  Secure Document Vault<br/>
+                  <span className="text-xs text-slate-300 font-normal normal-case tracking-normal">({previewDoc})</span>
+                </p>
+                <div className="w-full max-w-sm mt-8 space-y-3 opacity-20">
+                  <div className="h-4 bg-slate-200 rounded-full w-3/4 mx-auto"></div>
+                  <div className="h-4 bg-slate-200 rounded-full w-full"></div>
+                  <div className="h-4 bg-slate-200 rounded-full w-5/6 mx-auto"></div>
+                  <div className="h-4 bg-slate-200 rounded-full w-4/5 mx-auto"></div>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-white border-t border-slate-100 flex justify-end space-x-3">
+              <button onClick={() => setPreviewDoc(null)} className="px-5 py-2 font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors text-sm">Close Preview</button>
+              <button onClick={() => alert("Downloading document...")} className="px-5 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors text-sm">Download Original</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

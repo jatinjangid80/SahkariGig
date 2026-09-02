@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, AlertCircle, Mail, User, ShieldCheck } from 'lucide-react';
 import { CONFIG } from '../config';
+import { supabase } from '../supabase';
 
 export const ContactView: React.FC = () => {
   const [name, setName] = useState('');
@@ -23,22 +24,23 @@ export const ContactView: React.FC = () => {
     setSuccessTicket(null);
 
     try {
-      const res = await fetch(`${CONFIG.apiUrl}/api/contact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, role, message })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setSuccessTicket(data.data?.ticketId || 'TICK-2026-001');
-        setName('');
-        setEmail('');
-        setMessage('');
-      } else {
-        setErrorMsg(data.message || 'Failed to submit contact request.');
-      }
-    } catch (err) {
-      setErrorMsg('Error connecting to backend API.');
+      const { data, error } = await supabase
+        .from('contact_inquiries')
+        .insert([
+          { name, email, role, message }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setSuccessTicket(data.id.split('-')[0].toUpperCase()); // Uses part of the UUID as a mock ticket ID
+      setName('');
+      setEmail('');
+      setMessage('');
+    } catch (err: any) {
+      console.error("Error submitting contact form:", err);
+      setErrorMsg(err.message || 'Error connecting to database. Please try again.');
     } finally {
       setLoading(false);
     }
