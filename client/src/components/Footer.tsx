@@ -1,6 +1,13 @@
 import React from 'react';
 import { CONFIG } from '../config';
-import { Github, Twitter, Linkedin, ShieldCheck, PhoneCall, CheckCircle2, ArrowUpRight } from 'lucide-react';
+import { 
+  Github, 
+  Twitter, 
+  Linkedin, 
+  ShieldCheck, 
+  PhoneCall, 
+  CheckCircle2 
+} from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (path: string) => void;
@@ -9,6 +16,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
   return (
+
     <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 pt-16 pb-12 font-sans relative overflow-hidden">
       {/* Background Accent Blur */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -127,10 +135,23 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
 
         </div>
 
-        {/* Bottom Bar: Copyright */}
-        <div className="mt-8 flex items-center justify-center">
-          <div className="text-xs text-slate-400 text-center">
-            <p>© 2026 SahkariGig. All rights reserved.</p>
+        {/* Bottom Bar: Copyright, Designer, and Links */}
+        <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <p>© 2026 SahkariGig. All rights reserved.</p>
+
+          <div className="flex items-center space-x-1.5 text-slate-400">
+            <span>Designed & Deployed by</span>
+            <span className="font-semibold text-emerald-400 tracking-wide">
+              Jatin Jangid
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-4 text-slate-500">
+            <button onClick={() => onNavigate('/')} className="hover:text-emerald-400 transition-colors">Privacy</button>
+            <span>•</span>
+            <button onClick={() => onNavigate('/')} className="hover:text-emerald-400 transition-colors">Terms</button>
+            <span>•</span>
+            <button onClick={() => onNavigate('/')} className="hover:text-emerald-400 transition-colors">Security</button>
           </div>
         </div>
 
@@ -138,3 +159,5 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
     </footer>
   );
 };
+
+
