@@ -90,18 +90,18 @@ export const VerifyWorkerPage: React.FC<VerifyWorkerPageProps> = ({
         </div>
 
         {/* Worker Details Card Body */}
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="p-6 sm:p-8 space-y-6 bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
           
           {/* Status Badge */}
-          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div>
-                <p className="text-xs font-extrabold text-emerald-900 tracking-wide">{workerDetails.status}</p>
-                <p className="text-[10px] text-emerald-700">Official Membership Active</p>
+                <p className="text-xs font-extrabold text-emerald-900 dark:text-emerald-200 tracking-wide">{workerDetails.status}</p>
+                <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">Official Cooperative Membership Active</p>
               </div>
             </div>
-            <span className="text-[11px] font-bold text-slate-700 bg-white px-2.5 py-1 rounded-md border border-slate-200">
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
               ID: {workerDetails.workerId}
             </span>
           </div>
@@ -114,9 +114,9 @@ export const VerifyWorkerPage: React.FC<VerifyWorkerPageProps> = ({
               className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500 shadow-2xs"
             />
             <div>
-              <h2 className="text-xl font-bold text-slate-900 font-outfit">{workerDetails.name}</h2>
-              <p className="text-xs font-semibold text-emerald-700">{workerDetails.trade}</p>
-              <p className="text-xs text-slate-500 flex items-center mt-1">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white font-outfit">{workerDetails.name}</h2>
+              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{workerDetails.trade}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center mt-1">
                 <Building className="w-3.5 h-3.5 mr-1 text-slate-400" />
                 {workerDetails.coopName}
               </p>
@@ -124,32 +124,32 @@ export const VerifyWorkerPage: React.FC<VerifyWorkerPageProps> = ({
           </div>
 
           {/* Verification Fields Grid */}
-          <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-100">
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-              <span className="text-[10px] text-slate-500 uppercase font-medium">Cooperative Reg. No.</span>
-              <p className="font-bold text-slate-900 mt-0.5">{workerDetails.coopRegNo}</p>
+          <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Cooperative Reg. No.</span>
+              <p className="font-bold text-slate-900 dark:text-white mt-0.5">{workerDetails.coopRegNo}</p>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-              <span className="text-[10px] text-slate-500 uppercase font-medium">Rating & Reviews</span>
-              <p className="font-bold text-slate-900 mt-0.5">{workerDetails.rating} ★ ({workerDetails.jobsCompleted} Jobs)</p>
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Rating & Reviews</span>
+              <p className="font-bold text-slate-900 dark:text-white mt-0.5">{workerDetails.rating} ★ ({workerDetails.jobsCompleted} Jobs)</p>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-              <span className="text-[10px] text-slate-500 uppercase font-medium">Verification Timestamp</span>
-              <p className="font-semibold text-slate-700 mt-0.5 text-[11px]">{new Date(workerDetails.verificationTimestamp).toLocaleTimeString()}</p>
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Verification Timestamp</span>
+              <p className="font-semibold text-slate-700 dark:text-slate-300 mt-0.5 text-[11px]">{new Date(workerDetails.verificationTimestamp).toLocaleTimeString()}</p>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-              <span className="text-[10px] text-slate-500 uppercase font-medium">ID Validity Until</span>
-              <p className="font-bold text-slate-900 mt-0.5">{workerDetails.validUntil}</p>
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">ID Validity Until</span>
+              <p className="font-bold text-slate-900 dark:text-white mt-0.5">{workerDetails.validUntil}</p>
             </div>
           </div>
 
           {/* Verification Advice */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
-            <p className="font-bold text-slate-900 flex items-center">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 mr-1" />
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+            <p className="font-bold text-slate-900 dark:text-white flex items-center">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mr-1" />
               Safety Instructions for Household Customers
             </p>
             <p>1. Match the worker photo and digital ID card before letting the worker inside your residence.</p>
@@ -159,7 +159,7 @@ export const VerifyWorkerPage: React.FC<VerifyWorkerPageProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-colors"
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition-colors cursor-pointer"
             >
               Close Verification View
             </button>
