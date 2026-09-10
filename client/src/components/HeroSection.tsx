@@ -158,8 +158,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         
         {/* Top Trust Badge */}
         <div className="flex justify-center mb-4">
-          <div className="inline-flex items-center space-x-1.5 px-3.5 py-1 rounded-full bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold shadow-2xs backdrop-blur-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold shadow-2xs backdrop-blur-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse shrink-0" />
             <span className="tracking-wide uppercase text-[10px] font-bold">Verified Cooperative Network</span>
           </div>
         </div>
@@ -196,7 +196,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 if (elem) elem.scrollIntoView({ behavior: 'smooth' });
                 else if (onNavigate) onNavigate('/workers');
               }}
-              className="w-full sm:w-auto px-7 py-3 text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-md hover:shadow-emerald-600/25 transition-all flex items-center justify-center btn-interaction cursor-pointer"
+              className="w-full sm:w-auto px-7 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md hover:shadow-lg hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
             >
               Hire Talent
               <ArrowRight className="ml-2 w-4 h-4" />
@@ -204,7 +204,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {currentUser?.role !== 'Customer' && (
               <button
                 onClick={() => onNavigate && onNavigate('/for-workers')}
-                className="w-full sm:w-auto px-7 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-emerald-600 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-xl shadow-2xs transition-all flex items-center justify-center btn-interaction cursor-pointer"
+                className="w-full sm:w-auto px-7 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-750 rounded-xl shadow-2xs hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
               >
                 Find Jobs
               </button>
@@ -250,7 +250,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <form onSubmit={handleSearchSubmit} className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-2.5">
                 
-                {/* Search Input */}
+                {/* Search Input with Emerald Focus Glow */}
                 <div className="relative flex-1">
                   <Search className="absolute left-3.5 top-3.5 w-4.5 h-4.5 text-slate-400" />
                   <input
@@ -258,15 +258,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     value={searchPrompt}
                     onChange={(e) => setSearchPrompt(e.target.value)}
                     placeholder="Search for a service, skill, or problem (e.g. AC Repair, Plumber)..."
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/90 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs sm:text-sm font-medium focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all"
                   />
                 </div>
 
-                {/* Primary CTA Search Button (Strong Dark Green) */}
+                {/* Primary CTA Search Button (Strong Emerald Green with Lift) */}
                 <button
                   type="submit"
                   disabled={isClassifying}
-                  className="w-full sm:w-auto px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center space-x-1.5 shrink-0 btn-interaction cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md hover:shadow-lg hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
                 >
                   {isClassifying ? (
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -298,16 +298,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <span className="font-bold text-slate-700 dark:text-slate-300">Popular:</span>
                   <div className="flex flex-wrap gap-1">
-                    {['AC Repair', 'Plumbing', 'Electrician', 'Painting', 'Cleaning'].map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => handlePopularTagClick(tag)}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium transition-colors cursor-pointer text-xs"
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                    {['AC Repair', 'Plumbing', 'Electrician', 'Painting', 'Cleaning'].map((tag) => {
+                      const isSelected = searchPrompt.toLowerCase() === tag.toLowerCase();
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => handlePopularTagClick(tag)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-emerald-600 text-white border border-emerald-600 shadow-sm shadow-emerald-600/30 scale-105'
+                              : 'bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:-translate-y-0.5'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
