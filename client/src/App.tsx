@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { CooperativeAdvantage } from './components/CooperativeAdvantage';
+import { WorkersView } from './components/WorkersView';
 import { CategoryGrid } from './components/CategoryGrid';
 import { WhyCooperative } from './components/WhyCooperative';
 import { WorkerDirectory } from './components/WorkerDirectory';
@@ -257,45 +258,41 @@ export default function App() {
 
       {/* Main Page Content */}
       <main className="flex-1">
-        {(currentPath === '/' || currentPath === '/workers') && (
+        {currentPath === '/' && (
           <>
-            {currentPath === '/' && (
-              <>
-                <HeroSection
-                  currentUser={currentUser}
-                  onSearchService={(cat, loc) => {
-                    setSelectedCategory(cat);
-                    if (loc) setSelectedLocation(loc);
-                    const elem = document.getElementById('workers-directory');
-                    if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  onNavigate={navigateTo}
-                  selectedLocation={selectedLocation}
-                  onLocationChange={(loc) => setSelectedLocation(loc)}
-                />
+            <HeroSection
+              currentUser={currentUser}
+              onSearchService={(cat, loc) => {
+                setSelectedCategory(cat);
+                if (loc) setSelectedLocation(loc);
+                const elem = document.getElementById('workers-directory');
+                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onNavigate={navigateTo}
+              selectedLocation={selectedLocation}
+              onLocationChange={(loc) => setSelectedLocation(loc)}
+            />
 
-                {/* Cooperative Advantage Value Proposition */}
-                <CooperativeAdvantage onNavigate={navigateTo} />
+            {/* Cooperative Advantage Value Proposition */}
+            <CooperativeAdvantage onNavigate={navigateTo} />
 
-                {/* Popular Services Categories */}
-                <PopularServicesSection
-                  onSelectCategory={(cat) => {
-                    setSelectedCategory(cat);
-                    const elem = document.getElementById('workers-directory');
-                    if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                />
+            {/* Popular Services Categories */}
+            <PopularServicesSection
+              onSelectCategory={(cat) => {
+                setSelectedCategory(cat);
+                const elem = document.getElementById('workers-directory');
+                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
 
-                {/* How SahkariGig Works */}
-                <HowSahkariWorksSection
-                  onNavigate={navigateTo}
-                  onExploreServices={() => {
-                    const elem = document.getElementById('popular-services');
-                    if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                />
-              </>
-            )}
+            {/* How SahkariGig Works */}
+            <HowSahkariWorksSection
+              onNavigate={navigateTo}
+              onExploreServices={() => {
+                const elem = document.getElementById('popular-services');
+                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
 
             {/* Verified Worker Discovery Directory (Trusted workers near you) */}
             <div id="workers-directory">
@@ -312,8 +309,23 @@ export default function App() {
               />
             </div>
 
-            {currentPath === '/' && <WhyCooperative />}
+            <WhyCooperative />
           </>
+        )}
+
+        {currentPath === '/workers' && (
+          <WorkersView
+            selectedCategory={selectedCategory}
+            selectedCity={selectedLocation.split(',')[0]}
+            currentUserId={currentUser?.id}
+            onSelectWorkerForBooking={handleOpenBooking}
+            onViewWorkerProfile={(worker) => {
+              setActiveWorkerIdCard(worker);
+              setWorkerIdCardModalOpen(true);
+            }}
+            onVerifyQrCode={handleVerifyQrCode}
+            onNavigate={navigateTo}
+          />
         )}
 
         {currentPath === '/about' && (
@@ -332,6 +344,17 @@ export default function App() {
         {currentPath === '/for-workers' && (
           <ForWorkersView
             onRegisterClick={() => handleOpenAuth('Worker', 'signup')}
+            onDemoWorkerClick={() => {
+              const demoWorker = {
+                id: 'demo-worker-202',
+                name: 'Rajesh Sharma',
+                email: 'rajesh.worker@sahkarigig.org',
+                role: 'Worker' as const
+              };
+              localStorage.setItem('demoUser', JSON.stringify(demoWorker));
+              setCurrentUser(demoWorker);
+              navigateTo('/dashboard');
+            }}
           />
         )}
 

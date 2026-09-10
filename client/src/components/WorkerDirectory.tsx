@@ -128,99 +128,135 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
           }
         });
 
-        // Add high-quality verified showcase workers
-        if (combined.length < 4) {
-           combined.push({
-             id: 'worker-1',
-             name: 'Rajesh Kumar',
-             avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=047857&color=fff&size=150',
-             trade: 'Electrician',
-             rating: 4.8,
-             reviewsCount: 124,
-             coopName: 'Jaipur Sahkari Labour Federation',
-             city: 'Jaipur',
-             hourlyRate: '₹400–₹700 / visit',
-             distanceKm: 2.1,
-             isAvailableToday: true,
-             isTopRated: true,
-             workerId: 'WORKER-JAI-1011'
-           });
-           combined.push({
-             id: 'worker-2',
-             name: 'Amit Verma',
-             avatar: 'https://ui-avatars.com/api/?name=Amit+Verma&background=0284c7&color=fff&size=150',
-             trade: 'Plumber',
-             rating: 4.9,
-             reviewsCount: 98,
-             coopName: 'Rajasthan Labour Cooperative Society',
-             city: 'Jaipur',
-             hourlyRate: '₹350–₹650 / visit',
-             distanceKm: 3.4,
-             isAvailableToday: true,
-             isTopRated: true,
-             workerId: 'WORKER-JAI-2042'
-           });
-           combined.push({
-             id: 'worker-3',
-             name: 'Suresh Jangid',
-             avatar: 'https://ui-avatars.com/api/?name=Suresh+Jangid&background=d97706&color=fff&size=150',
-             trade: 'Carpenter',
-             rating: 4.8,
-             reviewsCount: 76,
-             coopName: 'Jaipur Artisan Cooperative Federation',
-             city: 'Jaipur',
-             hourlyRate: '₹450–₹800 / visit',
-             distanceKm: 1.8,
-             isAvailableToday: true,
-             isTopRated: true,
-             workerId: 'WORKER-JAI-4122'
-           });
-           combined.push({
-             id: 'worker-4',
-             name: 'Mahesh Sharma',
-             avatar: 'https://ui-avatars.com/api/?name=Mahesh+Sharma&background=059669&color=fff&size=150',
-             trade: 'AC Repair',
-             rating: 4.9,
-             reviewsCount: 142,
-             coopName: 'Pink City HVAC Technicians Cooperative',
-             city: 'Jaipur',
-             hourlyRate: '₹500–₹850 / visit',
-             distanceKm: 2.9,
-             isAvailableToday: true,
-             isTopRated: true,
-             workerId: 'WORKER-JAI-5104'
-           });
-           combined.push({
-             id: 'worker-5',
-             name: 'Sunita Devi',
-             avatar: 'https://ui-avatars.com/api/?name=Sunita+Devi&background=7c3aed&color=fff&size=150',
-             trade: 'Cleaning',
-             rating: 4.9,
-             reviewsCount: 215,
-             coopName: 'Mahila Sahkari Labour Union',
-             city: 'Jaipur',
-             hourlyRate: '₹250–₹500 / visit',
-             distanceKm: 1.2,
-             isAvailableToday: true,
-             isTopRated: true,
-             workerId: 'WORKER-JAI-3099'
-           });
-           combined.push({
-             id: 'worker-6',
-             name: 'Vikram Singh',
-             avatar: 'https://ui-avatars.com/api/?name=Vikram+Singh&background=db2777&color=fff&size=150',
-             trade: 'Painter',
-             rating: 4.7,
-             reviewsCount: 88,
-             coopName: 'Jaipur Painters & Polishers Guild',
-             city: 'Jaipur',
-             hourlyRate: '₹400–₹750 / visit',
-             distanceKm: 4.5,
-             isAvailableToday: true,
-             isTopRated: false,
-             workerId: 'WORKER-JAI-6201'
-           });
-        }
+        // Add high-quality verified showcase workers covering all trades
+        const DEFAULT_SHOWCASE_WORKERS: Worker[] = [
+          {
+            id: 'worker-1',
+            name: 'Rajesh Kumar',
+            avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=047857&color=fff&size=150',
+            trade: 'Electrician',
+            rating: 4.8,
+            reviewsCount: 124,
+            coopName: 'Jaipur Sahkari Labour Federation',
+            city: 'Jaipur',
+            hourlyRate: '₹400–₹700 / visit',
+            distanceKm: 2.1,
+            isAvailableToday: true,
+            isTopRated: true,
+            workerId: 'WORKER-JAI-1011'
+          },
+          {
+            id: 'worker-2',
+            name: 'Amit Verma',
+            avatar: 'https://ui-avatars.com/api/?name=Amit+Verma&background=0284c7&color=fff&size=150',
+            trade: 'Plumber',
+            rating: 4.9,
+            reviewsCount: 98,
+            coopName: 'Rajasthan Labour Cooperative Society',
+            city: 'Jaipur',
+            hourlyRate: '₹350–₹650 / visit',
+            distanceKm: 3.4,
+            isAvailableToday: true,
+            isTopRated: true,
+            workerId: 'WORKER-JAI-2042'
+          },
+          {
+            id: 'worker-3',
+            name: 'Suresh Jangid',
+            avatar: 'https://ui-avatars.com/api/?name=Suresh+Jangid&background=d97706&color=fff&size=150',
+            trade: 'Carpenter',
+            rating: 4.8,
+            reviewsCount: 76,
+            coopName: 'Jaipur Artisan Cooperative Federation',
+            city: 'Jaipur',
+            hourlyRate: '₹450–₹800 / visit',
+            distanceKm: 1.8,
+            isAvailableToday: true,
+            isTopRated: true,
+            workerId: 'WORKER-JAI-4122'
+          },
+          {
+            id: 'worker-4',
+            name: 'Mahesh Sharma',
+            avatar: 'https://ui-avatars.com/api/?name=Mahesh+Sharma&background=059669&color=fff&size=150',
+            trade: 'AC Repair',
+            rating: 4.9,
+            reviewsCount: 142,
+            coopName: 'Pink City HVAC Technicians Cooperative',
+            city: 'Jaipur',
+            hourlyRate: '₹500–₹850 / visit',
+            distanceKm: 2.9,
+            isAvailableToday: true,
+            isTopRated: true,
+            workerId: 'WORKER-JAI-5104'
+          },
+          {
+            id: 'worker-5',
+            name: 'Sunita Devi',
+            avatar: 'https://ui-avatars.com/api/?name=Sunita+Devi&background=7c3aed&color=fff&size=150',
+            trade: 'Cleaning',
+            rating: 4.9,
+            reviewsCount: 215,
+            coopName: 'Mahila Sahkari Labour Union',
+            city: 'Jaipur',
+            hourlyRate: '₹250–₹500 / visit',
+            distanceKm: 1.2,
+            isAvailableToday: true,
+            isTopRated: true,
+            workerId: 'WORKER-JAI-3099'
+          },
+          {
+            id: 'worker-6',
+            name: 'Vikram Singh',
+            avatar: 'https://ui-avatars.com/api/?name=Vikram+Singh&background=db2777&color=fff&size=150',
+            trade: 'Painter',
+            rating: 4.7,
+            reviewsCount: 88,
+            coopName: 'Jaipur Painters & Polishers Guild',
+            city: 'Jaipur',
+            hourlyRate: '₹400–₹750 / visit',
+            distanceKm: 4.5,
+            isAvailableToday: true,
+            isTopRated: false,
+            workerId: 'WORKER-JAI-6201'
+          },
+          {
+            id: 'worker-7',
+            name: 'Rahul Sharma',
+            avatar: 'https://ui-avatars.com/api/?name=Rahul+Sharma&background=2563eb&color=fff&size=150',
+            trade: 'Vehicle Repair',
+            rating: 4.8,
+            reviewsCount: 64,
+            coopName: 'Auto Mechanics Cooperative Federation',
+            city: 'Jaipur',
+            hourlyRate: '₹350–₹700 / visit',
+            distanceKm: 3.1,
+            isAvailableToday: true,
+            isTopRated: true,
+            workerId: 'WORKER-JAI-7312'
+          },
+          {
+            id: 'worker-8',
+            name: 'Deepak Yadav',
+            avatar: 'https://ui-avatars.com/api/?name=Deepak+Yadav&background=0d9488&color=fff&size=150',
+            trade: 'Moving',
+            rating: 4.9,
+            reviewsCount: 110,
+            coopName: 'Transport & Logistics Labour Cooperative',
+            city: 'Jaipur',
+            hourlyRate: '₹800–₹1800 / trip',
+            distanceKm: 2.7,
+            isAvailableToday: true,
+            isTopRated: true,
+            workerId: 'WORKER-JAI-8490'
+          }
+        ];
+
+        DEFAULT_SHOWCASE_WORKERS.forEach(dw => {
+          if (!combined.find(w => w.id === dw.id || w.name === dw.name || (w.trade === dw.trade && w.city === dw.city))) {
+            combined.push(dw);
+          }
+        });
         
         setWorkers(combined);
         setIsLoading(false);
@@ -236,20 +272,32 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
       return false;
     }
 
-    const matchesTrade = 
-      filterTrade === 'All' || 
-      filterTrade === '' || 
-      worker.trade.toLowerCase() === filterTrade.toLowerCase() ||
-      (filterTrade.toLowerCase() === 'domestic help' && worker.trade.toLowerCase().includes('clean')) ||
-      (filterTrade.toLowerCase() === 'cleaning' && worker.trade.toLowerCase().includes('clean')) ||
-      (filterTrade.toLowerCase() === 'technician' && (worker.trade.toLowerCase().includes('ac') || worker.trade.toLowerCase().includes('tech')));
+    const normFilter = (filterTrade || 'All').trim().toLowerCase();
+    const workerTrade = (worker.trade || '').toLowerCase();
 
-    const matchesRating = worker.rating >= minRating;
-    const matchesDistance = worker.distanceKm <= maxDistance;
+    const matchesTrade = 
+      normFilter === 'all' || 
+      normFilter === '' || 
+      workerTrade === normFilter ||
+      workerTrade.includes(normFilter) ||
+      normFilter.includes(workerTrade) ||
+      (normFilter.includes('clean') && workerTrade.includes('clean')) ||
+      (normFilter.includes('plumb') && workerTrade.includes('plumb')) ||
+      (normFilter.includes('electr') && workerTrade.includes('electr')) ||
+      (normFilter.includes('ac') && workerTrade.includes('ac')) ||
+      (normFilter.includes('paint') && workerTrade.includes('paint')) ||
+      (normFilter.includes('carpent') && workerTrade.includes('carpent')) ||
+      (normFilter.includes('move') && workerTrade.includes('mov')) ||
+      (normFilter.includes('vehic') && (workerTrade.includes('vehic') || workerTrade.includes('mechanic')));
+
+    const matchesRating = minRating === 0 || worker.rating >= minRating;
+    const matchesDistance = maxDistance === 0 || worker.distanceKm <= maxDistance;
     const matchesQuery = 
+      !searchQuery.trim() ||
       worker.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
       worker.trade.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      worker.coopName.toLowerCase().includes(searchQuery.toLowerCase());
+      worker.coopName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (worker.city && worker.city.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return matchesTrade && matchesRating && matchesDistance && matchesQuery;
   });
@@ -328,8 +376,9 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
               <select
                 value={minRating}
                 onChange={(e) => setMinRating(parseFloat(e.target.value))}
-                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
               >
+                <option value={0}>All Ratings</option>
                 <option value={4.0}>4.0 ★ & above</option>
                 <option value={4.5}>4.5 ★ & above</option>
                 <option value={4.8}>4.8 ★ & above</option>
@@ -341,17 +390,25 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
 
         {/* Worker Cards Grid */}
         {filteredWorkers.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-10 text-center border border-slate-200 dark:border-slate-800">
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No workers match your current filters.</p>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 sm:p-14 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 max-w-lg mx-auto my-6">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+              🔍
+            </div>
+            <h4 className="text-base font-bold text-slate-900 dark:text-white font-outfit">No workers found matching this filter</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
+              We have verified cooperative professionals across all 8 trades available right now.
+            </p>
             <button
+              type="button"
               onClick={() => {
                 setFilterTrade('All');
-                setMinRating(4.0);
+                setMinRating(0);
+                setMaxDistance(30);
                 setSearchQuery('');
               }}
-              className="mt-3 px-4 py-2 bg-emerald-700 text-white text-xs font-bold rounded-xl"
+              className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
-              Reset Filters
+              Reset Filters & Show All Workers
             </button>
           </div>
         ) : (

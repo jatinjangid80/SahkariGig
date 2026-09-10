@@ -221,6 +221,55 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           </div>
 
+          {/* 1-Click Instant Demo Login */}
+          <div className="bg-emerald-50/80 dark:bg-emerald-950/40 p-3 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider flex items-center">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+                Instant Demo Access
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">1-Click Test</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const demoCustomer = {
+                    id: 'demo-customer-101',
+                    name: 'Demo Customer',
+                    email: 'customer@sahkarigig.org',
+                    role: 'Customer' as const
+                  };
+                  localStorage.setItem('demoUser', JSON.stringify(demoCustomer));
+                  onSuccess(demoCustomer, false);
+                  onClose();
+                }}
+                className="py-2 px-2.5 bg-white dark:bg-slate-800 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 text-emerald-800 dark:text-emerald-300 font-bold text-xs rounded-xl border border-emerald-200 dark:border-slate-700 shadow-2xs transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>Customer Demo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const demoWorker = {
+                    id: 'demo-worker-202',
+                    name: 'Rajesh Sharma',
+                    email: 'rajesh.worker@sahkarigig.org',
+                    role: 'Worker' as const
+                  };
+                  localStorage.setItem('demoUser', JSON.stringify(demoWorker));
+                  onSuccess(demoWorker, false);
+                  onClose();
+                }}
+                className="py-2 px-2.5 bg-white dark:bg-slate-800 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 text-amber-800 dark:text-amber-300 font-bold text-xs rounded-xl border border-amber-200 dark:border-slate-700 shadow-2xs transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                <Hammer className="w-3.5 h-3.5" />
+                <span>Worker Demo</span>
+              </button>
+            </div>
+          </div>
+
           {/* Messages */}
           {errorMsg && (
             <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-sm text-rose-700 dark:text-rose-200 flex items-start space-x-3">
