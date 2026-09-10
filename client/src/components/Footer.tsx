@@ -52,7 +52,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
             {/* Helpline Pill */}
             <div className="inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900/90 border border-emerald-200 dark:border-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 shadow-xs">
               <PhoneCall className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Cooperative Helpline: <strong className="text-emerald-700 dark:text-emerald-400 font-bold font-mono">1800-SAHKARI-GIG</strong></span>
+              <span>Cooperative Support: <strong className="text-emerald-700 dark:text-emerald-400 font-bold font-mono">+91 141-2890123</strong> (<span className="text-emerald-600 dark:text-emerald-400">help@sahkarigig.in</span>)</span>
             </div>
           </div>
 
@@ -142,11 +142,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
               </h5>
               <div className="flex items-center space-x-2.5">
                 <a
-                  href="https://github.com"
+                  href="https://github.com/jatinjangid80/SahkariGig"
                   target="_blank"
                   rel="noreferrer"
                   className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 hover:border-emerald-600 text-slate-600 dark:text-slate-400 shadow-2xs transition-all hover:scale-105 flex items-center justify-center cursor-pointer"
-                  title="GitHub"
+                  title="GitHub Repository"
+                  aria-label="GitHub Repository"
                 >
                   <Github className="w-4 h-4" />
                 </a>
@@ -156,6 +157,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
                   rel="noreferrer"
                   className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 hover:border-emerald-600 text-slate-600 dark:text-slate-400 shadow-2xs transition-all hover:scale-105 flex items-center justify-center cursor-pointer"
                   title="Twitter"
+                  aria-label="Twitter Profile"
                 >
                   <Twitter className="w-4 h-4" />
                 </a>
@@ -165,6 +167,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
                   rel="noreferrer"
                   className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 hover:border-emerald-600 text-slate-600 dark:text-slate-400 shadow-2xs transition-all hover:scale-105 flex items-center justify-center cursor-pointer"
                   title="LinkedIn"
+                  aria-label="LinkedIn Profile"
                 >
                   <Linkedin className="w-4 h-4" />
                 </a>
