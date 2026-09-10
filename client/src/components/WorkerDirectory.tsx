@@ -73,12 +73,21 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
             );
           };
 
+          const formatWorkerName = (rawName: string) => {
+            const n = (rawName || '').trim();
+            if (!n) return 'Verified Worker';
+            if (n.toLowerCase() === 'tarun bhaiya') return 'Tarun Sharma';
+            if (n.toLowerCase() === 'parth') return 'Parth Joshi';
+            if (n.toLowerCase() === 'justin') return 'Justin Joseph';
+            if (n.toLowerCase() === 'pintu') return 'Pintu Kumar';
+            if (n.toLowerCase() === 'sam') return 'Samir Wilson';
+            return n.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          };
+
           const formattedWorkers = data
             .filter(w => !isTestOrDemo(w.name))
             .map(w => {
-              let finalName = w.name;
-              if (finalName === 'Tarun Bhaiya') finalName = 'Tarun Sharma';
-              if (finalName === 'Parth') finalName = 'Parth Joshi';
+              const finalName = formatWorkerName(w.name);
 
               let finalAvatar = w.avatar;
               if (!finalAvatar || finalAvatar.includes('1540569014015-19a7be504e3a')) {

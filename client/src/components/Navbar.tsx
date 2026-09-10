@@ -27,11 +27,42 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('home');
   const { theme, isDark, setTheme } = useTheme();
 
   useEffect(() => {
     setImageError(false);
   }, [currentUser?.avatarUrl]);
+
+  // Dynamic Scroll Spy for Home page sections
+  useEffect(() => {
+    if (currentPath !== '/') return;
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 220; // 220px lookahead offset
+      const workersElem = document.getElementById('workers-directory');
+      const howItWorksElem = document.getElementById('how-sahkari-works');
+      const servicesElem = document.getElementById('popular-services');
+
+      const workersTop = workersElem ? workersElem.offsetTop : Infinity;
+      const howTop = howItWorksElem ? howItWorksElem.offsetTop : Infinity;
+      const servicesTop = servicesElem ? servicesElem.offsetTop : Infinity;
+
+      if (workersElem && scrollPosition >= workersTop) {
+        setActiveSection('workers');
+      } else if (howItWorksElem && scrollPosition >= howTop) {
+        setActiveSection('how-it-works');
+      } else if (servicesElem && scrollPosition >= servicesTop) {
+        setActiveSection('services');
+      } else {
+        setActiveSection('home');
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [currentPath]);
 
   // Public & Logged In Links
   const navLinks = currentUser?.role === 'Worker' ? [
@@ -53,6 +84,18 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Services', path: '/services' },
   ]);
 
+  const isLinkActive = (link: { label: string; path: string; tab?: string }) => {
+    if (currentPath !== '/') {
+      return currentPath === link.path && (!link.tab || workerActiveTab === link.tab);
+    }
+    // Dynamic Scroll-Spy on home page
+    if (link.path === '/') return activeSection === 'home';
+    if (link.path === '/workers') return activeSection === 'workers';
+    if (link.path === '/services') return activeSection === 'services';
+    if (link.path === '/how-it-works') return activeSection === 'how-it-works';
+    return false;
+  };
+
   const handleNavClick = (path: string, tab?: string) => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
@@ -61,22 +104,35 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
     
     // Smooth scroll for Home / anchor IDs if on home page
-    if (path === '/' && currentPath === '/') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (path === '/workers' && currentPath === '/') {
-      const elem = document.getElementById('workers-directory');
-      if (elem) {
-        elem.scrollIntoView({ behavior: 'smooth' });
+    if (currentPath === '/') {
+      if (path === '/') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setActiveSection('home');
         return;
       }
-    }
-    if (path === '/how-it-works' && currentPath === '/') {
-      const elem = document.getElementById('how-sahkari-works');
-      if (elem) {
-        elem.scrollIntoView({ behavior: 'smooth' });
-        return;
+      if (path === '/workers') {
+        const elem = document.getElementById('workers-directory');
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' });
+          setActiveSection('workers');
+          return;
+        }
+      }
+      if (path === '/services') {
+        const elem = document.getElementById('popular-services');
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' });
+          setActiveSection('services');
+          return;
+        }
+      }
+      if (path === '/how-it-works') {
+        const elem = document.getElementById('how-sahkari-works');
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' });
+          setActiveSection('how-it-works');
+          return;
+        }
       }
     }
 
@@ -106,10 +162,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Desktop Navigation Links: Modern Segmented Pill Bar */}
+        {/* Desktop Navigation Links: Modern Segmented Pill Bar with Scroll Spy */}
         <nav className="hidden md:flex items-center p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-inner">
           {navLinks.map((link) => {
-            const isActive = currentPath === link.path && (!link.tab || workerActiveTab === link.tab);
+            const isActive = isLinkActive(link);
             return (
               <button
                 key={link.label}
@@ -321,7 +377,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {mobileMenuOpen && (
         <div className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 pt-2 pb-6 space-y-2 animate-in fade-in duration-200">
           {navLinks.map((link) => {
-            const isActive = currentPath === link.path && (!link.tab || workerActiveTab === link.tab);
+            const isActive = isLinkActive(link);
             return (
               <button
                 key={link.label}
