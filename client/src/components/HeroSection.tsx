@@ -185,7 +185,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </h1>
           
           <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-medium max-w-2xl mx-auto">
-            Community-powered marketplace for verified professionals, workers and cooperatives.
+            Connecting you with trusted, community-verified professionals for all your local needs.
           </p>
 
           {/* Primary Action Buttons */}
@@ -198,7 +198,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               }}
               className="w-full sm:w-auto px-7 py-3 text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-md hover:shadow-emerald-600/25 transition-all flex items-center justify-center btn-interaction cursor-pointer"
             >
-              Hire Workers
+              Hire Talent
               <ArrowRight className="ml-2 w-4 h-4" />
             </button>
             {currentUser?.role !== 'Customer' && (
@@ -206,7 +206,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={() => onNavigate && onNavigate('/for-workers')}
                 className="w-full sm:w-auto px-7 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-emerald-600 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-xl shadow-2xs transition-all flex items-center justify-center btn-interaction cursor-pointer"
               >
-                Find Work
+                Find Jobs
               </button>
             )}
           </div>
@@ -216,9 +216,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-emerald-100 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 text-center shadow-2xs">
               <div className="flex items-center justify-center space-x-1 text-emerald-700 dark:text-emerald-400 font-extrabold text-sm sm:text-lg font-outfit">
                 <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>142+</span>
+                <span>500+</span>
               </div>
-              <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">Active Members</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">Jobs Completed</p>
             </div>
 
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-emerald-100 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 text-center shadow-2xs">
@@ -272,7 +272,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Find Workers</span>
+                      <span>Hire Talent</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}

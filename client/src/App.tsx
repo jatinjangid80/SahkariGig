@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
+import { CooperativeAdvantage } from './components/CooperativeAdvantage';
 import { CategoryGrid } from './components/CategoryGrid';
 import { WhyCooperative } from './components/WhyCooperative';
 import { WorkerDirectory } from './components/WorkerDirectory';
@@ -272,6 +273,9 @@ export default function App() {
                   selectedLocation={selectedLocation}
                   onLocationChange={(loc) => setSelectedLocation(loc)}
                 />
+
+                {/* Cooperative Advantage Value Proposition */}
+                <CooperativeAdvantage onNavigate={navigateTo} />
 
                 {/* Popular Services Categories */}
                 <PopularServicesSection

@@ -40,13 +40,15 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Earnings', path: '/dashboard', tab: 'earnings' },
     { label: 'Profile', path: '/dashboard', tab: 'profile' },
   ] : (currentUser?.role === 'Customer' ? [
-    { label: 'Find Workers', path: '/workers' },
+    { label: 'Home', path: '/' },
+    { label: 'Hire Talent', path: '/workers' },
     { label: 'Services', path: '/services' },
     { label: 'How It Works', path: '/how-it-works' },
     { label: 'My Bookings', path: '/dashboard' },
   ] : [
-    { label: 'Find Workers', path: '/workers' },
-    { label: 'Find Work', path: '/for-workers' },
+    { label: 'Home', path: '/' },
+    { label: 'Hire Talent', path: '/workers' },
+    { label: 'Find Jobs', path: '/for-workers' },
     { label: 'How It Works', path: '/how-it-works' },
     { label: 'Services', path: '/services' },
   ]);
@@ -58,7 +60,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       onWorkerTabChange(tab as any);
     }
     
-    // Smooth scroll for anchor IDs if on home page
+    // Smooth scroll for Home / anchor IDs if on home page
+    if (path === '/' && currentPath === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (path === '/workers' && currentPath === '/') {
       const elem = document.getElementById('workers-directory');
       if (elem) {
@@ -126,11 +132,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}
               className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer focus:outline-none flex items-center justify-center shadow-2xs"
-              title={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}
+              title={`Appearance: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}
             >
-              {theme === 'light' && <Sun className="w-4 h-4 text-amber-500 animate-in spin-in-180 duration-200" />}
-              {theme === 'dark' && <Moon className="w-4 h-4 text-sky-400 animate-in spin-in-180 duration-200" />}
-              {theme === 'system' && <Laptop className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-in spin-in-180 duration-200" />}
+              {isDark ? (
+                <Moon className="w-4 h-4 text-sky-400 animate-in spin-in-180 duration-200" />
+              ) : (
+                <Sun className="w-4 h-4 text-amber-500 animate-in spin-in-180 duration-200" />
+              )}
             </button>
 
             {themeDropdownOpen && (
@@ -268,9 +276,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onLoginClick || (() => onNavigate('/dashboard'))}
-                className="px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3 py-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors cursor-pointer"
               >
-                Login
+                <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                <span>Login</span>
               </button>
               <button
                 type="button"
