@@ -92,18 +92,18 @@ export const POPULAR_SERVICES = [
 
 export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({ onSelectCategory }) => {
   return (
-    <section id="popular-services" className="py-12 bg-slate-50 border-t border-slate-200">
+    <section id="popular-services" className="py-14 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-8">
-          <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider bg-emerald-100/70 border border-emerald-200 px-3 py-1 rounded-full">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="inline-flex items-center text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 px-3.5 py-1.5 rounded-full shadow-2xs">
             Everyday Essentials
           </span>
-          <h2 className="mt-2.5 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-outfit">
+          <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-outfit">
             Popular Services
           </h2>
-          <p className="mt-1.5 text-xs sm:text-sm text-slate-600">
+          <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
             Click any service to instantly connect with vetted local cooperative professionals.
           </p>
         </div>
@@ -111,29 +111,29 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({ 
         {/* 8-Grid Responsive Layout */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           {POPULAR_SERVICES.map((service) => {
-            const Icon = service.icon;
             return (
               <button
                 key={service.id}
+                type="button"
                 onClick={() => onSelectCategory(service.searchKey)}
-                className="group text-left bg-white hover:bg-emerald-50/40 p-4 rounded-2xl border border-slate-200/90 hover:border-emerald-300 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer"
+                className="group text-left bg-white dark:bg-slate-800/95 hover:bg-emerald-50/50 dark:hover:bg-slate-750 p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 hover:border-emerald-500 dark:hover:border-emerald-400 shadow-2xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between cursor-pointer active:scale-[0.98]"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-2.5">
-                    <span className="text-2xl">{service.emoji}</span>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-2xl sm:text-3xl filter drop-shadow-xs">{service.emoji}</span>
+                    <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-700/60 px-2 py-0.5 rounded-md">
                       {service.badge}
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900 font-outfit group-hover:text-emerald-700 transition-colors">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white font-outfit group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {service.name}
                   </h3>
-                  <p className="mt-1 text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                  <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed font-medium">
                     {service.description}
                   </p>
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-600 group-hover:text-emerald-700">
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/80 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                   <span>Find {service.name}</span>
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </div>

@@ -131,15 +131,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
         
         {/* Header */}
-        <div className="p-5 bg-slate-900 text-white flex items-center justify-between">
+        <div className="p-5 bg-slate-900 dark:bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
             <h3 className="font-bold text-base font-outfit">Secure Payment</h3>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg">
+          <button type="button" onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -148,56 +148,57 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         <div className="p-6 space-y-5">
           
           {/* Amount Box */}
-          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-            <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Service Fee Payable</span>
-            <p className="text-3xl font-extrabold text-slate-900 font-outfit mt-1">
+          <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-center">
+            <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Service Fee Payable</span>
+            <p className="text-3xl font-extrabold text-slate-900 dark:text-white font-outfit mt-1">
               {booking?.amount || '₹600'}
             </p>
-            <p className="text-[11px] text-slate-600 mt-1">
-              Beneficiary: <span className="font-semibold text-slate-900">Delhi Labour Cooperative Federation</span>
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
+              Beneficiary: <span className="font-semibold text-slate-900 dark:text-white">Delhi Labour Cooperative Federation</span>
             </p>
           </div>
 
           {/* Payment Info */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
             <div className="flex justify-between">
-              <span className="text-slate-500 font-medium">Payment Gateway:</span>
-              <span className="font-bold text-slate-900 font-mono">Razorpay (Secure)</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Payment Gateway:</span>
+              <span className="font-bold text-slate-900 dark:text-white font-mono">Razorpay (Secure)</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500 font-medium">Service Trade:</span>
-              <span className="font-semibold text-slate-900">{booking?.service || 'Electrician'}</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Service Trade:</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{booking?.service || 'Electrician'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500 font-medium">Assigned Professional:</span>
-              <span className="font-semibold text-slate-900">{booking?.workerName || 'Rajesh Kumar'}</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Assigned Professional:</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{booking?.workerName || 'Rajesh Kumar'}</span>
             </div>
           </div>
 
           {paymentState === 'PENDING' ? (
-            <form onSubmit={handleRazorpayPayment} className="space-y-4 pt-2 border-t border-slate-100">
+            <form onSubmit={handleRazorpayPayment} className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center space-x-2"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer"
               >
                 <CreditCard className="w-4 h-4" />
                 <span>{isSubmitting ? 'Initializing...' : 'Pay Securely with Razorpay'}</span>
               </button>
             </form>
           ) : (
-            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-              <h4 className="font-bold text-emerald-900 text-sm">Payment Successful</h4>
-              <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-200 text-emerald-900">
+            <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-center space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto" />
+              <h4 className="font-bold text-emerald-900 dark:text-emerald-200 text-sm">Payment Successful</h4>
+              <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
                 PAID
               </span>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Your payment has been successfully verified. The booking is now confirmed.
               </p>
               <button
+                type="button"
                 onClick={onClose}
-                className="w-full py-2 bg-slate-900 text-white font-semibold text-xs rounded-lg mt-2"
+                className="w-full py-2 bg-slate-900 dark:bg-slate-800 text-white font-semibold text-xs rounded-lg mt-2 cursor-pointer hover:bg-slate-800 dark:hover:bg-slate-700"
               >
                 Done
               </button>

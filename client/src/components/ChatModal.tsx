@@ -820,10 +820,10 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/70 backdrop-blur-xs font-sans">
-      <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col h-[620px] max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-[620px] max-h-[92vh] transition-colors">
         
         {/* WhatsApp-Style Header */}
-        <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between shadow-md z-10">
+        <div className="p-3.5 bg-slate-900 dark:bg-slate-950 text-white flex items-center justify-between shadow-md z-10 border-b border-slate-800">
           <div className="flex items-center space-x-3">
 
 
@@ -852,12 +852,13 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
           </div>
 
           <div className="flex items-center space-x-2">
-            <button className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors">
+            <button type="button" className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer">
               <MoreVertical className="w-5 h-5" />
             </button>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -866,7 +867,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
         {/* SahkariGig Booking Context Banner */}
         {booking && (
-          <div className="bg-emerald-950/90 text-emerald-100 border-b border-emerald-900/60 px-4 py-2.5 flex items-center justify-between text-xs backdrop-blur-xs">
+          <div className="bg-emerald-950 text-emerald-100 border-b border-emerald-900/60 px-4 py-2.5 flex items-center justify-between text-xs backdrop-blur-xs">
             <div className="flex items-center space-x-2.5">
               <div className="w-2 h-2 rounded-full bg-emerald-400" />
               <div>
@@ -885,18 +886,18 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
         )}
 
         {/* WhatsApp-Style Message Body */}
-        <div className="flex-1 p-4 bg-[#f0f2f5] overflow-y-auto space-y-3 relative">
+        <div className="flex-1 p-4 bg-[#f0f2f5] dark:bg-slate-950 overflow-y-auto space-y-3 relative transition-colors">
           
           {/* Today Date Separator Badge */}
           <div className="flex justify-center my-2">
-            <span className="px-3 py-1 bg-white/90 text-slate-500 text-[10px] font-bold uppercase tracking-wider rounded-md shadow-2xs border border-slate-200/60">
+            <span className="px-3 py-1 bg-white dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider rounded-md shadow-2xs border border-slate-200/80 dark:border-slate-700">
               Today
             </span>
           </div>
 
           {messages.length === 0 ? (
-            <div className="text-center text-slate-400 py-12 text-xs font-medium bg-white/60 backdrop-blur-xs p-6 rounded-2xl border border-slate-200/50 max-w-xs mx-auto">
-              <ShieldCheck className="w-8 h-8 text-emerald-600 mx-auto mb-2 opacity-80" />
+            <div className="text-center text-slate-600 dark:text-slate-300 py-12 text-xs font-semibold bg-white/80 dark:bg-slate-900/90 backdrop-blur-xs p-6 rounded-2xl border border-slate-200 dark:border-slate-800 max-w-xs mx-auto shadow-xs">
+              <ShieldCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-2 opacity-90" />
               <span>Say hello!</span>
             </div>
           ) : (
@@ -918,8 +919,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                     <div
                       className={`max-w-[85%] sm:max-w-[78%] px-3.5 py-2.5 rounded-2xl shadow-xs leading-relaxed text-xs relative ${
                         isMe
-                          ? 'bg-emerald-600 text-white rounded-tr-xs'
-                          : 'bg-white text-slate-900 border border-slate-200/80 rounded-tl-xs'
+                          ? 'bg-emerald-600 text-white rounded-tr-xs font-medium'
+                          : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700 rounded-tl-xs font-medium'
                       }`}
                     >
                       <p className="whitespace-pre-wrap break-words">{msg.text}</p>
@@ -927,14 +928,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                       {msg.reaction && (
                         <div 
                           onClick={() => toggleReaction(msg.id, msg.reaction)}
-                          className={`absolute -bottom-2.5 ${isMe ? 'right-2' : 'left-2'} bg-white border border-slate-200/90 shadow-xs rounded-full px-1.5 py-0.5 text-xs z-10 animate-in zoom-in duration-150 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform`}
+                          className={`absolute -bottom-2.5 ${isMe ? 'right-2' : 'left-2'} bg-white dark:bg-slate-700 border border-slate-200/90 dark:border-slate-600 shadow-xs rounded-full px-1.5 py-0.5 text-xs z-10 animate-in zoom-in duration-150 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform`}
                           title="Click to remove reaction"
                         >
                           <span>{msg.reaction}</span>
                         </div>
                       )}
                       
-                      <div className={`flex items-center justify-end space-x-1.5 mt-1 text-[9px] ${isMe ? 'text-emerald-100' : 'text-slate-400'}`}>
+                      <div className={`flex items-center justify-end space-x-1.5 mt-1 text-[9px] ${isMe ? 'text-emerald-100' : 'text-slate-400 dark:text-slate-400'}`}>
                         <span>{timeString}</span>
                         {isMe && (
                           <>
@@ -945,7 +946,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                               <button 
                                 type="button" 
                                 onClick={() => handleRetry(msg)}
-                                className="focus:outline-none"
+                                className="focus:outline-none cursor-pointer"
                                 title="Failed to send. Click to retry."
                               >
                                 <AlertCircle className="w-3 h-3 text-red-300 fill-red-850" />
@@ -960,7 +961,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                     </div>
 
                     {/* Reaction Bar (Hover) */}
-                    <div className={`opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity absolute -top-7 ${isMe ? 'right-0' : 'left-0'} bg-white border border-slate-200 shadow-md rounded-full px-2 py-0.5 flex items-center space-x-1 z-20`}>
+                    <div className={`opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity absolute -top-7 ${isMe ? 'right-0' : 'left-0'} bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-full px-2 py-0.5 flex items-center space-x-1 z-20`}>
                       {['👍', '❤️', '😊', '🙏'].map(emoji => (
                         <button
                           key={emoji}
@@ -969,7 +970,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
                             e.stopPropagation();
                             toggleReaction(msg.id, emoji);
                           }}
-                          className={`hover:scale-125 transition-all rounded-full p-1 leading-none text-sm cursor-pointer ${msg.reaction === emoji ? 'bg-emerald-100 scale-110' : 'hover:bg-slate-100'}`}
+                          className={`hover:scale-125 transition-all rounded-full p-1 leading-none text-sm cursor-pointer ${msg.reaction === emoji ? 'bg-emerald-100 dark:bg-emerald-900/60 scale-110' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                           title={`React with ${emoji}`}
                         >
                           {emoji}
@@ -984,12 +985,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
 
           {typingStatus && typingStatus.isTyping && (
             <div className="flex items-start animate-fade-in">
-              <div className="bg-white border border-slate-200/80 text-slate-600 text-xs px-3.5 py-2.5 rounded-2xl rounded-tl-xs shadow-xs flex items-center space-x-2">
+              <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs px-3.5 py-2.5 rounded-2xl rounded-tl-xs shadow-xs flex items-center space-x-2">
                 <Circle className="w-1.5 h-1.5 fill-emerald-500 text-emerald-500 animate-pulse" />
-                <span className="font-medium text-slate-500">
-                  <strong className="text-slate-700">{typingStatus.senderName}</strong> is typing
+                <span className="font-medium text-slate-500 dark:text-slate-400">
+                  <strong className="text-slate-700 dark:text-slate-200">{typingStatus.senderName}</strong> is typing
                   {typingStatus.text ? (
-                    <span>: <span className="italic text-emerald-600 font-semibold">"{typingStatus.text}"</span></span>
+                    <span>: <span className="italic text-emerald-600 dark:text-emerald-400 font-semibold">"{typingStatus.text}"</span></span>
                   ) : (
                     "..."
                   )}
@@ -1002,12 +1003,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
         </div>
 
         {/* WhatsApp-Style Composer Bar */}
-        <form onSubmit={handleSend} className="p-2.5 bg-slate-100 border-t border-slate-200 flex items-center space-x-2 relative overflow-visible">
+        <form onSubmit={handleSend} className="p-2.5 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center space-x-2 relative overflow-visible transition-colors">
           
           <div className="relative group">
             <button
               type="button"
-              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors shrink-0 focus:outline-none"
+              className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors shrink-0 focus:outline-none cursor-pointer"
               title="Add Emoji"
             >
               <Smile className="w-5 h-5" />
@@ -1030,13 +1031,13 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2 bg-white border border-slate-300/80 rounded-2xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none max-h-24 font-sans"
+            className="flex-1 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300/80 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none max-h-24 font-sans font-medium"
           />
 
           <button
             type="submit"
             disabled={!inputText.trim()}
-            className="w-9 h-9 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-full shadow-sm transition-colors flex items-center justify-center shrink-0"
+            className="w-9 h-9 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-full shadow-sm transition-colors flex items-center justify-center shrink-0 cursor-pointer"
             title="Send Message"
           >
             <Send className="w-4 h-4" />

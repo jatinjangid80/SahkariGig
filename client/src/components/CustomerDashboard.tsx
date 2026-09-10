@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle, Send, CheckCheck, Lock, Circle, Smile, Paperclip, ArrowLeft, Camera } from 'lucide-react';
+import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle, Send, CheckCheck, Lock, Circle, Smile, Paperclip, ArrowLeft, Camera, Sun, Moon, Laptop, Palette, Check } from 'lucide-react';
 import { supabase } from '../supabase';
 import { io } from 'socket.io-client';
 import { encryptMessage, decryptMessage } from '../utils/crypto';
 import { CONFIG } from '../config';
+import { useTheme } from '../utils/theme';
 
 interface CustomerDashboardProps {
   currentUser?: { name: string; role: string; id: string; email: string; avatarUrl?: string } | null;
@@ -31,6 +32,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onTabChange
 }) => {
   const validTabs = ['my_jobs', 'pay_review', 'history', 'profile', 'edit_account', 'settings', 'messages'];
+  const { theme, isDark, setTheme } = useTheme();
   const [activeTabState, setActiveTabState] = useState<'my_jobs' | 'pay_review' | 'history' | 'profile' | 'settings' | 'messages'>(() => {
     if (propActiveTab === 'edit_account') return 'profile';
     if (propActiveTab && validTabs.includes(propActiveTab)) {
@@ -1175,7 +1177,145 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8 max-w-4xl">
             <div>
               <h3 className="text-xl font-extrabold text-slate-900 font-outfit">Account & Platform Settings</h3>
-              <p className="text-xs text-slate-500 mt-1">Manage notification channels, security parameters, and verified cooperative preferences.</p>
+              <p className="text-xs text-slate-500 mt-1">Manage appearance, notification channels, security parameters, and verified cooperative preferences.</p>
+            </div>
+
+            {/* Appearance & Theme Section */}
+            <div className="space-y-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-outfit uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                    Appearance & Display Theme
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Customize your visual interface and comfortable reading contrast.</p>
+                </div>
+                
+                {/* Segmented Switch Pill */}
+                <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setTheme('light')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+                      theme === 'light'
+                        ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <Sun className="w-3.5 h-3.5" />
+                    <span>Light</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTheme('dark')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+                      theme === 'dark'
+                        ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <Moon className="w-3.5 h-3.5" />
+                    <span>Dark</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTheme('system')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+                      theme === 'system'
+                        ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <Laptop className="w-3.5 h-3.5" />
+                    <span>System</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                {/* Light Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  className={`p-5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                    theme === 'light'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-500/30 shadow-md scale-[1.02]'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3.5">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 ${
+                      theme === 'light'
+                        ? 'bg-amber-500 text-white shadow-amber-500/20'
+                        : 'bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'
+                    }`}>
+                      <Sun className="w-5 h-5" />
+                    </div>
+                    {theme === 'light' && (
+                      <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs font-bold">
+                        <Check className="w-3.5 h-3.5" />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">Light Mode</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-200 mt-1.5 leading-relaxed font-medium">Crisp daytime layout with sharp contrast and clean surfaces.</p>
+                </button>
+
+                {/* Dark Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  className={`p-5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                    theme === 'dark'
+                      ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30 ring-2 ring-sky-500/30 shadow-md scale-[1.02]'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3.5">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 ${
+                      theme === 'dark'
+                        ? 'bg-sky-500 text-white shadow-sky-500/20'
+                        : 'bg-slate-200 dark:bg-slate-800 text-sky-500 dark:text-sky-400'
+                    }`}>
+                      <Moon className="w-5 h-5" />
+                    </div>
+                    {theme === 'dark' && (
+                      <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs font-bold">
+                        <Check className="w-3.5 h-3.5" />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">Dark Mode</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-200 mt-1.5 leading-relaxed font-medium">Midnight dark aesthetic with reduced glare and soothing dark tones.</p>
+                </button>
+
+                {/* System Default Card */}
+                <button
+                  type="button"
+                  onClick={() => setTheme('system')}
+                  className={`p-5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                    theme === 'system'
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 ring-2 ring-emerald-500/30 shadow-md scale-[1.02]'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3.5">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 ${
+                      theme === 'system'
+                        ? 'bg-emerald-600 text-white shadow-emerald-500/20'
+                        : 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400'
+                    }`}>
+                      <Laptop className="w-5 h-5" />
+                    </div>
+                    {theme === 'system' && (
+                      <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs font-bold">
+                        <Check className="w-3.5 h-3.5" />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">System Default</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-200 mt-1.5 leading-relaxed font-medium">Automatically matches your operating system schedule.</p>
+                </button>
+              </div>
             </div>
 
             {/* Notification Preferences */}

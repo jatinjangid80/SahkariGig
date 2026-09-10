@@ -31,6 +31,7 @@ import { CustomerOnboarding } from './components/CustomerOnboarding';
 import { ChatBotWidget } from './components/ChatBotWidget';
 import { PopularServicesSection } from './components/PopularServicesSection';
 import { HowSahkariWorksSection } from './components/HowSahkariWorksSection';
+import { initTheme } from './utils/theme';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname || '/');
@@ -52,6 +53,8 @@ export default function App() {
   };
 
   useEffect(() => {
+    initTheme();
+
     // Hardcoded Admin Bypass
     if (localStorage.getItem('mockAdmin') === 'true') {
       setCurrentUser({ id: 'admin-123', name: 'jatin Admin', email: 'admin@gmail.com', role: 'Admin' });

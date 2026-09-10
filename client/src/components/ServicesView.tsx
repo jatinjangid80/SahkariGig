@@ -19,26 +19,26 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onSelectCategory }) 
         </div>
 
         {/* Quality Guarantee Card */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-slate-800">
-          <div className="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-start space-x-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shrink-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-6 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 flex items-start space-x-4 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-lg shrink-0 shadow-xs">
               ✓
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 font-outfit text-base">Standardized Rates</h3>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+              <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Standardized Rates</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-200 mt-1 leading-relaxed font-medium">
                 No bargaining or hidden fees. All rates are defined transparently by the cooperative society and agreed upon beforehand.
               </p>
             </div>
           </div>
 
-          <div className="p-6 bg-sky-50/50 rounded-2xl border border-sky-100 flex items-start space-x-4">
-            <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-lg shrink-0">
+          <div className="p-6 bg-sky-50/70 dark:bg-sky-950/30 rounded-2xl border border-sky-200/80 dark:border-sky-800/60 flex items-start space-x-4 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold text-lg shrink-0 shadow-xs">
               ★
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 font-outfit text-base">Verified Skill Assured</h3>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+              <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Verified Skill Assured</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-200 mt-1 leading-relaxed font-medium">
                 Every worker is vetted, certified, and fully registered with a Labour Cooperative Federation before serving the community.
               </p>
             </div>

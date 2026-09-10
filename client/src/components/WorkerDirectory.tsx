@@ -255,19 +255,19 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
   });
 
   return (
-    <section id="workers-directory" className="py-14 bg-slate-50 border-t border-slate-200">
+    <section id="workers-directory" className="py-14 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
-            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider bg-emerald-100/70 px-3 py-1 rounded-full border border-emerald-200">
+            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider bg-emerald-100/70 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
               Verified Marketplace
             </span>
-            <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight font-outfit">
+            <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight font-outfit">
               Trusted workers near you
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-slate-600">
+            <p className="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
               Directly connect with background-checked cooperative professionals with standard rates & QR identity.
             </p>
           </div>
@@ -286,7 +286,7 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
         </div>
 
         {/* Filter & Search Bar */}
-        <div className="bg-white rounded-2xl p-4 mb-8 border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 mb-8 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
           
           {/* Search Box */}
           <div className="relative w-full md:w-80">
@@ -296,19 +296,19 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filter by name, skill, or problem..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           {/* Category & Rating Filters */}
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto text-xs">
             <div className="flex items-center space-x-1.5">
-              <Filter className="w-3.5 h-3.5 text-slate-500" />
-              <span className="font-semibold text-slate-700">Category:</span>
+              <Filter className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Category:</span>
               <select
                 value={filterTrade}
                 onChange={(e) => setFilterTrade(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="All">All Services</option>
                 <option value="Electrician">Electrician</option>
@@ -324,11 +324,11 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
             </div>
 
             <div className="flex items-center space-x-1.5">
-              <span className="font-semibold text-slate-700">Min Rating:</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Min Rating:</span>
               <select
                 value={minRating}
                 onChange={(e) => setMinRating(parseFloat(e.target.value))}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value={4.0}>4.0 ★ & above</option>
                 <option value={4.5}>4.5 ★ & above</option>
@@ -341,8 +341,8 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
 
         {/* Worker Cards Grid */}
         {filteredWorkers.length === 0 ? (
-          <div className="bg-white rounded-2xl p-10 text-center border border-slate-200">
-            <p className="text-sm font-semibold text-slate-700">No workers match your current filters.</p>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-10 text-center border border-slate-200 dark:border-slate-800">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No workers match your current filters.</p>
             <button
               onClick={() => {
                 setFilterTrade('All');
@@ -358,21 +358,24 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredWorkers.map((worker) => {
               const getTradeIcon = (trade: string) => {
-                if (trade.toLowerCase().includes('electrician')) return '⚡';
-                if (trade.toLowerCase().includes('plumber')) return '🔧';
-                if (trade.toLowerCase().includes('ac') || trade.toLowerCase().includes('cool')) return '❄️';
-                if (trade.toLowerCase().includes('painter')) return '🎨';
-                if (trade.toLowerCase().includes('carpenter')) return '🔨';
-                if (trade.toLowerCase().includes('clean')) return '🧹';
-                if (trade.toLowerCase().includes('car') || trade.toLowerCase().includes('vehic')) return '🚗';
-                if (trade.toLowerCase().includes('move') || trade.toLowerCase().includes('pack')) return '📦';
-                return '🛠️';
+                switch (trade) {
+                  case 'Electrician': return '⚡';
+                  case 'Plumber': return '🔧';
+                  case 'AC Repair': return '❄️';
+                  case 'Painter': return '🎨';
+                  case 'Cleaning': return '🧹';
+                  case 'Carpenter': return '🪚';
+                  case 'Vehicle Repair': return '🚗';
+                  case 'Moving': return '📦';
+                  case 'Caregiver': return '🩺';
+                  default: return '🛠️';
+                }
               };
 
               return (
                 <div 
                   key={worker.id} 
-                  className="bg-white border border-slate-200/90 shadow-xs hover:shadow-lg transition-all rounded-2xl p-5 sm:p-6 flex flex-col justify-between"
+                  className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:shadow-xl hover:border-emerald-500/40 transition-all rounded-2xl p-5 sm:p-6 flex flex-col justify-between"
                 >
                   <div>
                     {/* Header: Photo, Name, Verified Badge */}
@@ -381,13 +384,13 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
                         <img
                           src={worker.avatar}
                           alt={worker.name}
-                          className="w-14 h-14 rounded-full object-cover border-2 border-emerald-100 shadow-xs"
+                          className="w-14 h-14 rounded-full object-cover border-2 border-emerald-100 dark:border-emerald-900/60 shadow-xs"
                         />
                         <div>
                           <div className="flex items-center space-x-1.5">
-                            <h3 className="text-base font-bold text-slate-900 font-outfit">{worker.name}</h3>
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white font-outfit">{worker.name}</h3>
                           </div>
-                          <p className="text-xs font-bold text-emerald-800 flex items-center mt-0.5">
+                          <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center mt-0.5">
                             <span className="mr-1">{getTradeIcon(worker.trade)}</span> 
                             {worker.trade}
                           </p>
@@ -395,32 +398,32 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
                       </div>
 
                       {/* Verified Badge */}
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0">
-                        <CheckCircle className="w-3 h-3 text-emerald-600" />
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                        <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                         <span>Verified</span>
                       </span>
                     </div>
 
                     {/* Stats Stack */}
-                    <div className="space-y-2 text-xs text-slate-600 bg-slate-50/70 rounded-xl p-3 border border-slate-100 mb-4">
+                    <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 rounded-xl p-3 border border-slate-100 dark:border-slate-700/60 mb-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 mr-1.5 shrink-0" />
-                          <span className="font-bold text-slate-900 mr-1">{worker.rating}</span>
-                          <span className="text-slate-500">· {worker.reviewsCount} jobs</span>
+                          <span className="font-bold text-slate-900 dark:text-white mr-1">{worker.rating}</span>
+                          <span className="text-slate-500 dark:text-slate-400">· {worker.reviewsCount} jobs</span>
                         </div>
-                        <div className="flex items-center text-slate-500 font-medium">
+                        <div className="flex items-center text-slate-500 dark:text-slate-400 font-medium">
                           <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" />
                           <span>{worker.city || 'Jaipur'} · {worker.distanceKm} km</span>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-1.5 border-t border-slate-200/60 text-[11px]">
-                        <span className="text-slate-500 truncate max-w-[170px]" title={worker.coopName}>
+                      <div className="flex items-center justify-between pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60 text-[11px]">
+                        <span className="text-slate-500 dark:text-slate-400 truncate max-w-[170px]" title={worker.coopName}>
                           {worker.coopName}
                         </span>
                         {worker.isAvailableToday && (
-                          <span className="text-emerald-700 font-semibold flex items-center shrink-0">
+                          <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center shrink-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
                             Available Today
                           </span>
@@ -432,14 +435,14 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
                   {/* Footer: Price & CTA Actions */}
                   <div className="pt-2">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-semibold text-slate-500">Standard Rate:</span>
-                      <span className="font-extrabold text-sm text-slate-900 font-outfit">{worker.hourlyRate}</span>
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Standard Rate:</span>
+                      <span className="font-extrabold text-sm text-slate-900 dark:text-white font-outfit">{worker.hourlyRate}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2.5">
                       <button
                         onClick={() => onViewWorkerProfile(worker)}
-                        className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center border border-slate-200 cursor-pointer"
+                        className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center border border-slate-200 dark:border-slate-700 cursor-pointer"
                       >
                         View Profile
                       </button>
