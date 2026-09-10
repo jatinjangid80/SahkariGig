@@ -58,75 +58,54 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
         if (error) throw error;
         
         if (data && data.length > 0) {
-          const formattedWorkers = data.map(w => {
-            let finalAvatar = w.avatar;
-            if (!finalAvatar || finalAvatar.includes('1540569014015-19a7be504e3a')) {
-              finalAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(w.name || 'User')}&background=10b981&color=fff&size=150`;
-            }
-            return {
-              id: w.id,
-              name: w.name,
-              avatar: finalAvatar,
-              trade: w.trade,
-              rating: Number(w.rating) || 4.8,
-              reviewsCount: w.reviews_count || 124,
-              coopName: w.coop_name || 'Jaipur Sahkari Labour Cooperative Society',
-              city: w.city || 'Jaipur',
-              hourlyRate: w.hourly_rate || '₹400–₹700 / visit',
-              distanceKm: Number(w.distance_km) || 2.5,
-              isAvailableToday: w.is_available_today ?? true,
-              isTopRated: w.is_top_rated ?? true,
-              workerId: w.worker_id || `WORKER-JAI-${w.id.slice(0, 4).toUpperCase()}`
-            };
-          });
+          const isTestOrDemo = (name: string) => {
+            const n = (name || '').toLowerCase().trim();
+            return (
+              !n ||
+              n === 'demo' ||
+              n === 'demo worker' ||
+              n.startsWith('demo') ||
+              n === 'test' ||
+              n.includes('test') ||
+              n.includes('badass') ||
+              n.includes('dummy') ||
+              n.includes('sample')
+            );
+          };
+
+          const formattedWorkers = data
+            .filter(w => !isTestOrDemo(w.name))
+            .map(w => {
+              let finalName = w.name;
+              if (finalName === 'Tarun Bhaiya') finalName = 'Tarun Sharma';
+              if (finalName === 'Parth') finalName = 'Parth Joshi';
+
+              let finalAvatar = w.avatar;
+              if (!finalAvatar || finalAvatar.includes('1540569014015-19a7be504e3a')) {
+                finalAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(finalName || 'Worker')}&background=10b981&color=fff&size=150`;
+              }
+              return {
+                id: w.id,
+                name: finalName,
+                avatar: finalAvatar,
+                trade: w.trade === 'Cleaner' ? 'Cleaning' : w.trade,
+                rating: Number(w.rating) || 4.8,
+                reviewsCount: w.reviews_count || 124,
+                coopName: w.coop_name || 'Jaipur Sahkari Labour Cooperative Society',
+                city: w.city || 'Jaipur',
+                hourlyRate: w.hourly_rate || '₹400–₹700 / visit',
+                distanceKm: Number(w.distance_km) || 2.5,
+                isAvailableToday: w.is_available_today ?? true,
+                isTopRated: w.is_top_rated ?? true,
+                workerId: w.worker_id || `WORKER-JAI-${w.id.slice(0, 4).toUpperCase()}`
+              };
+            });
           fetchedWorkers = [...fetchedWorkers, ...formattedWorkers];
         }
       } catch (err) {
-        console.error("Failed to fetch workers from database, using local fallbacks:", err);
+        console.error("Failed to fetch workers from database, using verified standards:", err);
       } finally {
-        // Fetch from localStorage
-        const localWorkers: Worker[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('worker_profile_')) {
-            try {
-              const profileStr = localStorage.getItem(key);
-              if (profileStr) {
-                const p = JSON.parse(profileStr);
-                const uid = key.replace('worker_profile_', '');
-                let finalLocalAvatar = p.avatarUrl;
-                if (!finalLocalAvatar || finalLocalAvatar.includes('1540569014015-19a7be504e3a')) {
-                  finalLocalAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullName || 'User')}&background=10b981&color=fff&size=150`;
-                }
-                localWorkers.push({
-                  id: uid,
-                  name: p.fullName || 'Demo Worker',
-                  avatar: finalLocalAvatar,
-                  trade: p.skill || 'Electrician',
-                  rating: 5.0,
-                  reviewsCount: 18,
-                  coopName: p.coop || 'Jaipur Labour Cooperative Federation',
-                  city: p.city || 'Jaipur',
-                  hourlyRate: p.skill === 'Electrician' ? '₹400–₹700 / visit' : (p.skill === 'Plumber' ? '₹350–₹650 / visit' : '₹500–₹900 / visit'),
-                  distanceKm: p.radius ? p.radius / 2 : 1.5,
-                  isAvailableToday: p.availableDays?.includes('Monday') ?? true,
-                  isTopRated: true,
-                  workerId: `WORKER-JAI-${uid.slice(0, 4).toUpperCase()}`
-                });
-              }
-            } catch (e) {
-              console.error("Failed to parse local profile:", e);
-            }
-          }
-        }
-        
-        // Filter out duplicates
-        const combined = [...fetchedWorkers];
-        localWorkers.forEach(lw => {
-          if (!combined.find(w => w.id === lw.id || w.workerId === lw.workerId || w.name === lw.name)) {
-            combined.push(lw);
-          }
-        });
+        const combined: Worker[] = [...fetchedWorkers];
 
         // Add high-quality verified showcase workers covering all trades
         const DEFAULT_SHOWCASE_WORKERS: Worker[] = [
@@ -269,6 +248,11 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
   const filteredWorkers = workers.filter((worker) => {
     // Hide the currently logged-in user from the directory
     if (currentUserId && worker.id === currentUserId) {
+      return false;
+    }
+
+    const n = (worker.name || '').toLowerCase().trim();
+    if (!n || n === 'demo' || n.startsWith('demo') || n.includes('test') || n.includes('badass') || n.includes('dummy')) {
       return false;
     }
 
