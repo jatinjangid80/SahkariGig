@@ -42,7 +42,7 @@ export default function App() {
   
   // User state & role management
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string; avatarUrl?: string } | null>(null);
-  const [workerActiveTab, setWorkerActiveTab] = useState<'feed' | 'active' | 'earnings' | 'profile'>('feed');
+  const [workerActiveTab, setWorkerActiveTab] = useState<'feed' | 'active' | 'earnings' | 'rights' | 'profile'>('feed');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalRole, setAuthModalRole] = useState<'Customer' | 'Worker'>('Customer');
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');

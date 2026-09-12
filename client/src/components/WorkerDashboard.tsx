@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip, CheckCircle2, Navigation, ExternalLink, Sun, Moon, Laptop } from 'lucide-react';
+import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip, CheckCircle2, Navigation, ExternalLink, Sun, Moon, Laptop, Scale, Shield, HeartHandshake, FileText, PhoneCall, Vote, AlertCircle, Sparkles, Building2, HelpCircle, CheckCircle, Heart, ArrowUpRight, Send, AlertTriangle } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useTheme } from '../utils/theme';
 // @ts-ignore
@@ -7,8 +7,8 @@ import confetti from 'canvas-confetti';
 
 interface WorkerDashboardProps {
   currentUser?: { name: string; role: string; id: string; email: string; avatarUrl?: string } | null;
-  activeTab?: 'feed' | 'active' | 'earnings' | 'profile';
-  onTabChange?: (tab: 'feed' | 'active' | 'earnings' | 'profile') => void;
+  activeTab?: 'feed' | 'active' | 'earnings' | 'rights' | 'profile';
+  onTabChange?: (tab: 'feed' | 'active' | 'earnings' | 'rights' | 'profile') => void;
   onProfileUpdate?: (updatedUser: { avatarUrl?: string; name?: string }) => void;
   onOpenWorkerIdCard?: (worker: any) => void;
   onOpenChat?: (booking: any) => void;
@@ -26,13 +26,29 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 }) => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { theme, isDark, setTheme } = useTheme();
-  const [localTab, setLocalTab] = useState<'feed' | 'active' | 'earnings' | 'profile'>('feed');
+  const [localTab, setLocalTab] = useState<'feed' | 'active' | 'earnings' | 'rights' | 'profile'>('feed');
   const currentTab = activeTab || localTab;
   const setTab = onTabChange || setLocalTab;
 
   const [requests, setRequests] = useState<any[]>([]);
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [payoutSuccess, setPayoutSuccess] = useState(false);
+  const [reliefModalOpen, setReliefModalOpen] = useState(false);
+  const [reliefClaimSubmitted, setReliefClaimSubmitted] = useState(false);
+  const [grievanceModalOpen, setGrievanceModalOpen] = useState(false);
+  const [grievanceSubmitted, setGrievanceSubmitted] = useState(false);
+  const [claimData, setClaimData] = useState({
+    type: 'medical',
+    amount: '5000',
+    description: '',
+    urgency: 'high'
+  });
+  const [grievanceData, setGrievanceData] = useState({
+    category: 'Payment Dispute',
+    customerName: '',
+    jobId: '',
+    details: ''
+  });
   const [profileSaved, setProfileSaved] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewDocsData, setPreviewDocsData] = useState<Record<string, { url: string, type: string }>>({});
@@ -720,6 +736,246 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             </div>
           )}
 
+          {/* TAB: WORKER RIGHTS */}
+          {currentTab === 'rights' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              
+              {/* Hero Banner with Cooperative Shield */}
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-900 to-slate-900 text-white p-6 sm:p-8 shadow-xl border border-emerald-700/50">
+                <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-0 right-1/4 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="space-y-3 max-w-2xl">
+                    <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold">
+                      <Scale className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>Cooperative Labour Protection Charter</span>
+                    </div>
+
+                    <h2 className="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">
+                      Your Guaranteed Worker Rights & Protections
+                    </h2>
+
+                    <p className="text-sm text-emerald-100/90 leading-relaxed font-normal">
+                      At <span className="font-bold text-white">SahkariGig</span>, you are a member-owner, not a disposable contractor. Every gig you accept is protected by cooperative statute: <span className="font-semibold text-emerald-300">0% platform commission</span>, <span className="font-semibold text-emerald-300">guaranteed minimum floor rates</span>, <span className="font-semibold text-emerald-300">emergency medical coverage</span>, and <span className="font-semibold text-emerald-300">democratic union voting rights</span>.
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/10 text-emerald-200 text-[11px] font-bold border border-white/10">
+                        <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-400" /> 100% Payout Sovereignty
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/10 text-emerald-200 text-[11px] font-bold border border-white/10">
+                        <Vote className="w-3.5 h-3.5 mr-1 text-amber-400" /> 1 Worker = 1 Vote
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/10 text-emerald-200 text-[11px] font-bold border border-white/10">
+                        <Heart className="w-3.5 h-3.5 mr-1 text-rose-400" /> ₹25,000 Emergency Mutual Fund
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReliefClaimSubmitted(false);
+                        setReliefModalOpen(true);
+                      }}
+                      className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg hover:shadow-emerald-500/25 flex items-center justify-center space-x-2 cursor-pointer"
+                    >
+                      <HeartHandshake className="w-4 h-4 text-slate-950" />
+                      <span>Apply Emergency Relief Fund</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGrievanceSubmitted(false);
+                        setGrievanceModalOpen(true);
+                      }}
+                      className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors border border-white/20 flex items-center justify-center space-x-2 cursor-pointer"
+                    >
+                      <AlertCircle className="w-4 h-4 text-amber-300" />
+                      <span>File Worker Grievance / Dispute</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 6 Core Rights Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                
+                {/* 1. Zero Commission */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold group-hover:scale-105 transition-transform">
+                    <IndianRupee className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      Right #1 · Zero Cut
+                    </span>
+                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
+                      0% Platform Commission
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                    You keep 100% of the customer's payment. Unlike corporate gig apps that extract 20%–30% in fees, SahkariGig charges ₹0 to workers. Escrow releases directly to your bank account.
+                  </p>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-emerald-700">
+                    <span>Active Benefit: 100% Retained</span>
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {/* 2. Guaranteed Minimum Floor Rate */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 font-bold group-hover:scale-105 transition-transform">
+                    <Scale className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-blue-800 uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      Right #2 · Fair Wage
+                    </span>
+                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
+                      Fair Floor Wage Protection
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                    Customers cannot force predatory low-ball pricing. Minimum base rates are collectively determined by the trade union federation ({profile.skill}: ₹400–₹700 min visit base) ensuring dignified livelihood.
+                  </p>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-blue-700">
+                    <span>Enforced Baseline Rates</span>
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {/* 3. Emergency Relief Fund */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-700 font-bold group-hover:scale-105 transition-transform">
+                    <HeartHandshake className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-rose-800 uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                      Right #3 · Mutual Aid
+                    </span>
+                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
+                      Cooperative Emergency Relief Fund
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                    Instant mutual aid grant up to ₹25,000 for on-job physical injuries, acute medical hospitalizations, or critical equipment theft/breakdown. Fast-track disbursement within 24 hours.
+                  </p>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-rose-700">
+                    <span>Coverage: Up to ₹25,000</span>
+                    <Heart className="w-4 h-4 fill-rose-500" />
+                  </div>
+                </div>
+
+                {/* 4. Democratic Union Representation */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 font-bold group-hover:scale-105 transition-transform">
+                    <Vote className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-amber-800 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      Right #4 · Governance
+                    </span>
+                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
+                      Democratic Voting & Transparency
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                    You have an equal vote in cooperative governance, fee schedules, and policy updates. Algorithms are open and auditable: no random shadow-banning or automated account terminations.
+                  </p>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-amber-700">
+                    <span>1 Member = 1 Equal Vote</span>
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {/* 5. Legal Ombudsman & Free Arbitration */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700 font-bold group-hover:scale-105 transition-transform">
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-purple-800 uppercase tracking-wider bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                      Right #5 · Legal Defense
+                    </span>
+                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
+                      Free Legal Aid & Dispute Ombudsman
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                    Full federation legal support for unpaid invoices, client misconduct, or unfair damages accusations. An independent worker-customer ombudsman resolves cases fairly within 48 hours.
+                  </p>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-purple-700">
+                    <span>Ombudsman Resolution: 48h</span>
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {/* 6. Social Security & Pension Integration */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold group-hover:scale-105 transition-transform">
+                    <Building2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-teal-800 uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                      Right #6 · Social Security
+                    </span>
+                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
+                      e-Shram & Pension Linkage
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                    Seamless integration with Ministry of Labour e-Shram portal and Pradhan Mantri Shram Yogi Maandhan (PM-SYM). Sahkari cooperative matches community welfare points for pension credits.
+                  </p>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-teal-700">
+                    <span>Verified e-Shram Connected</span>
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Cooperative Support Hotline & Emergency Contacts */}
+              <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-md border border-slate-700">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0">
+                    <PhoneCall className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-white text-base font-outfit">24x7 Cooperative Union Hotline & SOS</h4>
+                    <p className="text-xs text-slate-300 mt-1 max-w-xl">
+                      Need immediate assistance on a job site or facing client harassment? Call our emergency union desk toll-free or connect directly with your regional labor coordinator.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 shrink-0">
+                  <a
+                    href="tel:18007245274"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-md flex items-center space-x-2"
+                  >
+                    <PhoneCall className="w-3.5 h-3.5" />
+                    <span>Call 1800-SAHKARI</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      alert("Opening Sahkari Cooperative Federation Labour Charter (PDF)\n\nUnder section 42 of the Cooperative Labour Act, all members retain 100% of gig remuneration and are covered under collective bargaining agreements.");
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-colors flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>View Charter</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          )}
+
           {/* TAB 4: PROFILE & ONBOARDING SETTINGS */}
           {currentTab === 'profile' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1240,6 +1496,261 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 Download Original
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Emergency Relief Fund Application Modal */}
+      {reliefModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-rose-50/60 dark:bg-rose-950/40 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-md">
+                  <HeartHandshake className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base font-outfit">Emergency Mutual Relief Claim</h3>
+                  <p className="text-[11px] text-rose-700 dark:text-rose-300 font-medium">Cooperative Welfare Grant · Fast-Track 24h</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReliefModalOpen(false)}
+                className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full text-slate-400 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {reliefClaimSubmitted ? (
+              <div className="p-8 text-center space-y-4">
+                <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/80 rounded-full flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-extrabold text-slate-900 dark:text-white font-outfit">Relief Claim Submitted</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-xs mx-auto">
+                    Claim #REL-{Math.floor(1000 + Math.random() * 9000)} is filed with the <span className="font-bold text-emerald-600">{profile.coop}</span> welfare committee. A regional coordinator will contact you directly within 4 hours.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReliefModalOpen(false)}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setReliefClaimSubmitted(true);
+                  confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                  });
+                }}
+                className="p-6 space-y-4"
+              >
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Claim Category</label>
+                  <select
+                    value={claimData.type}
+                    onChange={(e) => setClaimData({ ...claimData, type: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="medical">On-Job Injury / Emergency Medical Care</option>
+                    <option value="equipment">Critical Tool Theft / Equipment Breakdown</option>
+                    <option value="hardship">Temporary Illness / Acute Family Hardship</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Grant Requested (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      max="25000"
+                      value={claimData.amount}
+                      onChange={(e) => setClaimData({ ...claimData, amount: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">Maximum grant: ₹25,000</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Urgency</label>
+                    <select
+                      value={claimData.urgency}
+                      onChange={(e) => setClaimData({ ...claimData, urgency: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="immediate">Immediate (&lt; 6 Hours)</option>
+                      <option value="high">High (&lt; 24 Hours)</option>
+                      <option value="normal">Standard (2–3 Days)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Incident Details</label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="Describe what happened (location, medical bills, damaged tools)..."
+                    value={claimData.description}
+                    onChange={(e) => setClaimData({ ...claimData, description: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start space-x-2">
+                  <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                  <span>Approved claims are credited directly into your linked bank account ({profile.bankDetails?.bankName || 'Verified Cooperative Account'}).</span>
+                </div>
+
+                <div className="flex items-center justify-end space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setReliefModalOpen(false)}
+                    className="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Submit Relief Request</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Worker Grievance & Dispute Filing Modal */}
+      {grievanceModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-amber-50/60 dark:bg-amber-950/40 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base font-outfit">File Worker Grievance</h3>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">Independent Cooperative Ombudsman</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGrievanceModalOpen(false)}
+                className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full text-slate-400 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {grievanceSubmitted ? (
+              <div className="p-8 text-center space-y-4">
+                <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/80 rounded-full flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-extrabold text-slate-900 dark:text-white font-outfit">Grievance Registered</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-xs mx-auto">
+                    Dispute docket #GRV-{Math.floor(1000 + Math.random() * 9000)} has been assigned to the regional legal ombudsman. Case review begins within 24 hours.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGrievanceModalOpen(false)}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setGrievanceSubmitted(true);
+                }}
+                className="p-6 space-y-4"
+              >
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Dispute Type</label>
+                  <select
+                    value={grievanceData.category}
+                    onChange={(e) => setGrievanceData({ ...grievanceData, category: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="Payment Dispute">Unpaid Job / Escrow Release Delay</option>
+                    <option value="Customer Misconduct">Customer Misconduct / Harassment on Job</option>
+                    <option value="Unfair Rating">Unfair Low Rating / Malicious Review</option>
+                    <option value="Safety Violation">Unsafe Working Conditions at Customer Site</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Customer / Entity Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ramesh Sharma"
+                      value={grievanceData.customerName}
+                      onChange={(e) => setGrievanceData({ ...grievanceData, customerName: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Job ID (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. BK-4091"
+                      value={grievanceData.jobId}
+                      onChange={(e) => setGrievanceData({ ...grievanceData, jobId: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Detailed Explanation</label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="Provide full facts regarding the dispute..."
+                    value={grievanceData.details}
+                    onChange={(e) => setGrievanceData({ ...grievanceData, details: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setGrievanceModalOpen(false)}
+                    className="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>File Dispute</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

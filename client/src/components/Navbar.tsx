@@ -10,7 +10,7 @@ interface NavbarProps {
   onGetStartedClick?: () => void;
   onLogoutClick?: () => void;
   workerActiveTab?: string;
-  onWorkerTabChange?: (tab: 'feed' | 'active' | 'earnings' | 'profile') => void;
+  onWorkerTabChange?: (tab: 'feed' | 'active' | 'earnings' | 'rights' | 'profile') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -69,6 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Job Feed', path: '/dashboard', tab: 'feed' },
     { label: 'Active Job', path: '/dashboard', tab: 'active' },
     { label: 'Earnings', path: '/dashboard', tab: 'earnings' },
+    { label: 'Worker Rights', path: '/dashboard', tab: 'rights' },
     { label: 'Profile', path: '/dashboard', tab: 'profile' },
   ] : (currentUser?.role === 'Customer' ? [
     { label: 'Home', path: '/' },
