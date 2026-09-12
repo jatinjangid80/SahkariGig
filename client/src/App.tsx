@@ -579,8 +579,22 @@ export default function App() {
         />
       )}
 
-      {/* Global Chat Bot Widget */}
-      <ChatBotWidget />
+      {/* Global Sahkari AI Assistant Chat Bot Widget */}
+      <ChatBotWidget 
+        onNavigate={navigateTo}
+        onOpenBooking={(tradeOrWorker) => {
+          if (typeof tradeOrWorker === 'string') {
+            handleOpenBooking({ trade: tradeOrWorker });
+          } else {
+            handleOpenBooking(tradeOrWorker);
+          }
+        }}
+        onVerifyWorker={(workerId) => {
+          setVerifyWorkerId(workerId || 'WORKER-DEL-8901');
+          setVerifyModalOpen(true);
+        }}
+        currentUser={currentUser}
+      />
     </div>
   );
 }
