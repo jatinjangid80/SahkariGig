@@ -524,6 +524,7 @@ export default function App() {
             currentUser={currentUser}
             onNavigate={navigateTo}
             onOpenChat={handleOpenChat}
+            generatedProjectDetails={generatedProjectDetails}
           />
         )}
       </main>

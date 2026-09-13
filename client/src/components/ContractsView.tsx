@@ -112,9 +112,9 @@ export const ContractsView: React.FC<ContractsViewProps> = ({ currentUser, onNav
             <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
               <LucideIndianRupee className="w-4 h-4 text-slate-400" />
               {contractValue ? (
-                contractValue.toLocaleString('en-IN')
+                `${contractValue.toLocaleString('en-IN')} (Approx)`
               ) : (
-                activeVersion === 'v1' ? '2,93,480' : <span className="text-emerald-600 dark:text-emerald-400">3,42,000</span>
+                activeVersion === 'v1' ? '2,93,480 (Approx)' : <span className="text-emerald-600 dark:text-emerald-400">3,42,000 (Approx)</span>
               )}
             </div>
           </div>

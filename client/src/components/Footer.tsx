@@ -181,12 +181,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
         <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
           <p>© 2026 SahkariGig. All rights reserved.</p>
 
-          <div className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-400">
-            <span>Designed & Deployed by</span>
-            <span className="font-bold text-emerald-700 dark:text-emerald-400 tracking-wide">
-              Jatin Jangid
-            </span>
-          </div>
+
 
           <div className="flex items-center space-x-4 text-slate-500 dark:text-slate-400">
             <button onClick={() => onNavigate('/about')} className="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer hover:underline">Privacy</button>

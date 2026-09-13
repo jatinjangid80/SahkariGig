@@ -5,11 +5,20 @@ export interface ProjectControlCenterProps {
   currentUser: any;
   onNavigate: (path: string) => void;
   onOpenChat: (booking: any) => void;
+  generatedProjectDetails?: { projectType: string; area: string; floors: string; } | null;
 }
 
-export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ currentUser, onNavigate, onOpenChat }) => {
+export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ currentUser, onNavigate, onOpenChat, generatedProjectDetails }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [changeRequestOpen, setChangeRequestOpen] = useState(false);
+
+  const contractValue = generatedProjectDetails ? Number(generatedProjectDetails.area) * 200 : 342000;
+  const projectTitle = generatedProjectDetails ? `${generatedProjectDetails.floors} — ${generatedProjectDetails.projectType === 'renovation' ? 'Renovation' : 'Construction'}` : 'Single Floor Villa — G+0';
+  const progress = generatedProjectDetails ? 0 : 38;
+  const daysLeft = generatedProjectDetails ? 75 : 47;
+  const workers = generatedProjectDetails ? 0 : 18;
+  const amountSpent = generatedProjectDetails ? 0 : 58696;
+  const milestonesPaid = generatedProjectDetails ? 0 : 1;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -23,7 +32,7 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
             Project Control Center
           </h1>
           <p className="mt-1 text-slate-600 dark:text-slate-400">
-            Single Floor Villa — G+0 • <span className="font-semibold text-slate-900 dark:text-white">₹3,42,000 Contract</span>
+            {projectTitle} • <span className="font-semibold text-slate-900 dark:text-white">₹{contractValue.toLocaleString('en-IN')} Contract (Approx)</span>
           </p>
         </div>
         <button 
@@ -38,25 +47,25 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
           <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Progress</div>
-          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">38%</div>
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{progress}%</div>
           <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full mt-2 overflow-hidden">
-            <div className="h-full bg-emerald-500 w-[38%]"></div>
+            <div className="h-full bg-emerald-500" style={{ width: `${progress}%` }}></div>
           </div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
           <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Days Left</div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">47 days</div>
-          <div className="text-xs text-slate-500 mt-1">Est. completion: Nov 15</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">{daysLeft} days</div>
+          <div className="text-xs text-slate-500 mt-1">Est. completion: {generatedProjectDetails ? 'TBD' : 'Nov 15'}</div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
           <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Workers On Site</div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">18</div>
-          <div className="text-xs text-slate-500 mt-1">Including 1 Supervisor</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">{workers}</div>
+          <div className="text-xs text-slate-500 mt-1">{workers > 0 ? 'Including 1 Supervisor' : 'Awaiting start'}</div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
           <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Amount Spent</div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">₹58,696</div>
-          <div className="text-xs text-slate-500 mt-1">1 of 5 milestones paid</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">₹{amountSpent.toLocaleString('en-IN')}</div>
+          <div className="text-xs text-slate-500 mt-1">{milestonesPaid} of 5 milestones paid</div>
         </div>
       </div>
 

@@ -188,55 +188,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             Connecting you with trusted, community-verified professionals for all your local needs.
           </p>
 
-          {/* Primary Action Buttons */}
-          <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={() => {
-                const elem = document.getElementById('workers-directory');
-                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-                else if (onNavigate) onNavigate('/workers');
-              }}
-              className="w-full sm:w-auto px-7 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md hover:shadow-lg hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
-            >
-              Hire Talent
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </button>
-            {currentUser?.role !== 'Customer' && (
-              <button
-                onClick={() => onNavigate && onNavigate('/for-workers')}
-                className="w-full sm:w-auto px-7 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-750 rounded-xl shadow-2xs hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
-              >
-                Find Jobs
-              </button>
-            )}
-          </div>
 
-          {/* Trust Statistics Cards (Compact 3-Card Format) */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3.5 max-w-lg mx-auto my-5 sm:my-6">
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-emerald-100 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 text-center shadow-2xs">
-              <div className="flex items-center justify-center space-x-1 text-emerald-700 dark:text-emerald-400 font-extrabold text-sm sm:text-lg font-outfit">
-                <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>500+</span>
-              </div>
-              <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">Jobs Completed</p>
-            </div>
-
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-emerald-100 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 text-center shadow-2xs">
-              <div className="flex items-center justify-center space-x-1 text-emerald-700 dark:text-emerald-400 font-extrabold text-sm sm:text-lg font-outfit">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>98%</span>
-              </div>
-              <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">Verified Profiles</p>
-            </div>
-
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-emerald-100 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 text-center shadow-2xs">
-              <div className="flex items-center justify-center space-x-1 text-amber-500 dark:text-amber-400 font-extrabold text-sm sm:text-lg font-outfit">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0" />
-                <span>4.8</span>
-              </div>
-              <p className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">Average Rating</p>
-            </div>
-          </div>
         </div>
 
         {/* High-Conversion Search Box with Location */}

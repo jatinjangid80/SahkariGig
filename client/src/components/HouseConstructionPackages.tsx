@@ -97,7 +97,7 @@ export const HouseConstructionPackages: React.FC<HouseConstructionPackagesProps>
                 <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
                   <div className="text-xs text-slate-500 dark:text-slate-400 mb-1 font-medium">Contract Value</div>
                   <div className="font-semibold text-slate-900 dark:text-white">
-                    ₹{generatedProjectDetails ? (Number(generatedProjectDetails.area) * 200).toLocaleString('en-IN') : '2,93,480'}
+                    ₹{generatedProjectDetails ? (Number(generatedProjectDetails.area) * 200).toLocaleString('en-IN') : '2,93,480'} (Approx)
                   </div>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
@@ -111,11 +111,11 @@ export const HouseConstructionPackages: React.FC<HouseConstructionPackagesProps>
               {/* Progress Bar */}
               <div className="mt-6">
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="font-medium text-slate-700 dark:text-slate-300">Phase 2 of 4 (Structure & Roof)</span>
-                  <span className="text-slate-500">38% Complete</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">Phase 1 of 4 (Foundation & Plinth)</span>
+                  <span className="text-slate-500">0% Complete</span>
                 </div>
                 <div className="h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full w-[38%]"></div>
+                  <div className="h-full bg-emerald-500 rounded-full w-[0%]"></div>
                 </div>
               </div>
             </div>
