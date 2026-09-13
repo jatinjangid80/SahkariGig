@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  Github, 
-  Twitter, 
-  Linkedin, 
-  ShieldCheck, 
-  PhoneCall, 
+import {
+  Github,
+  Twitter,
+  Linkedin,
+  ShieldCheck,
+  PhoneCall,
   CheckCircle2
 } from 'lucide-react';
 
@@ -21,10 +21,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-teal-500/5 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Top Grid: Brand & Column Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12 pb-12 border-b border-slate-200 dark:border-slate-800/80">
-          
+
           {/* Brand & Description (Spans 2 cols) */}
           <div className="lg:col-span-2 space-y-5">
             <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => onNavigate('/')}>

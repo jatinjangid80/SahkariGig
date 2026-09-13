@@ -74,15 +74,6 @@ export const ForWorkersView: React.FC<ForWorkersViewProps> = ({ onRegisterClick,
               <span>Register as Cooperative Member</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-            {onDemoWorkerClick && (
-              <button
-                type="button"
-                onClick={onDemoWorkerClick}
-                className="w-full sm:w-auto px-7 py-3.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm rounded-xl shadow-2xs transition-all flex items-center justify-center space-x-2 cursor-pointer"
-              >
-                <span>Explore Worker Dashboard Demo</span>
-              </button>
-            )}
           </div>
         </div>
 

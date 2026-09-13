@@ -72,17 +72,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Worker Rights', path: '/dashboard', tab: 'rights' },
     { label: 'Profile', path: '/dashboard', tab: 'profile' },
   ] : (currentUser?.role === 'Customer' ? [
-    { label: 'Home', path: '/' },
-    { label: 'Hire Talent', path: '/workers' },
-    { label: 'Services', path: '/services' },
-    { label: 'How It Works', path: '/how-it-works' },
+    { label: 'Projects', path: '/projects' },
     { label: 'My Bookings', path: '/dashboard' },
+    { label: 'Messages', path: '/messages' },
   ] : [
     { label: 'Home', path: '/' },
     { label: 'Hire Talent', path: '/workers' },
-    { label: 'Find Jobs', path: '/for-workers' },
-    { label: 'How It Works', path: '/how-it-works' },
+    { label: 'Projects', path: '/projects' },
     { label: 'Services', path: '/services' },
+    { label: 'How It Works', path: '/how-it-works' },
+    { label: 'Help', path: '/help' },
   ]);
 
   const isLinkActive = (link: { label: string; path: string; tab?: string }) => {
@@ -92,6 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     // Dynamic Scroll-Spy on home page
     if (link.path === '/') return activeSection === 'home';
     if (link.path === '/workers') return activeSection === 'workers';
+    if (link.path === '/projects' || link.path === '/teams') return false; // Handled by exact path match
     if (link.path === '/services') return activeSection === 'services';
     if (link.path === '/how-it-works') return activeSection === 'how-it-works';
     return false;
@@ -103,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (tab && onWorkerTabChange) {
       onWorkerTabChange(tab as any);
     }
-    
+
     // Smooth scroll for Home / anchor IDs if on home page
     if (currentPath === '/') {
       if (path === '/') {
@@ -143,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-2xs transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        
+
         {/* Brand Logo */}
         <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => handleNavClick('/')}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center text-white shadow-sm font-extrabold text-xl tracking-tight transition-transform group-hover:scale-105">
@@ -171,11 +171,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={link.label}
                 onClick={() => handleNavClick(link.path, link.tab)}
-                className={`relative px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
-                  isActive
+                className={`relative px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${isActive
                     ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 ring-1 ring-emerald-500'
                     : 'text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-700/60'
-                }`}
+                  }`}
               >
                 {link.label}
               </button>
@@ -185,7 +184,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right CTA / Auth Status */}
         <div className="hidden md:flex items-center space-x-3">
-          
+
           {/* Theme Selector Toggle */}
           <div className="relative">
             <button
@@ -206,13 +205,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="fixed inset-0 z-40" onClick={() => setThemeDropdownOpen(false)} />
                 <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                   <p className="px-3.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Appearance</p>
-                  
+
                   <button
                     type="button"
                     onClick={() => { setTheme('light'); setThemeDropdownOpen(false); }}
-                    className={`w-full text-left px-3.5 py-2 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                      theme === 'light' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                    className={`w-full text-left px-3.5 py-2 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${theme === 'light' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                   >
                     <span className="flex items-center">
                       <Sun className="w-3.5 h-3.5 mr-2 text-amber-500" />
@@ -224,9 +222,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     type="button"
                     onClick={() => { setTheme('dark'); setThemeDropdownOpen(false); }}
-                    className={`w-full text-left px-3.5 py-2 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                      theme === 'dark' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                    className={`w-full text-left px-3.5 py-2 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${theme === 'dark' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                   >
                     <span className="flex items-center">
                       <Moon className="w-3.5 h-3.5 mr-2 text-sky-400" />
@@ -238,9 +235,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     type="button"
                     onClick={() => { setTheme('system'); setThemeDropdownOpen(false); }}
-                    className={`w-full text-left px-3.5 py-2 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                      theme === 'system' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                    className={`w-full text-left px-3.5 py-2 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${theme === 'system' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                   >
                     <span className="flex items-center">
                       <Laptop className="w-3.5 h-3.5 mr-2 text-slate-500 dark:text-slate-400" />
@@ -384,11 +380,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={link.label}
                 type="button"
                 onClick={() => handleNavClick(link.path, link.tab)}
-                className={`block w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  isActive
+                className={`block w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${isActive
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400'
-                }`}
+                  }`}
               >
                 {link.label}
               </button>

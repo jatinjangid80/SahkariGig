@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  Wrench, 
-  Zap, 
-  Snowflake, 
-  Paintbrush, 
-  Sparkles, 
-  Hammer, 
-  Car, 
-  Package, 
-  ArrowRight 
+import {
+  Wrench,
+  Zap,
+  Snowflake,
+  Paintbrush,
+  Sparkles,
+  Hammer,
+  Car,
+  Package,
+  ArrowRight
 } from 'lucide-react';
 
 interface PopularServicesSectionProps {
@@ -94,7 +94,7 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({ 
   return (
     <section id="popular-services" className="py-14 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
           <span className="inline-flex items-center text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 px-3.5 py-1.5 rounded-full shadow-2xs">

@@ -87,16 +87,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   if (!isOpen) return null;
 
-  const defaultWorker: Worker = worker || {
-    id: 'w-101',
-    name: 'Rajesh Kumar',
-    trade: selectedTrades[0] || 'Electrician',
+  const fallbackWorker: Worker = {
+    id: 'w-default',
+    name: 'Verified Cooperative Professional',
+    trade: 'General Service',
     rating: 4.8,
-    reviewsCount: 128,
-    coopName: 'Delhi Labour Cooperative Federation',
-    hourlyRate: '₹400–₹700 / visit',
+    reviewsCount: 124,
+    coopName: 'Jaipur Urban Service Cooperative',
+    hourlyRate: '₹400 / hour',
     workerId: 'WORKER-DEL-8901'
   };
+
+  const defaultWorker: Worker = worker ? { ...fallbackWorker, ...worker } : fallbackWorker;
 
   // Base rate calculation per worker
   const baseRatePerWorker = 500;

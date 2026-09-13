@@ -12,6 +12,9 @@ import { CustomerDashboard } from './components/CustomerDashboard';
 import { WorkerDashboard } from './components/WorkerDashboard';
 import { AdminPanel } from './components/AdminPanel';
 import { CrewProjectSection } from './components/CrewProjectSection';
+import { HouseConstructionPackages } from './components/HouseConstructionPackages';
+import { ProjectControlCenter } from './components/ProjectControlCenter';
+import { ContractsView } from './components/ContractsView';
 import { VerifyWorkerPage } from './components/VerifyWorkerPage';
 import { BookingModal } from './components/BookingModal';
 import { ChatModal } from './components/ChatModal';
@@ -39,10 +42,17 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname || '/');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLocation, setSelectedLocation] = useState('Jaipur, Rajasthan');
-  
+
   // User state & role management
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string; avatarUrl?: string } | null>(null);
   const [workerActiveTab, setWorkerActiveTab] = useState<'feed' | 'active' | 'earnings' | 'rights' | 'profile'>('feed');
+  const [hasGeneratedProject, setHasGeneratedProject] = useState(false);
+  const [generatedProjectDetails, setGeneratedProjectDetails] = useState<{
+    projectType: string;
+    area: string;
+    floors: string;
+  } | null>(null);
+
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalRole, setAuthModalRole] = useState<'Customer' | 'Worker'>('Customer');
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
@@ -119,14 +129,14 @@ export default function App() {
   // Modal States
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedWorkerForBooking, setSelectedWorkerForBooking] = useState<any>(null);
-  
+
   const [chatModalOpen, setChatModalOpen] = useState(false);
 
   const [activeBookingForChat, setActiveBookingForChat] = useState<any>(null);
-  
+
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [activeBookingForPayment, setActiveBookingForPayment] = useState<any>(null);
-  
+
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [activeBookingForReview, setActiveBookingForReview] = useState<any>(null);
 
@@ -145,7 +155,7 @@ export default function App() {
     // Listen to Supabase Auth State Changes (Google OAuth & Email Auth)
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (localStorage.getItem('mockAdmin') === 'true') return;
-      
+
       if (session?.user) {
         const email = session.user.email || '';
         const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
@@ -195,7 +205,7 @@ export default function App() {
   const handleReviewSubmit = async (reviewData: { rating: number; comment: string; bookingId: string }) => {
     try {
       if (!currentUser) return;
-      
+
       const { error } = await supabase
         .from('reviews')
         .insert([
@@ -217,7 +227,7 @@ export default function App() {
           .update({ status: 'RATED' })
           .eq('id', reviewData.bookingId);
       }
-      
+
       // Close the modal after a short delay for success animation
       setTimeout(() => {
         setReviewModalOpen(false);
@@ -235,7 +245,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-600 selection:text-white">
-      
+
       {/* Public Header */}
       {currentPath !== '/worker-onboarding' && currentPath !== '/customer-onboarding' && (
         <Navbar
@@ -371,7 +381,7 @@ export default function App() {
         )}
 
         {currentPath === '/worker-onboarding' && (
-          <WorkerOnboarding 
+          <WorkerOnboarding
             currentUser={currentUser}
             onComplete={() => navigateTo('/dashboard')}
             onLogout={() => {
@@ -385,7 +395,7 @@ export default function App() {
         )}
 
         {currentPath === '/customer-onboarding' && (
-          <CustomerOnboarding 
+          <CustomerOnboarding
             currentUser={currentUser}
             onComplete={() => navigateTo('/dashboard')}
           />
@@ -415,11 +425,11 @@ export default function App() {
                   } catch (e) {
                     console.error("Local storage update failed", e);
                   }
-                  
+
                   if (currentUser?.id && !currentUser.id.startsWith('demo-') && !currentUser.id.startsWith('admin-')) {
                     try {
                       await supabase.auth.updateUser({
-                        data: { 
+                        data: {
                           full_name: updatedUser.name || currentUser.name,
                           avatar_url: updatedUser.avatarUrl || currentUser.avatarUrl
                         }
@@ -464,8 +474,57 @@ export default function App() {
           </div>
         )}
 
-        {currentPath === '/projects' && (
-          <CrewProjectSection />
+        {(currentPath === '/projects' || currentPath === '/teams' || currentPath === '/bulk-workers' || currentPath === '/house-construction' || currentPath === '/construction-packages') && (
+          <HouseConstructionPackages 
+            currentUser={currentUser}
+            onNavigate={navigateTo}
+            onOpenBooking={handleOpenBooking}
+            onOpenAuth={handleOpenAuth}
+            hasGeneratedProject={hasGeneratedProject}
+            generatedProjectDetails={generatedProjectDetails}
+            onProjectGenerated={(details) => {
+              setGeneratedProjectDetails(details);
+              setHasGeneratedProject(true);
+            }}
+          />
+        )}
+
+        {currentPath === '/contracts' && (
+          <ContractsView
+            currentUser={currentUser}
+            onNavigate={navigateTo}
+            generatedProjectDetails={generatedProjectDetails}
+          />
+        )}
+
+        {currentPath === '/messages' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center min-h-[60vh]">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-700 shadow-sm max-w-lg">
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Messages Hub</h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-8">
+                Your centralized inbox for all cooperative worker communications is currently under development. You can still message workers directly from active bookings in your Dashboard!
+              </p>
+              <button 
+                onClick={() => navigateTo('/dashboard')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-sm cursor-pointer"
+              >
+                Go to My Dashboard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {(currentPath === '/control-center' || currentPath === '/project-control-center') && (
+          <ProjectControlCenter
+            currentUser={currentUser}
+            onNavigate={navigateTo}
+            onOpenChat={handleOpenChat}
+          />
         )}
       </main>
 
@@ -489,7 +548,7 @@ export default function App() {
           };
           if (user.email === 'google.user@example.com') { localStorage.setItem('demoUser', JSON.stringify(demoUser)); }
           setCurrentUser(demoUser);
-          
+
           if (user.role === 'Worker' && isSignup) {
             navigateTo('/worker-onboarding');
           } else if (user.role === 'Customer' && isSignup) {
@@ -580,7 +639,7 @@ export default function App() {
       )}
 
       {/* Global Sahkari AI Assistant Chat Bot Widget */}
-      <ChatBotWidget 
+      <ChatBotWidget
         onNavigate={navigateTo}
         onOpenBooking={(tradeOrWorker) => {
           if (typeof tradeOrWorker === 'string') {

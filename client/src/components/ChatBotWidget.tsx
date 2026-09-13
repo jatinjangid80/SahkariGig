@@ -31,8 +31,24 @@ export const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
   currentUser
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+    const isProjectContext = path.includes('/control-center') || path.includes('/projects') || path.includes('/contracts');
+    
+    if (isProjectContext) {
+      return [{
+        id: 'welcome-msg',
+        sender: 'bot',
+        text: `Your project is currently in: **Phase 2 — Structure & Roof**\n\nTry asking:\n"What's happening this week?"\n"When is the next payment?"\n"Why is my project delayed?"\n"Who is responsible for this phase?"\n"Show my remaining contract balance."`,
+        timestamp: 'Just now',
+        actions: [
+          { label: '📅 What\'s happening this week?', actionType: 'QUERY', payload: 'What is happening this week on site?' },
+          { label: '💰 When is the next payment?', actionType: 'QUERY', payload: 'When is the next payment?' }
+        ]
+      }];
+    }
+
+    return [{
       id: 'welcome-msg',
       sender: 'bot',
       text: `Hello ${currentUser?.name ? currentUser.name : 'there'}! 👋 Welcome to **SahkariGig AI Assistant**. I can help you find verified workers, book single professionals or full crews, check standard cooperative rates, or verify worker credentials. How can I assist you today?`,
@@ -44,8 +60,8 @@ export const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
         { label: '🛡️ Verify Worker ID / QR', actionType: 'VERIFY', payload: 'WORKER-DEL-8901' },
         { label: '🤝 How SahkariGig Works', actionType: 'QUERY', payload: 'How does the cooperative model work?' }
       ]
-    }
-  ]);
+    }];
+  });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -80,6 +96,31 @@ export const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
           { label: '👥 Open Crew Booking', actionType: 'BOOK', payload: 'CREW' },
           { label: '👷 View Worker Directory', actionType: 'NAVIGATE', payload: '/workers' }
         ]
+      };
+    }
+
+    // Context-Aware Project Queries
+    if (q.includes('happening') || q.includes('week') || q.includes('this week') || q.includes('update')) {
+      return {
+        text: `🏗️ **Project Update: Structure & Roof Phase**\n\nThis week, Supervisor **Er. Vikramaditya Rathore** and the team (17 workers) are focusing on:\n\n1. Completing the North Wall brickwork.\n2. Reinforcing all load-bearing columns.\n3. Preparing for the upcoming Slab Casting Inspection.\n\nThe team is currently on track and the site inspection today showed excellent progress.`,
+        actions: [
+          { label: '📋 View Control Center', actionType: 'NAVIGATE', payload: '/control-center' }
+        ]
+      };
+    }
+
+    if (q.includes('payment') || q.includes('next payment') || q.includes('balance') || q.includes('milestone')) {
+      return {
+        text: `💰 **Payment Status**\n\nYour next payment is **Milestone 2 (Structure & Roof) for ₹73,370**.\n\nThis payment will only be due after the Slab Casting Inspection is completed and approved by you. The estimated date for this is **Nov 15 (in 12 days)**.\n\nYou currently have ₹2,34,784 remaining on your contract balance.`,
+        actions: [
+          { label: '📄 View Contract', actionType: 'NAVIGATE', payload: '/contracts' }
+        ]
+      };
+    }
+
+    if (q.includes('delay') || q.includes('late') || q.includes('problem')) {
+      return {
+        text: `⏱️ **Project Timeline Status**\n\nCurrently, your project is **on schedule**. There are no reported delays.\n\nThe estimated handover is still approximately 47 days away. If any delays occur due to weather or material supply, your Supervisor will raise a notification in the Control Center immediately.`,
       };
     }
 

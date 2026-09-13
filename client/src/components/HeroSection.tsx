@@ -155,7 +155,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 my-auto">
-        
+
         {/* Top Trust Badge */}
         <div className="flex justify-center mb-4">
           <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold shadow-2xs backdrop-blur-sm">
@@ -183,7 +183,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </>
             )}
           </h1>
-          
+
           <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-medium max-w-2xl mx-auto">
             Connecting you with trusted, community-verified professionals for all your local needs.
           </p>
@@ -249,7 +249,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* Search Form */}
             <form onSubmit={handleSearchSubmit} className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-2.5">
-                
+
                 {/* Search Input with Emerald Focus Glow */}
                 <div className="relative flex-1">
                   <Search className="absolute left-3.5 top-3.5 w-4.5 h-4.5 text-slate-400" />
@@ -305,11 +305,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           key={tag}
                           type="button"
                           onClick={() => handlePopularTagClick(tag)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            isSelected
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${isSelected
                               ? 'bg-emerald-600 text-white border border-emerald-600 shadow-sm shadow-emerald-600/30 scale-105'
                               : 'bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:-translate-y-0.5'
-                          }`}
+                            }`}
                         >
                           {tag}
                         </button>
@@ -397,11 +396,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <button
                     key={city}
                     onClick={() => handleSelectCity(city)}
-                    className={`text-left px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${
-                      isSelected
+                    className={`text-left px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${isSelected
                         ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold shadow-2xs'
                         : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-750'
-                    }`}
+                      }`}
                   >
                     <span className="truncate">{city.split(',')[0]}</span>
                     {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1" />}
