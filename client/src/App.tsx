@@ -13,6 +13,7 @@ import { WorkerDashboard } from './components/WorkerDashboard';
 import { AdminPanel } from './components/AdminPanel';
 import { CrewProjectSection } from './components/CrewProjectSection';
 import { HouseConstructionPackages } from './components/HouseConstructionPackages';
+import { SupervisorDashboard } from './components/SupervisorDashboard';
 import { ProjectControlCenter } from './components/ProjectControlCenter';
 import { ContractsView } from './components/ContractsView';
 import { VerifyWorkerPage } from './components/VerifyWorkerPage';
@@ -45,7 +46,7 @@ export default function App() {
 
   // User state & role management
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string; id: string; email: string; avatarUrl?: string } | null>(null);
-  const [workerActiveTab, setWorkerActiveTab] = useState<'feed' | 'active' | 'earnings' | 'rights' | 'profile'>('feed');
+  const [workerActiveTab, setWorkerActiveTab] = useState<string>('overview');
   const [hasGeneratedProject, setHasGeneratedProject] = useState(false);
   const [generatedProjectDetails, setGeneratedProjectDetails] = useState<{
     projectType: string;
@@ -76,28 +77,36 @@ export default function App() {
     // Demo User Bypass (survives page reload)
     const savedDemoUser = localStorage.getItem('demoUser');
     if (savedDemoUser) {
-      setCurrentUser(JSON.parse(savedDemoUser));
+      const parsed = JSON.parse(savedDemoUser);
+      setCurrentUser(parsed);
+      if (parsed.role === 'Supervisor' && (currentPath === '/' || currentPath === '/projects')) {
+        navigateTo('/dashboard');
+      }
       return;
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setCurrentUser({
+        const u = {
           id: session.user.id,
           email: session.user.email || '',
           name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
           role: session.user.user_metadata?.role || 'Customer',
           avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
-        });
+        };
+        setCurrentUser(u);
+        if (u.role === 'Supervisor' && (currentPath === '/' || currentPath === '/projects')) {
+          navigateTo('/dashboard');
+        }
       } else {
-        // Auto-prompt login page modal on first visit of the session if not logged in (with 5 second delay)
+        // Auto-prompt login page modal on first visit of the session if not logged in (with 2 second delay)
         if (!sessionStorage.getItem('hasPromptedLogin')) {
           sessionStorage.setItem('hasPromptedLogin', 'true');
           setTimeout(() => {
             if (!localStorage.getItem('mockAdmin') && !localStorage.getItem('demoUser')) {
               setAuthModalOpen(true);
             }
-          }, 5000);
+          }, 2000);
         }
       }
     });
@@ -106,13 +115,17 @@ export default function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setCurrentUser({
+        const u = {
           id: session.user.id,
           email: session.user.email || '',
           name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
           role: session.user.user_metadata?.role || 'Customer',
           avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
-        });
+        };
+        setCurrentUser(u);
+        if (u.role === 'Supervisor' && (currentPath === '/' || currentPath === '/projects')) {
+          navigateTo('/dashboard');
+        }
       } else {
         if (localStorage.getItem('mockAdmin') !== 'true' && !localStorage.getItem('demoUser')) {
           setCurrentUser(null);
@@ -268,7 +281,31 @@ export default function App() {
 
       {/* Main Page Content */}
       <main className="flex-1">
-        {currentPath === '/' && (
+        {/* Supervisor Unified Views */}
+        {currentUser?.role === 'Supervisor' && (
+          ['/', '/dashboard', '/projects', '/workers', '/assignments', '/progress', '/control-center', '/project-control-center'].includes(currentPath) ? (
+            <SupervisorDashboard
+              currentUser={currentUser}
+              onNavigate={navigateTo}
+              onOpenChat={handleOpenChat}
+              activeTab={
+                currentPath === '/projects' ? 'projects' :
+                  currentPath === '/workers' ? 'workers' :
+                    currentPath === '/assignments' ? 'assignments' :
+                      currentPath === '/progress' ? 'progress' :
+                        (workerActiveTab || 'overview')
+              }
+              onTabChange={(tab) => {
+                setWorkerActiveTab(tab);
+                if (currentPath !== '/dashboard') {
+                  navigateTo('/dashboard');
+                }
+              }}
+            />
+          ) : null
+        )}
+
+        {currentPath === '/' && currentUser?.role !== 'Supervisor' && (
           <>
             <HeroSection
               currentUser={currentUser}
@@ -323,7 +360,7 @@ export default function App() {
           </>
         )}
 
-        {currentPath === '/workers' && (
+        {currentPath === '/workers' && currentUser?.role !== 'Supervisor' && (
           <WorkersView
             selectedCategory={selectedCategory}
             selectedCity={selectedLocation.split(',')[0]}
@@ -403,6 +440,16 @@ export default function App() {
 
         {currentPath === '/dashboard' && (
           <div>
+            {currentUser?.role === 'Supervisor' && (
+              <SupervisorDashboard
+                currentUser={currentUser}
+                onNavigate={navigateTo}
+                onOpenChat={handleOpenChat}
+                activeTab={workerActiveTab}
+                onTabChange={setWorkerActiveTab as any}
+              />
+            )}
+
             {(!currentUser || currentUser?.role === 'Customer') && (
               <CustomerDashboard
                 currentUser={currentUser || { id: 'demo-123', name: 'Guest User', role: 'Customer', email: 'guest@sahkarigig.org' }}
@@ -474,8 +521,8 @@ export default function App() {
           </div>
         )}
 
-        {(currentPath === '/projects' || currentPath === '/teams' || currentPath === '/bulk-workers' || currentPath === '/house-construction' || currentPath === '/construction-packages') && (
-          <HouseConstructionPackages 
+        {(currentPath === '/projects' || currentPath === '/teams' || currentPath === '/bulk-workers' || currentPath === '/house-construction' || currentPath === '/construction-packages') && currentUser?.role !== 'Supervisor' && (
+          <HouseConstructionPackages
             currentUser={currentUser}
             onNavigate={navigateTo}
             onOpenBooking={handleOpenBooking}
@@ -509,7 +556,7 @@ export default function App() {
               <p className="text-slate-600 dark:text-slate-400 mb-8">
                 Your centralized inbox for all cooperative worker communications is currently under development. You can still message workers directly from active bookings in your Dashboard!
               </p>
-              <button 
+              <button
                 onClick={() => navigateTo('/dashboard')}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-sm cursor-pointer"
               >
@@ -551,9 +598,16 @@ export default function App() {
           setCurrentUser(demoUser);
 
           if (user.role === 'Worker' && isSignup) {
+            setWorkerActiveTab('feed');
             navigateTo('/worker-onboarding');
           } else if (user.role === 'Customer' && isSignup) {
             navigateTo('/customer-onboarding');
+          } else if (user.role === 'Supervisor') {
+            setWorkerActiveTab('overview');
+            navigateTo('/dashboard');
+          } else if (user.role === 'Worker') {
+            setWorkerActiveTab('feed');
+            navigateTo('/dashboard');
           } else {
             navigateTo('/dashboard');
           }

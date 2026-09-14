@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, User, ArrowRight, CheckCircle2, AlertCircle, Home, Hammer, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { X, Mail, Lock, User, ArrowRight, CheckCircle2, AlertCircle, Home, Hammer, Eye, EyeOff, ShieldCheck, Briefcase } from 'lucide-react';
 import { supabase } from '../supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (user: { name: string; email: string; role: 'Customer' | 'Worker' | 'Admin' }, isSignup: boolean) => void;
+  onSuccess: (user: { name: string; email: string; role: 'Customer' | 'Worker' | 'Supervisor' | 'Admin' }, isSignup: boolean) => void;
   defaultRole?: 'Customer' | 'Worker';
   defaultMode?: 'signin' | 'signup';
 }
@@ -24,7 +24,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'Customer' | 'Worker'>('Customer');
+  const [selectedRole, setSelectedRole] = useState<'Customer' | 'Worker' | 'Supervisor'>('Customer');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -280,19 +280,45 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   className="w-full text-left p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-400 bg-white dark:bg-slate-800/90 hover:bg-amber-50/50 dark:hover:bg-amber-950/40 hover:shadow-lg hover:shadow-amber-500/10 hover:ring-2 hover:ring-amber-500/30 hover:scale-[1.01] transition-all duration-200 group flex items-center justify-between cursor-pointer active:scale-[0.98]"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 ring-1 ring-amber-300 dark:ring-amber-700 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-xs">
-                      <Hammer className="w-6 h-6 transition-colors" />
+                    <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 ring-1 ring-amber-300 dark:ring-amber-700/60 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-xs">
+                      <Briefcase className="w-6 h-6 transition-colors" />
                     </div>
                     <div>
                       <h5 className="font-bold text-slate-900 dark:text-white text-base leading-tight group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                        Worker
+                        Cooperative Worker
                       </h5>
                       <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium group-hover:text-slate-700 dark:group-hover:text-slate-200">
-                        Offer your services and manage bookings
+                        Join to find work and get verified
                       </p>
                     </div>
                   </div>
                   <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-300 group-hover:bg-amber-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0">
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedRole('Supervisor');
+                    setSignupStep('form');
+                  }}
+                  className="w-full text-left p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 bg-white dark:bg-slate-800/90 hover:bg-blue-50/50 dark:hover:bg-blue-950/40 hover:shadow-lg hover:shadow-blue-500/10 hover:ring-2 hover:ring-blue-500/30 hover:scale-[1.01] transition-all duration-200 group flex items-center justify-between cursor-pointer active:scale-[0.98]"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 ring-1 ring-blue-300 dark:ring-blue-700/60 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-xs">
+                      <ShieldCheck className="w-6 h-6 transition-colors" />
+                    </div>
+                    <div>
+                      <h5 className="font-bold text-slate-900 dark:text-white text-base leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        Project Supervisor
+                      </h5>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium group-hover:text-slate-700 dark:group-hover:text-slate-200">
+                        Manage teams and large projects
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-300 group-hover:bg-blue-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0">
                     <ArrowRight className="w-4 h-4" />
                   </div>
                 </button>

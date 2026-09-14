@@ -10,7 +10,7 @@ interface NavbarProps {
   onGetStartedClick?: () => void;
   onLogoutClick?: () => void;
   workerActiveTab?: string;
-  onWorkerTabChange?: (tab: 'feed' | 'active' | 'earnings' | 'rights' | 'profile') => void;
+  onWorkerTabChange?: (tab: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -71,11 +71,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Earnings', path: '/dashboard', tab: 'earnings' },
     { label: 'Worker Rights', path: '/dashboard', tab: 'rights' },
     { label: 'Profile', path: '/dashboard', tab: 'profile' },
+  ] : (currentUser?.role === 'Supervisor' ? [
+    { label: 'Dashboard', path: '/dashboard', tab: 'overview' },
+    { label: 'Projects', path: '/dashboard', tab: 'projects' },
+    { label: 'Workers', path: '/dashboard', tab: 'workers' },
+    { label: 'Assignments', path: '/dashboard', tab: 'assignments' },
+    { label: 'Progress', path: '/dashboard', tab: 'progress' },
   ] : (currentUser?.role === 'Customer' ? [
     { label: 'Home', path: '/' },
     { label: 'Projects', path: '/projects' },
     { label: 'My Bookings', path: '/dashboard' },
-    { label: 'Messages', path: '/messages' },
     { label: 'Help', path: '/help' },
   ] : [
     { label: 'Home', path: '/' },
@@ -84,11 +89,17 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Services', path: '/services' },
     { label: 'How It Works', path: '/how-it-works' },
     { label: 'Help', path: '/help' },
-  ]);
+  ]));
 
   const isLinkActive = (link: { label: string; path: string; tab?: string }) => {
     if (currentPath !== '/') {
-      return currentPath === link.path && (!link.tab || workerActiveTab === link.tab);
+      if (currentPath !== link.path) return false;
+      if (!link.tab) return true;
+      if (currentUser?.role === 'Supervisor') {
+        const effectiveTab = (!workerActiveTab || workerActiveTab === 'feed') ? 'overview' : workerActiveTab;
+        return effectiveTab === link.tab;
+      }
+      return workerActiveTab === link.tab;
     }
     // Dynamic Scroll-Spy on home page
     if (link.path === '/') return activeSection === 'home';
@@ -147,7 +158,18 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
         {/* Brand Logo */}
-        <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => handleNavClick('/')}>
+        <div 
+          className="flex items-center space-x-3 cursor-pointer group" 
+          onClick={() => {
+            if (currentUser?.role === 'Supervisor') {
+              handleNavClick('/dashboard', 'overview');
+            } else if (currentUser?.role === 'Worker') {
+              handleNavClick('/dashboard', 'feed');
+            } else {
+              handleNavClick('/');
+            }
+          }}
+        >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center text-white shadow-sm font-extrabold text-xl tracking-tight transition-transform group-hover:scale-105">
             Sg
           </div>

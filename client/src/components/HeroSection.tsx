@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { Search, ShieldCheck, CheckCircle, Star, MapPin, ArrowRight, Sparkles, ChevronDown, Check } from 'lucide-react';
+import { 
+  Search, ShieldCheck, CheckCircle2, Star, MapPin, ArrowRight, 
+  Sparkles, Check, QrCode, Lock, CreditCard, Building2, UserCheck, 
+  SlidersHorizontal, Briefcase, ChevronRight
+} from 'lucide-react';
 import { CONFIG } from '../config';
 
 interface HeroSectionProps {
@@ -13,12 +17,12 @@ interface HeroSectionProps {
 const POPULAR_CITIES = [
   'Jaipur, Rajasthan',
   'Delhi NCR',
-  'Bengaluru, Karnataka',
   'Mumbai, Maharashtra',
-  'Pune, Maharashtra',
+  'Bengaluru, Karnataka',
   'Ahmedabad, Gujarat',
-  'Lucknow, Uttar Pradesh',
-  'Hyderabad, Telangana'
+  'Udaipur, Rajasthan',
+  'Pune, Maharashtra',
+  'Lucknow, Uttar Pradesh'
 ];
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -31,7 +35,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [searchPrompt, setSearchPrompt] = useState('');
   const [currentCity, setCurrentCity] = useState(externalLocation || 'Jaipur, Rajasthan');
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
-  const [customCityInput, setCustomCityInput] = useState('');
+  const [citySearchQuery, setCitySearchQuery] = useState('');
   const [isClassifying, setIsClassifying] = useState(false);
   const [aiResult, setAiResult] = useState<{
     category: string;
@@ -43,14 +47,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     setCurrentCity(city);
     if (onLocationChange) onLocationChange(city);
     setIsCityModalOpen(false);
-  };
-
-  const handleCustomCitySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (customCityInput.trim()) {
-      handleSelectCity(customCityInput.trim());
-      setCustomCityInput('');
-    }
+    setCitySearchQuery('');
   };
 
   const handlePopularTagClick = (tag: string) => {
@@ -101,30 +98,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       let matchedCategory = 'Technician';
       let reason = 'Matched home technician and repair services.';
 
-      if (text.includes('fan') || text.includes('wire') || text.includes('switch') || text.includes('light') || text.includes('mcb') || text.includes('spark') || text.includes('electr')) {
+      if (text.includes('fan') || text.includes('wire') || text.includes('switch') || text.includes('light') || text.includes('mcb') || text.includes('electr')) {
         matchedCategory = 'Electrician';
         reason = 'Matched electrical repair, wiring & lighting troubleshooting.';
-      } else if (text.includes('pipe') || text.includes('leak') || text.includes('tap') || text.includes('drain') || text.includes('sink') || text.includes('plumb') || text.includes('water')) {
+      } else if (text.includes('pipe') || text.includes('leak') || text.includes('tap') || text.includes('drain') || text.includes('sink') || text.includes('plumb')) {
         matchedCategory = 'Plumber';
         reason = 'Matched plumbing fixtures, water supply & drain repairs.';
-      } else if (text.includes('ac') || text.includes('cool') || text.includes('filter') || text.includes('refrigerat') || text.includes('air cond')) {
+      } else if (text.includes('ac') || text.includes('cool') || text.includes('filter') || text.includes('air cond')) {
         matchedCategory = 'AC Repair';
         reason = 'Matched AC servicing, cooling troubleshooting & HVAC.';
       } else if (text.includes('paint') || text.includes('wall') || text.includes('color') || text.includes('putty')) {
         matchedCategory = 'Painter';
         reason = 'Matched interior/exterior wall painting & touch-up work.';
-      } else if (text.includes('clean') || text.includes('dust') || text.includes('maid') || text.includes('sweep') || text.includes('mopping')) {
+      } else if (text.includes('clean') || text.includes('dust') || text.includes('maid') || text.includes('sweep')) {
         matchedCategory = 'Cleaning';
         reason = 'Matched deep home cleaning, housekeeping & sanitize service.';
-      } else if (text.includes('door') || text.includes('wood') || text.includes('table') || text.includes('lock') || text.includes('carpenter') || text.includes('furniture')) {
+      } else if (text.includes('door') || text.includes('wood') || text.includes('table') || text.includes('carpenter') || text.includes('furniture')) {
         matchedCategory = 'Carpenter';
         reason = 'Matched woodwork, furniture assembly & door fitting.';
-      } else if (text.includes('car') || text.includes('bike') || text.includes('vehicle') || text.includes('puncture') || text.includes('mechanic')) {
-        matchedCategory = 'Vehicle Repair';
-        reason = 'Matched automotive mechanic and vehicle maintenance.';
-      } else if (text.includes('move') || text.includes('shift') || text.includes('pack') || text.includes('transport')) {
-        matchedCategory = 'Moving';
-        reason = 'Matched home shifting, packing & heavy transport assistance.';
       }
 
       setAiResult({
@@ -137,118 +128,135 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         onSearchService(matchedCategory, currentCity);
       }
     } catch (err) {
-      console.error("Search Error:", err);
       if (onSearchService) onSearchService(query, currentCity);
     } finally {
       setIsClassifying(false);
     }
   };
 
+  // Filtered city list for location modal
+  const filteredCities = POPULAR_CITIES.filter(c => 
+    c.toLowerCase().includes(citySearchQuery.toLowerCase())
+  );
+
+  // Role-based CTA Button Text
+  const getCtaButtonText = () => {
+    if (currentUser?.role === 'Worker') return 'Find Jobs';
+    if (currentUser?.role === 'Supervisor') return 'Open Projects';
+    return 'Find Workers';
+  };
+
   return (
-    <section className="relative bg-white dark:bg-[#0b0f19] min-h-[calc(100vh-4rem)] flex flex-col justify-center py-12 sm:py-16 overflow-hidden">
-      {/* Background Gradients */}
+    <section className="relative bg-white dark:bg-[#0b0f19] min-h-[calc(100vh-4rem)] flex flex-col justify-center items-center pt-10 pb-20 sm:pt-14 sm:pb-24 overflow-hidden border-b border-slate-100 dark:border-slate-800/80">
+      {/* Background Soft Ambient Light */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1400px] h-full">
-          <div className="absolute top-[5%] right-[-5%] w-[550px] h-[550px] bg-emerald-100/35 dark:bg-emerald-500/10 rounded-full blur-[100px] opacity-70" />
-          <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-sky-100/35 dark:bg-cyan-500/10 rounded-full blur-[90px] opacity-60" />
+          <div className="absolute top-[5%] right-[5%] w-[550px] h-[450px] bg-emerald-100/40 dark:bg-emerald-500/10 rounded-full blur-[100px] opacity-80" />
+          <div className="absolute top-[20%] left-[-5%] w-[500px] h-[400px] bg-sky-100/35 dark:bg-cyan-500/10 rounded-full blur-[90px] opacity-70" />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 my-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
 
         {/* Top Trust Badge */}
         <div className="flex justify-center mb-4">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold shadow-2xs backdrop-blur-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse shrink-0" />
-            <span className="tracking-wide uppercase text-[10px] font-bold">Verified Cooperative Network</span>
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-50/90 dark:bg-emerald-950/70 border border-emerald-200/90 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold shadow-2xs backdrop-blur-xs">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse shrink-0" />
+            <span className="tracking-wider uppercase text-[10px] sm:text-xs font-extrabold">Verified Cooperative Network</span>
           </div>
         </div>
 
         {/* Hero Main Heading & Copy */}
-        <div className="text-center max-w-3xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl lg:text-[50px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15] font-outfit">
+        <div className="text-center max-w-4xl mx-auto space-y-3">
+          <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-900 dark:text-white tracking-tight leading-[1.15] font-outfit">
             {currentUser?.role === 'Worker' ? (
               <>
-                Find trusted local work. <br />
+                Find verified local jobs. <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-300">
-                  Build your cooperative workforce.
+                  Build with your cooperative union.
                 </span>
               </>
             ) : (
               <>
-                Find trusted local workers. <br />
+                Find verified local workers. <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-300">
-                  Get your job done right.
+                  Manage your work, from hire to completion.
                 </span>
               </>
             )}
           </h1>
 
-          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-medium max-w-2xl mx-auto">
-            Connecting you with trusted, community-verified professionals for all your local needs.
+          <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 font-semibold tracking-wide flex items-center justify-center gap-2 sm:gap-3 flex-wrap pt-1">
+            <span>Trusted workers</span>
+            <span className="text-slate-300 dark:text-slate-600">•</span>
+            <span>Fair pricing</span>
+            <span className="text-slate-300 dark:text-slate-600">•</span>
+            <span>Verified cooperative ID</span>
           </p>
-
-
         </div>
 
-        {/* High-Conversion Search Box with Location */}
-        <div id="ai-request-box" className="mt-2 max-w-3xl mx-auto z-20 relative">
-          <div className="bg-white dark:bg-slate-900/95 rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-xl dark:shadow-2xl">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 font-outfit uppercase tracking-wider mb-3">
-              What service do you need?
-            </h3>
+        {/* Actionable Search & Location Card */}
+        <div id="ai-request-box" className="mt-8 max-w-4xl mx-auto z-20 relative">
+          <div className="bg-white dark:bg-slate-900/95 rounded-3xl p-5 sm:p-7 border border-slate-200/90 dark:border-slate-800 shadow-2xl">
+            
+            <div className="flex items-center justify-between mb-2.5 px-1">
+              <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 font-outfit uppercase tracking-wider flex items-center gap-1.5">
+                <Search className="w-3.5 h-3.5 text-emerald-600" />
+                What do you need help with?
+              </h3>
+              <span className="text-[10px] text-slate-400 font-bold hidden sm:inline-block">Instant Cooperative Match</span>
+            </div>
 
             {/* Search Form */}
             <form onSubmit={handleSearchSubmit} className="space-y-3">
-              <div className="flex flex-col sm:flex-row gap-2.5">
+              <div className="flex flex-col sm:flex-row gap-2">
 
-                {/* Search Input with Emerald Focus Glow */}
+                {/* Search Input */}
                 <div className="relative flex-1">
-                  <Search className="absolute left-3.5 top-3.5 w-4.5 h-4.5 text-slate-400" />
+                  <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     value={searchPrompt}
                     onChange={(e) => setSearchPrompt(e.target.value)}
-                    placeholder="Search for a service, skill, or problem (e.g. AC Repair, Plumber)..."
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/90 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs sm:text-sm font-medium focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all"
+                    placeholder="Search plumber, AC repair, electrician, painter, carpenter..."
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/90 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs sm:text-sm font-medium focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
 
-                {/* Primary CTA Search Button (Strong Emerald Green with Lift) */}
+                {/* Primary Role-Aware CTA Button */}
                 <button
                   type="submit"
                   disabled={isClassifying}
-                  className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md hover:shadow-lg hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-md hover:shadow-lg hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
                 >
                   {isClassifying ? (
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Hire Talent</span>
+                      <span>{getCtaButtonText()}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
                 </button>
               </div>
 
-              {/* Prominent Location + Popular Tags Row */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-300 gap-2">
-                <div className="flex items-center space-x-1.5">
-                  <div className="inline-flex items-center px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 font-medium">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 mr-1 shrink-0" />
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{currentCity}</span>
-                    <button
-                      type="button"
-                      onClick={() => setIsCityModalOpen(true)}
-                      className="ml-2 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 font-bold underline cursor-pointer text-[11px]"
-                    >
-                      Change
-                    </button>
-                  </div>
-                </div>
+              {/* Location Selector & Popular Chips */}
+              <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-300 gap-2">
+                
+                {/* Clickable Location Control */}
+                <button
+                  type="button"
+                  onClick={() => setIsCityModalOpen(true)}
+                  className="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold transition-colors cursor-pointer group"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-emerald-600 mr-1.5 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-bold">{currentCity}</span>
+                  <span className="ml-2 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold underline">Change</span>
+                </button>
 
-                <div className="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400">
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Popular:</span>
+                {/* Popular Tags */}
+                <div className="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 overflow-x-auto pb-1 sm:pb-0">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 hidden md:inline">Popular:</span>
                   <div className="flex flex-wrap gap-1">
                     {['AC Repair', 'Plumbing', 'Electrician', 'Painting', 'Cleaning'].map((tag) => {
                       const isSelected = searchPrompt.toLowerCase() === tag.toLowerCase();
@@ -258,8 +266,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           type="button"
                           onClick={() => handlePopularTagClick(tag)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${isSelected
-                              ? 'bg-emerald-600 text-white border border-emerald-600 shadow-sm shadow-emerald-600/30 scale-105'
-                              : 'bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:-translate-y-0.5'
+                            ? 'bg-emerald-600 text-white border border-emerald-600 shadow-sm'
+                            : 'bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                             }`}
                         >
                           {tag}
@@ -271,32 +279,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
             </form>
 
-            {/* AI Classification Result Box */}
+            {/* AI Classification Feedback */}
             {aiResult && !isClassifying && (
-              <div className="mt-3 p-3 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-start space-x-3 animate-in slide-in-from-top-2 fade-in duration-300">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 text-lg border border-emerald-200 dark:border-emerald-700">
-                  {aiResult.category === 'Electrician' && '⚡'}
-                  {aiResult.category === 'Plumber' && '🔧'}
-                  {aiResult.category === 'Painter' && '🎨'}
-                  {aiResult.category === 'Carpenter' && '🪚'}
-                  {aiResult.category === 'AC Repair' && '❄️'}
-                  {aiResult.category === 'Cleaning' && '🧹'}
-                  {aiResult.category === 'Vehicle Repair' && '🚗'}
-                  {aiResult.category === 'Moving' && '📦'}
-                  {aiResult.category === 'Technician' && '🛠️'}
+              <div className="mt-3 p-3 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-start space-x-3 animate-in slide-in-from-top-1 duration-200">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 text-base font-bold">
+                  ⚡
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-outfit">
-                        {aiResult.category} Recommended
-                      </h4>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{aiResult.reason}</p>
-                    </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-300 rounded-full shrink-0 border border-emerald-200 dark:border-emerald-700">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white font-outfit">
+                      {aiResult.category} Recommended
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300 rounded-full">
                       {aiResult.confidence}% match
                     </span>
                   </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{aiResult.reason}</p>
 
                   <button
                     onClick={() => {
@@ -304,10 +302,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       const elem = document.getElementById('workers-directory');
                       if (elem) elem.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="mt-2.5 w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center space-x-1 cursor-pointer"
+                    className="mt-2 w-full py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
                   >
-                    <span>See Available {aiResult.category} Workers in {currentCity.split(',')[0]}</span>
-                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    <span>View Verified {aiResult.category} Workers</span>
+                    <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
               </div>
@@ -315,67 +313,112 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </div>
 
+        {/* Immediate 4 Trust Badges Under Search Box */}
+        <div className="mt-4 max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>Cooperative Verified</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>Transparent Rates</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>Digital Worker ID</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>QR Verification</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Floating Animated SCROLL Down Indicator Pinned at Bottom of Viewport */}
+      <div 
+        onClick={() => {
+          const elem = document.getElementById('popular-services') || document.getElementById('how-sahkari-works') || document.getElementById('workers-directory');
+          if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+        }}
+        className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center cursor-pointer group select-none transition-all z-20 hover:scale-105"
+        title="Scroll to explore"
+      >
+        <span className="text-[9px] sm:text-[10px] font-extrabold tracking-[0.35em] uppercase text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors font-outfit mb-1.5">
+          SCROLL
+        </span>
+        <div className="relative w-[1.5px] h-8 sm:h-10 bg-slate-200 dark:bg-slate-700/80 rounded-full overflow-hidden">
+          <div className="w-full h-full bg-gradient-to-b from-transparent via-emerald-500 dark:via-emerald-400 to-emerald-600 dark:to-teal-300 rounded-full animate-scroll-line" />
+        </div>
       </div>
 
       {/* Select Location Modal */}
       {isCityModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-150 space-y-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
                   <MapPin className="w-4 h-4" />
                 </div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white font-outfit text-base">Select Your City</h3>
+                <h3 className="font-extrabold text-slate-900 dark:text-white font-outfit text-base">Choose Your Location</h3>
               </div>
               <button
                 onClick={() => setIsCityModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl font-bold p-1 leading-none cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-              Choose your city to find verified cooperative workers and service technicians near you.
-            </p>
-
-            {/* Popular City Grid */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {POPULAR_CITIES.map((city) => {
-                const isSelected = currentCity === city;
-                return (
-                  <button
-                    key={city}
-                    onClick={() => handleSelectCity(city)}
-                    className={`text-left px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${isSelected
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold shadow-2xs'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-750'
-                      }`}
-                  >
-                    <span className="truncate">{city.split(',')[0]}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1" />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Custom Location Input */}
-            <form onSubmit={handleCustomCitySubmit} className="pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+            {/* City Search Bar */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
               <input
                 type="text"
-                value={customCityInput}
-                onChange={(e) => setCustomCityInput(e.target.value)}
-                placeholder="Or type other city / area..."
-                className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                value={citySearchQuery}
+                onChange={e => setCitySearchQuery(e.target.value)}
+                placeholder="Search city or area..."
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
+            </div>
+
+            {/* Popular City Grid */}
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Popular Cities</span>
+              <div className="grid grid-cols-2 gap-2">
+                {filteredCities.map((city) => {
+                  const isSelected = currentCity === city;
+                  return (
+                    <button
+                      key={city}
+                      onClick={() => handleSelectCity(city)}
+                      className={`text-left px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${isSelected
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold shadow-2xs'
+                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-750'
+                        }`}
+                    >
+                      <span className="truncate">{city.split(',')[0]}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Custom Manual Input */}
+            {citySearchQuery && filteredCities.length === 0 && (
               <button
-                type="submit"
-                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                type="button"
+                onClick={() => handleSelectCity(citySearchQuery)}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
               >
-                Apply
+                Set Location to "{citySearchQuery}"
               </button>
-            </form>
+            )}
           </div>
         </div>
       )}

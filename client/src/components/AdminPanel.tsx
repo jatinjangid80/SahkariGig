@@ -25,7 +25,7 @@ export const AdminPanel: React.FC = () => {
           .select('*')
           .eq('is_verified', false)
           .order('created_at', { ascending: false });
-        
+
         if (!error && data) {
           setPendingWorkers(data.map(w => ({
             id: w.id,
@@ -53,7 +53,7 @@ export const AdminPanel: React.FC = () => {
         const { data: payoutsData } = await supabase
           .from('bookings')
           .select('amount');
-          
+
         let totalPayouts = 0;
         if (payoutsData) {
           totalPayouts = payoutsData.reduce((sum, b) => {
@@ -86,7 +86,7 @@ export const AdminPanel: React.FC = () => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
     fetch(`${CONFIG.apiUrl}/api/workers/${id}/status`, {
       method: 'PATCH',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         'x-user-role': 'Admin'
@@ -100,7 +100,7 @@ export const AdminPanel: React.FC = () => {
     setPendingWorkers(pendingWorkers.filter(w => w.id !== id));
     fetch(`${CONFIG.apiUrl}/api/workers/${id}/status`, {
       method: 'PATCH',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         'x-user-role': 'Admin'
@@ -114,7 +114,7 @@ export const AdminPanel: React.FC = () => {
     return (
       <div className="py-16 bg-slate-50 min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 p-8 text-center space-y-6">
-          
+
           <div className="w-14 h-14 bg-slate-900 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
             <Lock className="w-7 h-7" />
           </div>
@@ -182,7 +182,7 @@ export const AdminPanel: React.FC = () => {
   return (
     <div className="py-8 bg-slate-50 min-h-[calc(100vh-4rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
+
         {/* Admin Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -237,7 +237,7 @@ export const AdminPanel: React.FC = () => {
 
         {/* Operational Section: Worker Approvals Queue */}
         <div className="light-card p-6">
-          
+
           <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
             <h2 className="text-lg font-extrabold text-slate-900 font-outfit flex items-center">
               <UserCheck className="w-5 h-5 text-emerald-600 mr-2" />
@@ -256,7 +256,7 @@ export const AdminPanel: React.FC = () => {
             <div className="space-y-4">
               {pendingWorkers.map((applicant) => (
                 <div key={applicant.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  
+
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
                       <h3 className="font-bold text-slate-900 text-base">{applicant.name}</h3>

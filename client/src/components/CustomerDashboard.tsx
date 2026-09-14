@@ -812,15 +812,6 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             Pay & Review
           </button>
           <button
-            onClick={() => setActiveTab('history')}
-            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'history'
-              ? 'border-emerald-600 text-emerald-700'
-              : 'border-transparent text-slate-500 hover:text-slate-900'
-              }`}
-          >
-            History
-          </button>
-          <button
             onClick={() => setActiveTab('profile')}
             className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'profile'
               ? 'border-emerald-600 text-emerald-700'
@@ -1010,46 +1001,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           </div>
         )}
 
-        {/* History Tab */}
-        {activeTab === 'history' && (
-          <div className="light-card p-6 min-h-[400px]">
-            <div className="space-y-4">
-              {bookings.filter(b => b.status === 'COMPLETED' || b.status === 'RATED').length > 0 ? (
-                bookings.filter(b => b.status === 'COMPLETED' || b.status === 'RATED').map((booking) => (
-                  <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
-                        {getStatusBadge(booking.status)}
-                      </div>
-                      <p className="text-xs text-slate-600">
-                        Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
-                      </p>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
-                        <span className="flex items-center">
-                          <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                          {booking.date}, {booking.time}
-                        </span>
-                        <span className="flex items-center">
-                          <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                          {booking.address}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-4">
-                    <Clock className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 font-outfit mb-2">No History</h3>
-                  <p className="text-slate-500">You don't have any past bookings.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+
 
         {/* Profile Tab */}
         {activeTab === 'profile' && (

@@ -15,12 +15,12 @@ interface WorkerDashboardProps {
   refreshTrigger?: number;
 }
 
-export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ 
-  currentUser, 
-  activeTab, 
-  onTabChange, 
+export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
+  currentUser,
+  activeTab,
+  onTabChange,
   onProfileUpdate,
-  onOpenWorkerIdCard, 
+  onOpenWorkerIdCard,
   onOpenChat,
   refreshTrigger
 }) => {
@@ -52,7 +52,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const [profileSaved, setProfileSaved] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewDocsData, setPreviewDocsData] = useState<Record<string, { url: string, type: string }>>({});
-  
+
   // Dynamic Supabase Stats
   const [weeklyBalance, setWeeklyBalance] = useState(0);
   const [completedJobsCount, setCompletedJobsCount] = useState(0);
@@ -109,7 +109,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           .select('*')
           .eq('user_id', currentUser.id)
           .single();
-          
+
         if (data && !error) {
           const loadedProfile = {
             fullName: data.name || currentUser.name || '',
@@ -134,7 +134,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           window.location.href = '/worker-onboarding';
         }
       };
-      
+
       fetchProfile();
     }
   }, [currentUser]);
@@ -143,30 +143,56 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     const fetchRequests = async () => {
       try {
         if (currentUser?.id) {
-          const workerId = `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`;
-          const { data, error } = await supabase
-            .from('bookings')
-            .select('*')
-            .or(`worker_id.eq.${workerId},worker_name.eq."${currentUser.name}"`)
-            .order('created_at', { ascending: false });
-            
-          if (!error && data) {
-            const loadedRequests = data.map(b => ({
-              id: b.id,
-              service: b.service,
-              customerName: b.customer_name,
-              customer_id: b.customer_id,
-              worker_id: b.worker_id,
-              address: b.address,
-              dateTime: `${b.booking_date}, ${b.booking_time}`,
-              amount: b.amount,
-              status: b.status,
-              paymentStatus: b.payment_status
-            }));
-            
-            setRequests(loadedRequests);
+          // Fetch the worker's internal ID based on user_id
+          let internalWorkerId = null;
+          const { data: workerData } = await supabase.from('workers').select('id').eq('user_id', currentUser.id).single();
+          
+          if (workerData) {
+            internalWorkerId = workerData.id;
+          }
+          
+          if (internalWorkerId) {
+            const { data, error } = await supabase
+              .from('project_workers')
+              .select(`
+                id,
+                task,
+                status,
+                assigned_at,
+                project_id,
+                projects (
+                  name,
+                  customer_name,
+                  location,
+                  start_date
+                ),
+                supervisors (
+                  name,
+                  phone
+                )
+              `)
+              .eq('worker_id', internalWorkerId)
+              .order('assigned_at', { ascending: false });
+
+            if (!error && data) {
+              const loadedRequests = data.map((pw: any) => ({
+                id: pw.id,
+                service: pw.projects?.name || 'Assigned Task',
+                customerName: pw.projects?.customer_name || 'N/A',
+                supervisorName: pw.supervisors?.name || 'N/A',
+                address: pw.projects?.location || 'N/A',
+                task: pw.task || 'General Work',
+                startDate: pw.projects?.start_date || 'TBD',
+                status: pw.status === 'PENDING' ? 'REQUESTED' : pw.status,
+                amount: 'TBD',
+                paymentStatus: 'PENDING'
+              }));
+              setRequests(loadedRequests);
+            } else {
+              setRequests([]);
+            }
           } else {
-             setRequests([]);
+            setRequests([]);
           }
         }
       } catch (err) {
@@ -174,7 +200,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         setRequests([]);
       }
     };
-    
+
     fetchRequests();
 
     // Set up realtime subscription
@@ -190,7 +216,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             // We can't use an OR filter in realtime postgres_changes easily, so we just listen to all changes and let fetchRequests filter, or we could just refetch on any change. Since it's a demo, fetching on any booking change is fine, but we can try to filter by worker_id.
           },
           () => {
-            fetchRequests(); 
+            fetchRequests();
           }
         )
         .subscribe();
@@ -205,19 +231,19 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   useEffect(() => {
     const completed = requests.filter(r => r.status === 'COMPLETED' || r.paymentStatus === 'PAID');
     setCompletedJobsCount(completed.length);
-    
+
     const totalBalance = completed.reduce((sum, req) => {
       const match = String(req.amount).match(/(\d+(\.\d+)?)/);
       return sum + (match ? parseFloat(match[0]) : 0);
     }, 0);
     setWeeklyBalance(totalBalance);
-    
+
     setPayoutHistory(completed.map(c => {
       const match = String(c.amount).match(/(\d+(\.\d+)?)/);
       const amountVal = match ? match[0] : '0';
       let displayDate = c.dateTime ? c.dateTime.split(',')[0] : 'Recently';
       displayDate = displayDate.replace('Tomorrow', 'Yesterday').replace('Day After Tomorrow', '2 Days Ago');
-      
+
       return {
         jobId: c.id.slice(0, 8).toUpperCase(),
         service: c.service,
@@ -256,7 +282,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const handleTriggerPayout = async () => {
     setPayoutLoading(true);
     setPayoutSuccess(false);
-    
+
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/payments/payout`, {
         method: 'POST',
@@ -275,9 +301,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
       if (!response.ok) {
         throw new Error(data.message || 'Failed to process payout.');
       }
-      
+
       if (data.data?.razorpayUrl) {
-         window.open(data.data.razorpayUrl, '_blank');
+        window.open(data.data.razorpayUrl, '_blank');
       }
 
       setPayoutSuccess(true);
@@ -318,7 +344,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           is_verified: true,
           avatar: profile.avatarUrl || null
         }, { onConflict: 'worker_id' });
-        
+
         if (error) {
           console.error("Failed to sync worker to Supabase:", error);
         }
@@ -384,34 +410,34 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   return (
     <div className="py-6 bg-slate-50 min-h-[calc(100vh-4rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        
+
         {/* Hidden File Input for Avatar */}
-        <input 
+        <input
           ref={avatarInputRef}
-          id="avatar-upload-input" 
-          type="file" 
-          accept="image/*" 
-          className="hidden" 
+          id="avatar-upload-input"
+          type="file"
+          accept="image/*"
+          className="hidden"
           onChange={(e) => {
             handleAvatarChange(e);
             e.target.value = ''; // Allow re-uploading the same file
-          }} 
+          }}
         />
 
         {/* Worker Info Card Header */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-md p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center space-x-4">
-            
+
             {/* Avatar Image / Initials Uploader Circle */}
-            <div 
-              className="relative group cursor-pointer shrink-0" 
+            <div
+              className="relative group cursor-pointer shrink-0"
               onClick={() => avatarInputRef.current?.click()}
             >
               {profile.avatarUrl ? (
-                <img 
-                  src={profile.avatarUrl} 
-                  alt="Avatar" 
-                  className="w-14 h-14 rounded-2xl object-cover border border-emerald-500 shadow-md transition-all group-hover:brightness-90" 
+                <img
+                  src={profile.avatarUrl}
+                  alt="Avatar"
+                  className="w-14 h-14 rounded-2xl object-cover border border-emerald-500 shadow-md transition-all group-hover:brightness-90"
                 />
               ) : (
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-extrabold text-xl shadow-md transition-all group-hover:brightness-90 font-outfit">
@@ -422,10 +448,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 <Camera className="w-3.5 h-3.5 mr-0.5" /> Change
               </div>
             </div>
-            
+
             {(() => {
-              const generatedWorkerId = currentUser?.id 
-                ? `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}` 
+              const generatedWorkerId = currentUser?.id
+                ? `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`
                 : 'WORKER-DEL-8901';
               return (
                 <div>
@@ -449,8 +475,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           <button
             onClick={() => {
               if (onOpenWorkerIdCard) {
-                const generatedWorkerId = currentUser?.id 
-                  ? `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}` 
+                const generatedWorkerId = currentUser?.id
+                  ? `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`
                   : 'WORKER-DEL-8901';
                 onOpenWorkerIdCard({
                   name: profile.fullName,
@@ -475,7 +501,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
         {/* Tab Content Panels */}
         <div className="space-y-6">
-          
+
           {/* TAB 1: JOB FEED */}
           {currentTab === 'feed' && (
             <div className="space-y-4">
@@ -487,34 +513,41 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               {requests.filter(r => r.status === 'REQUESTED').map(req => (
                 <div key={req.id} className="bg-white rounded-3xl border border-emerald-200 shadow-md p-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60 pointer-events-none" />
-                  
+
                   <div className="relative z-10 flex flex-col sm:flex-row justify-between gap-4">
-                    <div className="space-y-1">
+                    <div className="space-y-3">
                       <div className="flex items-center space-x-2">
-                        <h3 className="text-base font-bold text-slate-900 font-outfit">{req.service}</h3>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                          New Request
-                        </span>
+                        <h3 className="text-base font-bold text-slate-900 font-outfit uppercase">{req.service}</h3>
                       </div>
-                      <p className="text-xs font-medium text-slate-600">{req.customerName} · 2.5 km away</p>
-                      <div className="flex items-center gap-4 pt-2 text-xs text-slate-500">
-                        <span className="flex items-center"><Calendar className="w-4 h-4 mr-1 text-slate-400"/> {req.dateTime}</span>
-                        <span className="font-bold text-emerald-700 text-sm">{req.amount}</span>
+                      
+                      <div className="text-sm font-medium text-slate-600 space-y-1">
+                        <p>Customer: <span className="font-bold text-slate-900">{req.customerName}</span></p>
+                        <p>Supervisor: <span className="font-bold text-slate-900">{req.supervisorName}</span></p>
+                        <p>Location: <span className="font-bold text-slate-900">{req.address}</span></p>
+                      </div>
+
+                      <div className="pt-2">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Task</p>
+                        <p className="text-sm font-semibold text-slate-900">{req.task}</p>
+                      </div>
+
+                      <div className="flex items-center gap-4 pt-2 text-sm text-slate-500 font-medium">
+                        <span className="flex items-center">Start Date: <span className="font-bold text-slate-900 ml-1">{req.startDate}</span></span>
                       </div>
                     </div>
-                    
-                    <div className="flex sm:flex-col gap-2 shrink-0">
+
+                    <div className="flex sm:flex-col gap-2 shrink-0 self-end sm:self-start">
                       <button
                         onClick={() => handleAccept(req.id)}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs"
+                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs"
                       >
-                        <Check className="w-4 h-4 mr-1" /> Accept
+                        Accept Assignment
                       </button>
                       <button
                         onClick={() => handleReject(req.id)}
-                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center"
+                        className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center"
                       >
-                        <X className="w-4 h-4 mr-1" /> Decline
+                        Decline
                       </button>
                     </div>
                   </div>
@@ -537,46 +570,56 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           {currentTab === 'active' && (
             <div className="space-y-4">
               <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Scheduled & In-Progress Jobs</h2>
-              
+
               {requests.filter(r => r.status === 'ACCEPTED' || r.status === 'IN_PROGRESS').map(req => (
-                <div key={req.id} className="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
-                  
+                <div key={req.id} className="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden p-6">
+
                   {/* Job Header */}
-                  <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
+                  <div className="flex flex-col sm:flex-row justify-between gap-4">
+                    <div className="space-y-3">
                       <div className="flex items-center space-x-2">
-                        <h3 className="font-bold text-slate-900 text-base font-outfit">{req.service}</h3>
-                        <span className="px-2 py-0.5 bg-sky-50 text-sky-700 text-[10px] font-bold rounded border border-sky-100">
-                          {req.status === 'IN_PROGRESS' ? 'On-site' : 'Scheduled'}
-                        </span>
+                        <span className="text-emerald-700 font-bold text-xs uppercase tracking-wider mb-1 block">Active Job</span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">Scheduled: {req.dateTime}</p>
+                      <h3 className="text-lg font-bold text-slate-900 font-outfit uppercase">{req.service}</h3>
+                      
+                      <div className="text-sm font-medium text-slate-600 space-y-1">
+                        <p>Customer: <span className="font-bold text-slate-900">{req.customerName}</span></p>
+                        <p>Supervisor: <span className="font-bold text-slate-900">{req.supervisorName}</span></p>
+                        <p>Location: <span className="font-bold text-slate-900">{req.address}</span></p>
+                      </div>
+
+                      <div className="pt-2">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Task</p>
+                        <p className="text-sm font-semibold text-slate-900">{req.task}</p>
+                      </div>
+
+                      <div className="flex items-center gap-4 pt-2 text-sm text-slate-500 font-medium">
+                        <span className="flex items-center">Start Date: <span className="font-bold text-slate-900 ml-1">{req.startDate}</span></span>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 pt-1 text-sm text-slate-500 font-medium">
+                        <span className="flex items-center">Status: <span className="font-bold text-emerald-700 ml-1">{req.status}</span></span>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
+
+                    <div className="flex sm:flex-col gap-2 shrink-0 self-end sm:self-start">
                       <button
-                        onClick={() => onOpenChat && onOpenChat(req)}
-                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5"
+                        onClick={() => {}}
+                        className="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs"
                       >
-                        <MessageSquare className="w-4 h-4 text-white" />
-                        <span>Chat Customer</span>
+                        View Project
+                      </button>
+                      <button
+                        onClick={() => onOpenChat && onOpenChat({ ...req, workerName: req.supervisorName, service: 'Supervisor' })}
+                        className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs"
+                      >
+                        Contact Supervisor
                       </button>
                     </div>
                   </div>
 
-                  {/* Customer details & Map */}
-                  <div className="p-5 bg-slate-50/50 space-y-4">
-                    <div className="flex justify-between text-xs border-b border-slate-100 pb-3">
-                      <div>
-                        <p className="text-slate-400 font-medium">Customer</p>
-                        <p className="font-bold text-slate-800 mt-0.5">{req.customerName}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-slate-400 font-medium">Payout Rate</p>
-                        <p className="font-bold text-emerald-700 mt-0.5">{req.amount} (Escrow Secured)</p>
-                      </div>
-                    </div>
-
+                  {/* Location & Safety Section */}
+                  <div className="mt-6 space-y-4">
                     {/* Location Pin & Service Address (Direct Google Maps Navigation) */}
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.address || 'New Delhi')}`}
@@ -642,7 +685,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           {/* TAB 3: EARNINGS */}
           {currentTab === 'earnings' && (
             <div className="space-y-6">
-              
+
               {/* Earnings Overview Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 text-center">
@@ -739,7 +782,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           {/* TAB: WORKER RIGHTS */}
           {currentTab === 'rights' && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              
+
               {/* Hero Banner with Cooperative Shield */}
               <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-900 to-slate-900 text-white p-6 sm:p-8 shadow-xl border border-emerald-700/50">
                 <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
@@ -803,7 +846,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
               {/* 6 Core Rights Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                
+
                 {/* 1. Zero Commission */}
                 <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold group-hover:scale-105 transition-transform">
@@ -979,7 +1022,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           {/* TAB 4: PROFILE & ONBOARDING SETTINGS */}
           {currentTab === 'profile' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
+
               {/* Profile Config Form */}
               <form onSubmit={handleSaveProfile} className="lg:col-span-2 bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-5">
                 <h3 className="font-extrabold text-slate-900 text-base font-outfit border-b border-slate-100 pb-3 flex items-center justify-between">
@@ -990,16 +1033,16 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 {/* Section 1: Account info */}
                 <div className="space-y-4">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Personal & Account Information</h4>
-                  
+
                   {/* Visual Avatar File Uploader Field */}
                   <div className="bg-slate-50/50 rounded-2xl border border-slate-200 p-4 space-y-3">
                     <label className="block text-[11px] font-bold text-slate-600">Profile Picture (Avatar)</label>
                     <div className="flex items-center space-x-4">
                       {profile.avatarUrl ? (
-                        <img 
-                          src={profile.avatarUrl} 
-                          alt="Avatar preview" 
-                          className="w-16 h-16 rounded-2xl object-cover border border-emerald-500 shadow-sm" 
+                        <img
+                          src={profile.avatarUrl}
+                          alt="Avatar preview"
+                          className="w-16 h-16 rounded-2xl object-cover border border-emerald-500 shadow-sm"
                         />
                       ) : (
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-extrabold text-xl shadow-sm font-outfit">
@@ -1134,11 +1177,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                             type="button"
                             key={day}
                             onClick={() => toggleDay(day)}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${
-                              isSelected 
-                                ? 'bg-emerald-50 border-emerald-500 text-emerald-800' 
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${isSelected
+                                ? 'bg-emerald-50 border-emerald-500 text-emerald-800'
                                 : 'bg-slate-50 border-slate-200 text-slate-600'
-                            }`}
+                              }`}
                           >
                             {day}
                           </button>
@@ -1157,11 +1199,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                     />
                   </div>
                 </div>
-                
+
                 {/* Section 5: Payment & Bank Details */}
                 <div className="space-y-4 pt-3 border-t border-slate-100">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Payment & Bank Details</h4>
-                  
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1.5">Account Holder Name</label>
@@ -1400,11 +1442,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setTheme('light')}
-                    className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
-                      theme === 'light'
+                    className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'light'
                         ? 'border-amber-500 bg-amber-50/70 dark:bg-slate-800 ring-2 ring-amber-500/30 shadow-xs text-amber-600 dark:text-amber-400 font-bold'
                         : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
+                      }`}
                   >
                     <Sun className="w-5 h-5 mx-auto mb-1 text-amber-500" />
                     <p className="text-xs font-bold">Light</p>
@@ -1413,11 +1454,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setTheme('dark')}
-                    className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
-                      theme === 'dark'
+                    className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'dark'
                         ? 'border-sky-500 bg-sky-50/70 dark:bg-slate-800 ring-2 ring-sky-500/30 shadow-xs text-sky-600 dark:text-sky-400 font-bold'
                         : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
+                      }`}
                   >
                     <Moon className="w-5 h-5 mx-auto mb-1 text-sky-400" />
                     <p className="text-xs font-bold">Dark</p>
@@ -1426,11 +1466,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setTheme('system')}
-                    className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
-                      theme === 'system'
+                    className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'system'
                         ? 'border-emerald-500 bg-emerald-50/70 dark:bg-slate-800 ring-2 ring-emerald-500/30 shadow-xs text-emerald-600 dark:text-emerald-400 font-bold'
                         : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
+                      }`}
                   >
                     <Laptop className="w-5 h-5 mx-auto mb-1 text-emerald-500" />
                     <p className="text-xs font-bold">System</p>
@@ -1457,7 +1496,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <p className="text-xs text-slate-500">Document Preview</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setPreviewDoc(null)}
                 className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
               >
@@ -1481,7 +1520,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               )}
             </div>
             <div className="p-4 bg-white border-t border-slate-100 flex justify-end space-x-3">
-              <button 
+              <button
                 onClick={() => {
                   const url = previewDocsData[previewDoc]?.url || (profile.uploadedDocs[previewDoc]?.toLowerCase().endsWith('.pdf') ? 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' : 'https://ui-avatars.com/api/?name=Document&background=0D8ABC&color=fff&size=512');
                   const a = document.createElement('a');
@@ -1490,7 +1529,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   document.body.appendChild(a);
                   a.click();
                   document.body.removeChild(a);
-                }} 
+                }}
                 className="px-5 py-2 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-colors text-sm"
               >
                 Download Original

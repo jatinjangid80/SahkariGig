@@ -115,3 +115,46 @@ CREATE TABLE IF NOT EXISTS public.chat_messages (
 
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public Read/Write Chat" ON public.chat_messages FOR ALL USING (true);
+
+-- 7. Create Supervisors Table
+CREATE TABLE IF NOT EXISTS public.supervisors (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id),
+    name TEXT NOT NULL,
+    phone TEXT,
+    coop_name TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 8. Create Projects Table
+CREATE TABLE IF NOT EXISTS public.projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    customer_id UUID REFERENCES auth.users(id),
+    customer_name TEXT,
+    supervisor_id UUID REFERENCES public.supervisors(id),
+    location TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'CREATED', -- CREATED, ASSIGNED, IN_PROGRESS, COMPLETED
+    start_date TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 9. Create Project Workers Table
+CREATE TABLE IF NOT EXISTS public.project_workers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
+    worker_id UUID REFERENCES public.workers(id) ON DELETE CASCADE,
+    supervisor_id UUID REFERENCES public.supervisors(id),
+    task TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING', -- PENDING, ACCEPTED, DECLINED
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Enable RLS and Policies for new tables
+ALTER TABLE public.supervisors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_workers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public Read/Write Supervisors" ON public.supervisors FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Read/Write Projects" ON public.projects FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Read/Write Project Workers" ON public.project_workers FOR ALL USING (true) WITH CHECK (true);
