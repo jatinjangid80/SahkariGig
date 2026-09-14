@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LucideFileText, LucideCheckSquare, LucideUsers, LucideIndianRupee, LucideClock, LucideAlertCircle, LucideHistory, LucideCheckCircle2, LucideCircle } from 'lucide-react';
+import { supabase } from '../supabase';
 
 export interface ContractsViewProps {
   currentUser: any;
@@ -15,19 +16,65 @@ export interface ContractsViewProps {
 
 export const ContractsView: React.FC<ContractsViewProps> = ({ currentUser, onNavigate, generatedProjectDetails, isModal, onClose }) => {
   const [activeVersion, setActiveVersion] = useState<'v1' | 'v2'>('v2');
+  const [liveProgress, setLiveProgress] = useState<number>(25);
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const { data } = await supabase.from('projects').select('*').limit(1).single();
+        if (data) {
+          const savedProgress = localStorage.getItem(`project_progress_${data.id}`);
+          if (savedProgress !== null) {
+            setLiveProgress(parseInt(savedProgress, 10));
+          } else {
+            setLiveProgress(data.progress || 25);
+          }
+        }
+      } catch (e) {
+        console.warn('ContractsView progress fetch:', e);
+      }
+    };
+
+    fetchProgress();
+
+    const channel = supabase
+      .channel('contracts_view_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
+        fetchProgress();
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
   
   const contractValue = generatedProjectDetails ? Number(generatedProjectDetails.area) * 200 : null;
-  
   const currentTotalValue = contractValue || (activeVersion === 'v1' ? 293480 : 342000);
 
   const formatCurrency = (amount: number) => `₹${Math.round(amount).toLocaleString('en-IN')}`;
 
+  const getMilestoneState = (milestoneIndex: number) => {
+    // 5 milestones thresholds: 25%, 50%, 75%, 90%, 100%
+    const thresholds = [25, 50, 75, 90, 100];
+    const target = thresholds[milestoneIndex];
+    const prevTarget = milestoneIndex === 0 ? 0 : thresholds[milestoneIndex - 1];
+
+    if (liveProgress >= target) {
+      return { status: 'Released', isCurrent: false };
+    } else if (liveProgress >= prevTarget && liveProgress < target) {
+      return { status: 'In Progress', isCurrent: true };
+    } else {
+      return { status: 'Pending', isCurrent: false };
+    }
+  };
+
   const milestones = [
-    { name: 'Foundation & Plinth', amount: formatCurrency(currentTotalValue * 0.20), status: 'Released', isCurrent: false },
-    { name: 'Structure & Roof', amount: formatCurrency(currentTotalValue * 0.25), status: 'In Progress', isCurrent: true },
-    { name: 'Electrical & Plumbing', amount: formatCurrency(currentTotalValue * 0.20), status: 'Pending', isCurrent: false },
-    { name: 'Finishing & Painting', amount: formatCurrency(currentTotalValue * 0.20), status: 'Pending', isCurrent: false },
-    { name: 'Inspection & Handover', amount: formatCurrency(currentTotalValue * 0.15), status: 'Pending', isCurrent: false },
+    { name: 'Foundation & Plinth', amount: formatCurrency(currentTotalValue * 0.20), ...getMilestoneState(0) },
+    { name: 'Structure & Roof', amount: formatCurrency(currentTotalValue * 0.25), ...getMilestoneState(1) },
+    { name: 'Electrical & Plumbing', amount: formatCurrency(currentTotalValue * 0.20), ...getMilestoneState(2) },
+    { name: 'Finishing & Painting', amount: formatCurrency(currentTotalValue * 0.20), ...getMilestoneState(3) },
+    { name: 'Inspection & Handover', amount: formatCurrency(currentTotalValue * 0.15), ...getMilestoneState(4) },
   ];
 
   const content = (

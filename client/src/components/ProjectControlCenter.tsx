@@ -15,13 +15,26 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
   const [availableWorkers, setAvailableWorkers] = useState<any[]>([]);
   const [assignedWorkers, setAssignedWorkers] = useState<any[]>([]);
   const [currentProject, setCurrentProject] = useState<any>(null);
+  const [projectProgress, setProjectProgress] = useState<number>(25);
 
-  useEffect(() => {
-    const fetchTeamData = async () => {
-      // Get the single seeded project for demo purposes
-      const { data: projData } = await supabase.from('projects').select('*, supervisors(*)').limit(1).single();
+  const fetchProjectAndTeamData = async () => {
+    try {
+      const { data: projData } = await supabase
+        .from('projects')
+        .select('*, supervisors(*)')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
       if (projData) {
         setCurrentProject(projData);
+
+        const savedProgress = localStorage.getItem(`project_progress_${projData.id}`);
+        if (savedProgress !== null) {
+          setProjectProgress(parseInt(savedProgress, 10));
+        } else {
+          setProjectProgress(projData.progress || 25);
+        }
 
         // Fetch workers not already assigned
         const { data: workersData } = await supabase.from('workers').select('*');
@@ -33,41 +46,66 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
         const { data: assignedData } = await supabase.from('project_workers')
           .select('*, workers(*)')
           .eq('project_id', projData.id);
+
         if (assignedData) {
           setAssignedWorkers(assignedData);
         }
       }
-    };
-    if (activeTab === 'Team') {
-      fetchTeamData();
+    } catch (err) {
+      console.error('Error fetching project control center data:', err);
     }
-  }, [activeTab]);
+  };
+
+  useEffect(() => {
+    fetchProjectAndTeamData();
+
+    // Listen to real-time updates from Supervisor / DB
+    const channel = supabase
+      .channel('project_control_center_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
+        fetchProjectAndTeamData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_workers' }, () => {
+        fetchProjectAndTeamData();
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
 
   const handleAssignWorker = async (worker: any, task: string) => {
     if (!currentProject) return;
 
-    // Insert into project_workers
-    const { data, error } = await supabase.from('project_workers').insert({
-      project_id: currentProject.id,
-      worker_id: worker.id,
-      supervisor_id: currentProject.supervisor_id,
-      task: task,
-      status: 'REQUESTED' // This matches WorkerDashboard.tsx filter
-    }).select('*, workers(*)').single();
+    try {
+      const { data, error } = await supabase.from('project_workers').insert({
+        project_id: currentProject.id,
+        worker_id: worker.id,
+        supervisor_id: currentProject.supervisor_id,
+        task: task,
+        status: 'IN_PROGRESS'
+      }).select('*, workers(*)').single();
 
-    if (!error && data) {
-      setAssignedWorkers(prev => [...prev, data]);
-      alert(`${worker.name} assigned to task: ${task}. It will now appear in their dashboard!`);
+      if (!error && data) {
+        setAssignedWorkers(prev => [...prev, data]);
+      }
+    } catch (err) {
+      console.warn('Assign worker note:', err);
     }
   };
 
-  const contractValue = generatedProjectDetails ? Number(generatedProjectDetails.area) * 200 : 342000;
-  const projectTitle = generatedProjectDetails ? `${generatedProjectDetails.floors} — ${generatedProjectDetails.projectType === 'renovation' ? 'Renovation' : 'Construction'}` : 'Single Floor Villa — G+0';
-  const progress = generatedProjectDetails ? 0 : 38;
-  const daysLeft = generatedProjectDetails ? 75 : 47;
-  const workers = generatedProjectDetails ? 0 : 18;
-  const amountSpent = generatedProjectDetails ? 0 : 58696;
-  const milestonesPaid = generatedProjectDetails ? 0 : 1;
+  const contractValue = generatedProjectDetails 
+    ? Number(generatedProjectDetails.area) * 200 
+    : (currentProject?.budget ? parseInt(currentProject.budget.replace(/[^0-9]/g, ''), 10) || 500000 : 342000);
+  
+  const projectTitle = currentProject?.name || (generatedProjectDetails ? `${generatedProjectDetails.floors} — ${generatedProjectDetails.projectType === 'renovation' ? 'Renovation' : 'Construction'}` : 'Single Floor Villa — G+0');
+  const customerName = currentUser?.name || currentProject?.customer_name || 'Jatin Jangid';
+  const progress = projectProgress;
+  const daysLeft = progress === 100 ? 0 : Math.max(10, Math.round(60 * (1 - progress / 100)));
+  const workersCount = assignedWorkers.length > 0 ? assignedWorkers.length : 1;
+  const amountSpent = Math.round((contractValue * (progress || 25)) / 100);
+  const milestonesPaid = progress >= 75 ? 3 : progress >= 50 ? 2 : progress >= 25 ? 1 : 0;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -81,7 +119,7 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
             Project Control Center
           </h1>
           <p className="mt-1 text-slate-600 dark:text-slate-400">
-            {projectTitle} • <span className="font-semibold text-slate-900 dark:text-white">₹{contractValue.toLocaleString('en-IN')} Contract (Approx)</span>
+            {projectTitle} • Customer: <strong className="text-slate-900 dark:text-white">{customerName}</strong> • <span className="font-semibold text-slate-900 dark:text-white">₹{contractValue.toLocaleString('en-IN')} Contract</span>
           </p>
         </div>
         <button
@@ -98,23 +136,23 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
           <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Progress</div>
           <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{progress}%</div>
           <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full mt-2 overflow-hidden">
-            <div className="h-full bg-emerald-500" style={{ width: `${progress}%` }}></div>
+            <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${progress}%` }}></div>
           </div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
           <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Days Left</div>
           <div className="text-2xl font-black text-slate-900 dark:text-white">{daysLeft} days</div>
-          <div className="text-xs text-slate-500 mt-1">Est. completion: {generatedProjectDetails ? 'TBD' : 'Nov 15'}</div>
+          <div className="text-xs text-slate-500 mt-1">Est. completion: {progress === 100 ? 'Completed' : 'Nov 15'}</div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
           <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Workers On Site</div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">{workers}</div>
-          <div className="text-xs text-slate-500 mt-1">{workers > 0 ? 'Including 1 Supervisor' : 'Awaiting start'}</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">{workersCount}</div>
+          <div className="text-xs text-slate-500 mt-1">Including 1 Supervisor</div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
           <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Amount Spent</div>
           <div className="text-2xl font-black text-slate-900 dark:text-white">₹{amountSpent.toLocaleString('en-IN')}</div>
-          <div className="text-xs text-slate-500 mt-1">{milestonesPaid} of 5 milestones paid</div>
+          <div className="text-xs text-slate-500 mt-1">{milestonesPaid} of 4 milestones paid</div>
         </div>
       </div>
 
@@ -253,30 +291,69 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
       {/* Team Tab Content */}
       {activeTab === 'Team' && (
         <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900 font-outfit">Project Team</h2>
-            <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold text-sm">Post a Job Requirement</button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-outfit">Project Workforce & Supervisors</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Workers on this site are verified by their cooperative unions and managed by your assigned supervisor.
+              </p>
+            </div>
+            {currentUser?.role === 'Supervisor' ? (
+              <button 
+                onClick={() => onNavigate('/dashboard')}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-colors cursor-pointer"
+              >
+                + Manage Assignments
+              </button>
+            ) : (
+              <button 
+                onClick={() => setChangeRequestOpen(true)}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-colors cursor-pointer"
+              >
+                Request Crew Addition
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Assigned Workers */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-bold text-slate-900 font-outfit mb-4">Assigned Workers</h3>
+            {/* Assigned Workers List */}
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-outfit">Assigned Site Craftsmen</h3>
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  {assignedWorkers.length} Active
+                </span>
+              </div>
+
               {assignedWorkers.length === 0 ? (
-                <p className="text-slate-500 text-sm">No workers assigned to this project yet.</p>
+                <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                  <LucideUsers className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-slate-600 dark:text-slate-300 font-bold text-sm font-outfit">Supervisor Assigning Workers</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                    Your site supervisor Er. Vikramaditya is currently allocating certified cooperative craftsmen for this phase.
+                  </p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {assignedWorkers.map((pw, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div key={i} className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-750 rounded-xl border border-slate-100 dark:border-slate-700">
                       <div className="flex items-center gap-3">
-                        <img src={pw.workers?.avatar || `https://ui-avatars.com/api/?name=${pw.workers?.name}&background=10b981&color=fff`} alt={pw.workers?.name} className="w-10 h-10 rounded-full" />
+                        <img 
+                          src={pw.workers?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(pw.workers?.name || 'Craftsman')}&background=10b981&color=fff`} 
+                          alt={pw.workers?.name} 
+                          className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 object-cover" 
+                        />
                         <div>
-                          <p className="font-bold text-slate-900 text-sm">{pw.workers?.name}</p>
-                          <p className="text-xs text-slate-500 font-medium">{pw.task}</p>
+                          <p className="font-bold text-slate-900 dark:text-white text-sm">{pw.workers?.name || 'Cooperative Craftsman'}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Task: <strong className="text-slate-700 dark:text-slate-300">{pw.task}</strong></p>
                         </div>
                       </div>
-                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full ${pw.status === 'REQUESTED' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                        {pw.status}
+                      <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full ${
+                        pw.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                        pw.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' :
+                        'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                      }`}>
+                        {pw.status || 'IN_PROGRESS'}
                       </span>
                     </div>
                   ))}
@@ -284,31 +361,52 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
               )}
             </div>
 
-            {/* Available Workers in Coop */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-bold text-slate-900 font-outfit mb-4">Available Coop Workers</h3>
-              <div className="space-y-4">
-                {availableWorkers.filter(w => !assignedWorkers.find(aw => aw.worker_id === w.id)).map(worker => (
-                  <div key={worker.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 gap-4">
-                    <div className="flex items-center gap-3">
-                      <img src={worker.avatar || `https://ui-avatars.com/api/?name=${worker.name}&background=10b981&color=fff`} alt={worker.name} className="w-12 h-12 rounded-full" />
-                      <div>
-                        <p className="font-bold text-slate-900">{worker.name}</p>
-                        <p className="text-xs text-slate-500">{worker.trade} • {worker.distance_km} km away</p>
-                        <div className="flex items-center mt-1">
-                          <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                          <span className="text-[10px] text-slate-600 font-bold ml-1">{worker.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleAssignWorker(worker, 'Electrical Work')}
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
-                    >
-                      Assign (Electrical)
-                    </button>
+            {/* Supervisor Oversight & Support Card */}
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-800 dark:text-emerald-300 font-black text-lg border border-emerald-200 dark:border-emerald-800">
+                    VR
                   </div>
-                ))}
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white font-outfit">Er. Vikramaditya Rathore</h3>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Chief Project Supervisor • Verified Engineer</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-750 p-4 rounded-xl space-y-2 text-xs text-slate-600 dark:text-slate-300 mb-4 border border-slate-100 dark:border-slate-700">
+                  <div className="flex justify-between">
+                    <span>Cooperative Union:</span>
+                    <strong className="text-slate-800 dark:text-slate-200">Rajasthan Engineering Coop</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Supervision License:</span>
+                    <strong className="text-slate-800 dark:text-slate-200">COOP-ENG-2026-RJ42</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Safety Compliance:</span>
+                    <strong className="text-emerald-600 dark:text-emerald-400">100% Certified</strong>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-5">
+                  Your supervisor directly allocates, verifies, and inspects all masons, plumbers, and electricians on site. As a customer, all staffing is handled for you automatically.
+                </p>
+
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => onOpenChat({ id: 'supervisor-chat', workerName: 'Er. Vikramaditya Rathore', service: 'Supervisor' })}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <LucideMessageSquare className="w-4 h-4" /> Message Supervisor
+                  </button>
+                  <button 
+                    onClick={() => setChangeRequestOpen(true)}
+                    className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <LucidePlusCircle className="w-4 h-4" /> Request Change
+                  </button>
+                </div>
               </div>
             </div>
           </div>
