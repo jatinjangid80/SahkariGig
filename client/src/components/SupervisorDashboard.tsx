@@ -5,7 +5,8 @@ import {
   LucideCheckSquare, LucidePieChart, LucideUserCircle,
   LucideClock, LucideAlertCircle, LucideCalendar, LucidePlusCircle,
   LucideSearch, LucideCheck, LucideSliders, LucideMapPin, LucideShieldCheck,
-  LucidePhone, LucideMail, LucideAward, LucideActivity, LucideTrendingUp
+  LucidePhone, LucideMail, LucideAward, LucideActivity, LucideTrendingUp,
+  LucideTrash2, LucideX
 } from 'lucide-react';
 
 interface SupervisorDashboardProps {
@@ -118,7 +119,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     }
   };
 
-  // Fetch initial Supabase data with fallback
+  // Fetch initial Supabase data with fallback & Realtime
   useEffect(() => {
     const fetchSupervisorData = async () => {
       try {
@@ -158,9 +159,11 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           const { data: assignData } = await supabase
             .from('project_workers')
             .select('*, workers(*), projects(*)')
-            .eq('supervisor_id', supervisor.id);
+            .order('assigned_at', { ascending: false });
 
-          if (assignData && assignData.length > 0) setAssignments(assignData);
+          if (assignData && assignData.length > 0) {
+            setAssignments(assignData);
+          }
         }
       } catch (err) {
         console.error('Error fetching supervisor data', err);
@@ -168,6 +171,22 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     };
 
     fetchSupervisorData();
+
+    // Supabase Realtime channel for live cross-dashboard updates
+    const channel = supabase
+      .channel('supervisor_project_workers_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'project_workers' },
+        () => {
+          fetchSupervisorData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, [currentUser]);
 
   // Handle Assign Worker
@@ -178,33 +197,51 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     const projObj = projects.find(p => p.id === assignProject) || projects[0];
     const workerObj = workers.find(w => w.id === assignWorker) || workers[0];
 
-    const newAssignment = {
-      id: `as-${Date.now()}`,
-      project_id: assignProject,
-      worker_id: assignWorker,
-      task: assignTask,
-      status: 'REQUESTED',
-      workers: workerObj,
-      projects: projObj
-    };
-
     try {
-      await supabase.from('project_workers').insert({
+      const { data: inserted, error: insErr } = await supabase
+        .from('project_workers')
+        .insert({
+          project_id: assignProject,
+          worker_id: assignWorker,
+          task: assignTask,
+          status: 'IN_PROGRESS'
+        })
+        .select('*, workers(*), projects(*)')
+        .single();
+
+      if (inserted && !insErr) {
+        setAssignments(prev => [inserted, ...prev]);
+      } else {
+        const newAssignment = {
+          id: `as-${Date.now()}`,
+          project_id: assignProject,
+          worker_id: assignWorker,
+          task: assignTask,
+          status: 'IN_PROGRESS',
+          workers: workerObj,
+          projects: projObj
+        };
+        setAssignments(prev => [newAssignment, ...prev]);
+      }
+    } catch (err) {
+      console.warn('Supabase insert note', err);
+      const newAssignment = {
+        id: `as-${Date.now()}`,
         project_id: assignProject,
         worker_id: assignWorker,
         task: assignTask,
-        status: 'REQUESTED'
-      });
-    } catch (err) {
-      console.warn('Supabase insert note', err);
+        status: 'IN_PROGRESS',
+        workers: workerObj,
+        projects: projObj
+      };
+      setAssignments(prev => [newAssignment, ...prev]);
     }
 
-    setAssignments(prev => [newAssignment, ...prev]);
     setIsAssignModalOpen(false);
     setAssignProject('');
     setAssignWorker('');
     setAssignTask('');
-    showToast(`Assigned ${workerObj.name} to ${assignTask}!`);
+    showToast(`Assigned ${workerObj?.name || 'Worker'} to ${assignTask}!`);
   };
 
   // Handle Create New Project
@@ -289,10 +326,26 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     showToast(`Project progress updated to ${progressValue}%!`);
   };
 
-  // Handle Assignment Status Change
-  const handleUpdateAssignmentStatus = (id: string, newStatus: string) => {
+  // Handle Assignment Status Change (Persisted to Supabase)
+  const handleUpdateAssignmentStatus = async (id: string, newStatus: string) => {
     setAssignments(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
+    try {
+      await supabase.from('project_workers').update({ status: newStatus }).eq('id', id);
+    } catch (err) {
+      console.warn('Error updating assignment status in Supabase:', err);
+    }
     showToast(`Assignment status updated to ${newStatus}`);
+  };
+
+  // Handle Remove / Cross Assignment (Deleted from Supabase)
+  const handleRemoveAssignment = async (id: string) => {
+    setAssignments(prev => prev.filter(a => a.id !== id));
+    try {
+      await supabase.from('project_workers').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Error deleting assignment from Supabase:', err);
+    }
+    showToast('Assignment removed successfully');
   };
 
   const activeProjectForProgress = projects.find(p => p.id === selectedProjectIdForProgress) || projects[0] || DEFAULT_PROJECTS[0];
@@ -790,6 +843,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                           Done
                         </button>
                       )}
+                      <button 
+                        onClick={() => handleRemoveAssignment(a.id)}
+                        title="Remove / Cancel Assignment"
+                        className="p-1 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-lg text-xs font-bold transition-colors cursor-pointer ml-1"
+                      >
+                        <LucideX className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>

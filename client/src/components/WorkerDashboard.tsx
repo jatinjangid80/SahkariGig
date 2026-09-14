@@ -143,16 +143,24 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     const fetchRequests = async () => {
       try {
         if (currentUser?.id) {
-          // Fetch the worker's internal ID based on user_id
-          let internalWorkerId = null;
-          const { data: workerData } = await supabase.from('workers').select('id').eq('user_id', currentUser.id).single();
+          // Fetch internal worker ID by user_id or direct ID
+          let internalWorkerId: string | null = null;
+          const { data: workerData } = await supabase
+            .from('workers')
+            .select('id')
+            .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id}`)
+            .limit(1)
+            .maybeSingle();
           
-          if (workerData) {
+          if (workerData?.id) {
             internalWorkerId = workerData.id;
+          } else {
+            internalWorkerId = currentUser.id;
           }
-          
+
+          let loadedAssignments: any[] = [];
           if (internalWorkerId) {
-            const { data, error } = await supabase
+            const { data: pwData } = await supabase
               .from('project_workers')
               .select(`
                 id,
@@ -165,35 +173,52 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   customer_name,
                   location,
                   start_date
-                ),
-                supervisors (
-                  name,
-                  phone
                 )
               `)
-              .eq('worker_id', internalWorkerId)
+              .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id}`)
               .order('assigned_at', { ascending: false });
 
-            if (!error && data) {
-              const loadedRequests = data.map((pw: any) => ({
+            if (pwData) {
+              loadedAssignments = pwData.map((pw: any) => ({
                 id: pw.id,
-                service: pw.projects?.name || 'Assigned Task',
-                customerName: pw.projects?.customer_name || 'N/A',
-                supervisorName: pw.supervisors?.name || 'N/A',
-                address: pw.projects?.location || 'N/A',
-                task: pw.task || 'General Work',
-                startDate: pw.projects?.start_date || 'TBD',
-                status: pw.status === 'PENDING' ? 'REQUESTED' : pw.status,
-                amount: 'TBD',
-                paymentStatus: 'PENDING'
+                isProjectTask: true,
+                service: pw.projects?.name || 'Site Assignment',
+                customerName: pw.projects?.customer_name || 'Project Client',
+                supervisorName: 'Er. Vikramaditya (Supervisor)',
+                address: pw.projects?.location || 'Project Site',
+                task: pw.task || 'Assigned Site Work',
+                startDate: pw.projects?.start_date || 'Today',
+                status: (pw.status === 'PENDING' || !pw.status) ? 'REQUESTED' : pw.status,
+                amount: '₹800/day',
+                paymentStatus: pw.status === 'COMPLETED' ? 'PAID' : 'PENDING'
               }));
-              setRequests(loadedRequests);
-            } else {
-              setRequests([]);
             }
-          } else {
-            setRequests([]);
           }
+
+          let loadedBookings: any[] = [];
+          const { data: bookData } = await supabase
+            .from('bookings')
+            .select('*')
+            .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id}`)
+            .order('created_at', { ascending: false });
+
+          if (bookData) {
+            loadedBookings = bookData.map((b: any) => ({
+              id: b.id,
+              isProjectTask: false,
+              service: b.service_name || b.service || 'Direct Booking',
+              customerName: b.customer_name || 'Verified Customer',
+              supervisorName: 'Cooperative Direct',
+              address: b.customer_address || b.address || 'Jaipur, Rajasthan',
+              task: b.service_name || b.notes || 'Direct Service Call',
+              startDate: b.scheduled_date || b.date_time || 'Today',
+              status: b.status || 'REQUESTED',
+              amount: b.amount ? `₹${b.amount}` : '₹500',
+              paymentStatus: b.payment_status || 'PENDING'
+            }));
+          }
+
+          setRequests([...loadedAssignments, ...loadedBookings]);
         }
       } catch (err) {
         console.error("Worker booking fetch error:", err);
@@ -203,18 +228,20 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
     fetchRequests();
 
-    // Set up realtime subscription
+    // Set up realtime subscription across both assignments and direct bookings
     if (currentUser?.id) {
       const channel = supabase
-        .channel(`bookings_worker_${currentUser.id}`)
+        .channel(`worker_live_jobs_${currentUser.id}`)
         .on(
           'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'bookings'
-            // We can't use an OR filter in realtime postgres_changes easily, so we just listen to all changes and let fetchRequests filter, or we could just refetch on any change. Since it's a demo, fetching on any booking change is fine, but we can try to filter by worker_id.
-          },
+          { event: '*', schema: 'public', table: 'project_workers' },
+          () => {
+            fetchRequests();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'bookings' },
           () => {
             fetchRequests();
           }
@@ -255,28 +282,37 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   }, [requests]);
 
   const handleAccept = async (id: string) => {
-    // Update local state optimistically
-    setRequests(requests.map(r => r.id === id ? { ...r, status: 'ACCEPTED' } : r));
-    // Switch to active tab
+    setRequests(requests.map(r => r.id === id ? { ...r, status: 'IN_PROGRESS' } : r));
     setLocalTab('active');
     if (onTabChange) {
       onTabChange('active');
     }
-    // Update DB
     try {
+      await supabase.from('project_workers').update({ status: 'IN_PROGRESS' }).eq('id', id);
       await supabase.from('bookings').update({ status: 'ACCEPTED' }).eq('id', id);
     } catch (e) {
-      console.error('Failed to update booking to ACCEPTED:', e);
+      console.error('Failed to accept job:', e);
     }
   };
 
   const handleMarkCompleted = async (id: string) => {
     setRequests(requests.map(r => r.id === id ? { ...r, status: 'COMPLETED' } : r));
-    await supabase.from('bookings').update({ status: 'COMPLETED' }).eq('id', id);
+    try {
+      await supabase.from('project_workers').update({ status: 'COMPLETED' }).eq('id', id);
+      await supabase.from('bookings').update({ status: 'COMPLETED' }).eq('id', id);
+    } catch (e) {
+      console.error('Failed to complete job:', e);
+    }
   };
 
   const handleReject = async (id: string) => {
     setRequests(requests.filter(r => r.id !== id));
+    try {
+      await supabase.from('project_workers').delete().eq('id', id);
+      await supabase.from('bookings').update({ status: 'CANCELLED' }).eq('id', id);
+    } catch (e) {
+      console.error('Failed to reject job:', e);
+    }
   };
 
   const handleTriggerPayout = async () => {
