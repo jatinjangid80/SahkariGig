@@ -438,18 +438,8 @@ export default function App() {
           />
         )}
 
-        {currentPath === '/dashboard' && (
+        {currentPath === '/dashboard' && currentUser?.role !== 'Supervisor' && (
           <div>
-            {currentUser?.role === 'Supervisor' && (
-              <SupervisorDashboard
-                currentUser={currentUser}
-                onNavigate={navigateTo}
-                onOpenChat={handleOpenChat}
-                activeTab={workerActiveTab}
-                onTabChange={setWorkerActiveTab as any}
-              />
-            )}
-
             {(!currentUser || currentUser?.role === 'Customer') && (
               <CustomerDashboard
                 currentUser={currentUser || { id: 'demo-123', name: 'Guest User', role: 'Customer', email: 'guest@sahkarigig.org' }}
