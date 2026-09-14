@@ -72,9 +72,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Worker Rights', path: '/dashboard', tab: 'rights' },
     { label: 'Profile', path: '/dashboard', tab: 'profile' },
   ] : (currentUser?.role === 'Customer' ? [
+    { label: 'Home', path: '/' },
     { label: 'Projects', path: '/projects' },
     { label: 'My Bookings', path: '/dashboard' },
     { label: 'Messages', path: '/messages' },
+    { label: 'Help', path: '/help' },
   ] : [
     { label: 'Home', path: '/' },
     { label: 'Hire Talent', path: '/workers' },
