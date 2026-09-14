@@ -141,15 +141,20 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             .eq('supervisor_id', supervisor.id);
           
           if (projData && projData.length > 0) {
-            setProjects(projData.map(p => ({
-              ...p,
-              progress: p.progress || 60,
-              tasks: p.tasks || [
-                { id: '1', name: 'Foundation', status: 'COMPLETED' },
-                { id: '2', name: 'Brickwork', status: 'IN_PROGRESS' },
-                { id: '3', name: 'Finishing', status: 'PENDING' }
-              ]
-            })));
+            setProjects(projData.map(p => {
+              const savedProgress = localStorage.getItem(`project_progress_${p.id}`);
+              const savedTasks = localStorage.getItem(`project_tasks_${p.id}`);
+              return {
+                ...p,
+                progress: savedProgress !== null ? parseInt(savedProgress, 10) : (p.progress || 60),
+                tasks: savedTasks ? JSON.parse(savedTasks) : (p.tasks || [
+                  { id: '1', name: 'Foundation & Excavation', status: 'COMPLETED' },
+                  { id: '2', name: 'Brickwork & Structure', status: 'IN_PROGRESS' },
+                  { id: '3', name: 'Electrical & Plumbing', status: 'PENDING' },
+                  { id: '4', name: 'Finishing & Handover', status: 'PENDING' }
+                ])
+              };
+            }));
             setSelectedProjectIdForProgress(projData[0].id);
           }
 
@@ -298,6 +303,11 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         }
         return t;
       });
+      try {
+        localStorage.setItem(`project_tasks_${proj.id}`, JSON.stringify(updatedTasks));
+      } catch (e) {
+        console.error(e);
+      }
       return { ...proj, tasks: updatedTasks };
     }));
   };
@@ -308,6 +318,11 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     setProjects(prev => prev.map(proj => {
       if (proj.id !== selectedProjectIdForProgress) return proj;
       const newTasks = [...(proj.tasks || []), { id: `t-${Date.now()}`, name: newTaskName.trim(), status: 'PENDING' }];
+      try {
+        localStorage.setItem(`project_tasks_${proj.id}`, JSON.stringify(newTasks));
+      } catch (e) {
+        console.error(e);
+      }
       return { ...proj, tasks: newTasks };
     }));
     setNewTaskName('');
@@ -315,13 +330,33 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   };
 
   // Handle Save Progress Update
-  const handleSaveProgress = () => {
+  const handleSaveProgress = async () => {
     setProjects(prev => prev.map(proj => {
       if (proj.id === selectedProjectIdForProgress) {
-        return { ...proj, progress: progressValue };
+        return { 
+          ...proj, 
+          progress: progressValue,
+          status: progressValue === 100 ? 'COMPLETED' : 'IN_PROGRESS'
+        };
       }
       return proj;
     }));
+
+    try {
+      localStorage.setItem(`project_progress_${selectedProjectIdForProgress}`, String(progressValue));
+    } catch (e) {
+      console.error(e);
+    }
+
+    try {
+      await supabase
+        .from('projects')
+        .update({ status: progressValue === 100 ? 'COMPLETED' : 'IN_PROGRESS' })
+        .eq('id', selectedProjectIdForProgress);
+    } catch (err) {
+      console.warn('Supabase project update status note:', err);
+    }
+
     setIsUpdateProgressModalOpen(false);
     showToast(`Project progress updated to ${progressValue}%!`);
   };
