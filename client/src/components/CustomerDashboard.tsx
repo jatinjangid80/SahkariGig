@@ -820,15 +820,6 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           >
             Profile
           </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`pb-3 border-b-2 text-sm font-semibold transition-colors ${activeTab === 'settings'
-              ? 'border-emerald-600 text-emerald-700'
-              : 'border-transparent text-slate-500 hover:text-slate-900'
-              }`}
-          >
-            Settings
-          </button>
         </div>
 
         {/* My Jobs Tab (Active Bookings) */}
@@ -1121,6 +1112,55 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Appearance & Theme Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm font-outfit">Appearance & Theme</h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 uppercase">
+                  {theme}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'light'
+                      ? 'border-amber-500 bg-amber-50/70 dark:bg-slate-800 ring-2 ring-amber-500/30 shadow-xs text-amber-600 dark:text-amber-400 font-bold'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                >
+                  <Sun className="w-5 h-5 mx-auto mb-1 text-amber-500" />
+                  <p className="text-xs font-bold">Light</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'dark'
+                      ? 'border-sky-500 bg-sky-50/70 dark:bg-slate-800 ring-2 ring-sky-500/30 shadow-xs text-sky-600 dark:text-sky-400 font-bold'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                >
+                  <Moon className="w-5 h-5 mx-auto mb-1 text-sky-400" />
+                  <p className="text-xs font-bold">Dark</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTheme('system')}
+                  className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'system'
+                      ? 'border-emerald-500 bg-emerald-50/70 dark:bg-slate-800 ring-2 ring-emerald-500/30 shadow-xs text-emerald-600 dark:text-emerald-400 font-bold'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                >
+                  <Laptop className="w-5 h-5 mx-auto mb-1 text-emerald-500" />
+                  <p className="text-xs font-bold">System</p>
+                </button>
+              </div>
+            </div>
+
           </div>
         )}
 

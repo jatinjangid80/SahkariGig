@@ -805,10 +805,16 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, booking, 
   };
 
   const getChatPartnerName = () => {
+    if (booking?.targetName) {
+      return booking.targetName;
+    }
     if (currentUser?.role === 'Worker') {
       return booking?.customerName || 'Customer';
     }
-    return booking?.workerName || 'Rajesh Kumar';
+    if (currentUser?.role === 'Supervisor') {
+      return booking?.customerName || booking?.targetName || booking?.workerName || 'Customer';
+    }
+    return booking?.workerName || 'Er. Vikramaditya Rathore';
   };
 
   const partnerName = getChatPartnerName();

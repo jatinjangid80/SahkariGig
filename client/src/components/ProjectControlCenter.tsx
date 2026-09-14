@@ -158,12 +158,11 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
 
       {/* Tabs Navigation */}
       <div className="flex overflow-x-auto hide-scrollbar border-b border-slate-200 dark:border-slate-700 mb-6 gap-6">
-        {['Overview', 'Contract', 'Team', 'Milestones', 'Payments', 'Documents', 'Messages'].map(tab => (
+        {['Overview', 'Contract', 'Team', 'Milestones', 'Payments', 'Documents'].map(tab => (
           <button
             key={tab}
             onClick={() => {
               if (tab === 'Contract') onNavigate('/contracts');
-              else if (tab === 'Messages') onOpenChat({ id: 'proj-123', workerName: 'Er. Vikramaditya Rathore', service: 'Supervisor' });
               else setActiveTab(tab);
             }}
             className={`pb-3 font-semibold text-sm transition-colors cursor-pointer border-b-2 whitespace-nowrap ${activeTab === tab
@@ -213,8 +212,8 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
               <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-4">Latest Site Update</h3>
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0 overflow-hidden">
-                  <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Vikramaditya" alt="Supervisor" className="w-full h-full object-cover" />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs font-outfit border border-emerald-500/20">
+                  VR
                 </div>
                 <div>
                   <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
@@ -338,11 +337,9 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
                   {assignedWorkers.map((pw, i) => (
                     <div key={i} className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-750 rounded-xl border border-slate-100 dark:border-slate-700">
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={pw.workers?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(pw.workers?.name || 'Craftsman')}&background=10b981&color=fff`} 
-                          alt={pw.workers?.name} 
-                          className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 object-cover" 
-                        />
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs font-outfit uppercase border border-emerald-500/20">
+                          {(pw.workers?.name || 'Worker').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                        </div>
                         <div>
                           <p className="font-bold text-slate-900 dark:text-white text-sm">{pw.workers?.name || 'Cooperative Craftsman'}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Task: <strong className="text-slate-700 dark:text-slate-300">{pw.task}</strong></p>

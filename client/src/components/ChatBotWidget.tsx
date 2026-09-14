@@ -30,6 +30,11 @@ export const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
   onVerifyWorker,
   currentUser
 }) => {
+  // ChatBot is only for Customers and public users (hidden on Worker and Supervisor dashboards)
+  if (currentUser?.role === 'Worker' || currentUser?.role === 'Supervisor') {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     const path = typeof window !== 'undefined' ? window.location.pathname : '/';

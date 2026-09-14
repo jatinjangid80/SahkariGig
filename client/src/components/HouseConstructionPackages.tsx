@@ -17,6 +17,25 @@ export interface HouseConstructionPackagesProps {
   onProjectGenerated?: (details: { projectType: string; area: string; floors: string; }) => void;
 }
 
+const DEFAULT_CUSTOMER_PROJECTS = [
+  {
+    id: '716e2b56-e153-43f9-b9ec-a55b60a020ff',
+    name: 'Single Floor Villa — G+0',
+    customer_name: 'Jatin Jangid',
+    customer_phone: '+91 98765 43210',
+    location: 'Mansarovar / Jagatpura, Jaipur',
+    status: 'IN_PROGRESS',
+    budget: '₹3,42,000',
+    progress: 25,
+    start_date: '15 Sep',
+    supervisors: {
+      id: 's1',
+      name: 'Er. Vikramaditya Rathore',
+      phone: '+91 94140 12345'
+    }
+  }
+];
+
 export const HouseConstructionPackages: React.FC<HouseConstructionPackagesProps> = ({
   currentUser,
   onNavigate,
@@ -32,7 +51,7 @@ export const HouseConstructionPackages: React.FC<HouseConstructionPackagesProps>
   const [inputFloors, setInputFloors] = useState('Ground Floor Only (G+0)');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
-  const [projectsList, setProjectsList] = useState<any[]>([]);
+  const [projectsList, setProjectsList] = useState<any[]>(DEFAULT_CUSTOMER_PROJECTS);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -43,7 +62,17 @@ export const HouseConstructionPackages: React.FC<HouseConstructionPackagesProps>
           .order('created_at', { ascending: false });
 
         if (data && data.length > 0) {
-          setProjectsList(data);
+          setProjectsList(data.map(p => {
+            const savedProgress = localStorage.getItem(`project_progress_${p.id}`);
+            return {
+              ...p,
+              customer_name: p.customer_name || currentUser?.name || 'Jatin Jangid',
+              location: p.location || 'Jaipur, Rajasthan',
+              status: p.status || 'IN_PROGRESS',
+              start_date: p.start_date || '15 Sep',
+              progress: savedProgress !== null ? parseInt(savedProgress, 10) : (p.progress || (p.status === 'COMPLETED' ? 100 : 25))
+            };
+          }));
         }
       } catch (err) {
         console.error('Error fetching customer projects:', err);
@@ -51,6 +80,21 @@ export const HouseConstructionPackages: React.FC<HouseConstructionPackagesProps>
     };
 
     fetchProjects();
+
+    const channel = supabase
+      .channel('customer_projects_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        () => {
+          fetchProjects();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, [currentUser]);
 
   const hasProjects = projectsList.length > 0 || hasGeneratedProject;

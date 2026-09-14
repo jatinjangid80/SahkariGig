@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, User, LogIn, LogOut, Menu, X, ArrowRight, Settings, ChevronDown, UserCheck, Sun, Moon, Laptop } from 'lucide-react';
+import { ShieldCheck, User, LogIn, LogOut, Menu, X, ArrowRight, ChevronDown, Sun, Moon, Laptop } from 'lucide-react';
 import { useTheme } from '../utils/theme';
 
 interface NavbarProps {
@@ -97,6 +97,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (!link.tab) return true;
       if (currentUser?.role === 'Supervisor') {
         const effectiveTab = (!workerActiveTab || workerActiveTab === 'feed') ? 'overview' : workerActiveTab;
+        return effectiveTab === link.tab;
+      }
+      if (currentUser?.role === 'Worker') {
+        const effectiveTab = (!workerActiveTab || workerActiveTab === 'overview') ? 'feed' : workerActiveTab;
         return effectiveTab === link.tab;
       }
       return workerActiveTab === link.tab;
@@ -311,24 +315,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <User className="w-4 h-4 mr-2.5 text-slate-400 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
                       <span>Profile</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleNavClick('/dashboard', 'edit_account')}
-                      className="w-full text-left px-4 py-2.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center font-bold cursor-pointer group"
-                    >
-                      <UserCheck className="w-4 h-4 mr-2.5 text-slate-400 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
-                      <span>Edit Account</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleNavClick('/dashboard', 'settings')}
-                      className="w-full text-left px-4 py-2.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center font-bold cursor-pointer group"
-                    >
-                      <Settings className="w-4 h-4 mr-2.5 text-slate-400 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
-                      <span>Settings</span>
                     </button>
 
                     <div className="border-t border-slate-100 dark:border-slate-800 my-1 pt-1">

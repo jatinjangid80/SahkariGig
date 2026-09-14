@@ -6,7 +6,7 @@ export const CrewProjectSection: React.FC = () => {
     {
       id: 'proj-501',
       title: '3BHK Flat Renovation Project',
-      customer: 'Ananya Sharma',
+      customer: 'Jatin Jangid',
       location: 'Green Park, New Delhi',
       crew: ['Electrician (Rajesh K.)', 'Plumber (Suresh S.)', 'Painter (Anita V.)'],
       progress: 65,

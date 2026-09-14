@@ -6,8 +6,9 @@ import {
   LucideClock, LucideAlertCircle, LucideCalendar, LucidePlusCircle,
   LucideSearch, LucideCheck, LucideSliders, LucideMapPin, LucideShieldCheck,
   LucidePhone, LucideMail, LucideAward, LucideActivity, LucideTrendingUp,
-  LucideTrash2, LucideX
+  LucideTrash2, LucideX, LucideMessageSquare, Sun, Moon, Laptop
 } from 'lucide-react';
+import { useTheme } from '../utils/theme';
 
 interface SupervisorDashboardProps {
   currentUser: any;
@@ -19,9 +20,27 @@ interface SupervisorDashboardProps {
 
 const DEFAULT_PROJECTS = [
   {
+    id: '716e2b56-e153-43f9-b9ec-a55b60a020ff',
+    name: 'Single Floor Villa — G+0',
+    customer_name: 'Jatin Jangid',
+    customer_phone: '+91 98765 43210',
+    location: 'Mansarovar / Jagatpura, Jaipur',
+    status: 'IN_PROGRESS',
+    progress: 25,
+    start_date: '2026-09-01',
+    budget: '₹3,42,000',
+    tasks: [
+      { id: 't1', name: 'Site Marking & Foundation Layout', status: 'COMPLETED' },
+      { id: 't2', name: 'Excavation & Footing RCC', status: 'IN_PROGRESS' },
+      { id: 't3', name: 'Plinth Beam & Soil Compaction', status: 'PENDING' },
+      { id: 't4', name: 'Superstructure Brickwork', status: 'PENDING' },
+      { id: 't5', name: 'Roof Slab Shuttering & Casting', status: 'PENDING' }
+    ]
+  },
+  {
     id: 'proj-demo-1',
     name: 'Residential Villa G+1 Construction',
-    customer_name: 'Ananya Sharma',
+    customer_name: 'Jatin Jangid',
     customer_phone: '+91 98765 43210',
     location: 'Civil Lines, Jaipur',
     status: 'IN_PROGRESS',
@@ -29,28 +48,11 @@ const DEFAULT_PROJECTS = [
     start_date: '2026-08-01',
     budget: '₹14,50,000',
     tasks: [
-      { id: 't1', name: 'Foundation & Excavation', status: 'COMPLETED' },
-      { id: 't2', name: 'RCC Column Reinforcement', status: 'COMPLETED' },
-      { id: 't3', name: 'Ground Floor Brickwork', status: 'IN_PROGRESS' },
-      { id: 't4', name: 'Electrical Conduit Routing', status: 'PENDING' },
-      { id: 't5', name: 'Slab Casting & Curing', status: 'PENDING' }
-    ]
-  },
-  {
-    id: 'proj-demo-2',
-    name: 'Commercial Shop Renovation',
-    customer_name: 'Rajiv Mehra',
-    customer_phone: '+91 98234 11223',
-    location: 'Mansarovar, Jaipur',
-    status: 'IN_PROGRESS',
-    progress: 42,
-    start_date: '2026-08-15',
-    budget: '₹3,80,000',
-    tasks: [
-      { id: 't21', name: 'Demolition & Debris Clearing', status: 'COMPLETED' },
-      { id: 't22', name: 'False Ceiling & Framing', status: 'IN_PROGRESS' },
-      { id: 't23', name: 'Wall Plaster & Texture', status: 'PENDING' },
-      { id: 't24', name: 'Flooring Tiling', status: 'PENDING' }
+      { id: 't11', name: 'Foundation & Excavation', status: 'COMPLETED' },
+      { id: 't12', name: 'RCC Column Reinforcement', status: 'COMPLETED' },
+      { id: 't13', name: 'Ground Floor Brickwork', status: 'IN_PROGRESS' },
+      { id: 't14', name: 'Electrical Conduit Routing', status: 'PENDING' },
+      { id: 't15', name: 'Slab Casting & Curing', status: 'PENDING' }
     ]
   }
 ];
@@ -64,9 +66,9 @@ const DEFAULT_WORKERS = [
 ];
 
 const DEFAULT_ASSIGNMENTS = [
-  { id: 'as-1', project_id: 'proj-demo-1', worker_id: 'w1', task: 'Ground Floor Brickwork', status: 'IN_PROGRESS', workers: DEFAULT_WORKERS[0], projects: DEFAULT_PROJECTS[0] },
-  { id: 'as-2', project_id: 'proj-demo-1', worker_id: 'w5', task: 'Shuttering for Slab', status: 'ACCEPTED', workers: DEFAULT_WORKERS[4], projects: DEFAULT_PROJECTS[0] },
-  { id: 'as-3', project_id: 'proj-demo-2', worker_id: 'w2', task: 'Main Panel Wiring', status: 'REQUESTED', workers: DEFAULT_WORKERS[1], projects: DEFAULT_PROJECTS[1] }
+  { id: 'as-1', project_id: '716e2b56-e153-43f9-b9ec-a55b60a020ff', worker_id: 'w1', task: 'Excavation & Footing RCC', status: 'IN_PROGRESS', workers: DEFAULT_WORKERS[0], projects: DEFAULT_PROJECTS[0] },
+  { id: 'as-2', project_id: '716e2b56-e153-43f9-b9ec-a55b60a020ff', worker_id: 'w2', task: 'Temporary Distribution & Conduit', status: 'ACCEPTED', workers: DEFAULT_WORKERS[1], projects: DEFAULT_PROJECTS[0] },
+  { id: 'as-3', project_id: 'proj-demo-1', worker_id: 'w5', task: 'Shuttering for Slab', status: 'REQUESTED', workers: DEFAULT_WORKERS[4], projects: DEFAULT_PROJECTS[1] }
 ];
 
 export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ 
@@ -76,6 +78,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   activeTab = 'overview', 
   onTabChange 
 }) => {
+  const { theme, setTheme } = useTheme();
   const [projects, setProjects] = useState<any[]>(DEFAULT_PROJECTS);
   const [workers, setWorkers] = useState<any[]>(DEFAULT_WORKERS);
   const [assignments, setAssignments] = useState<any[]>(DEFAULT_ASSIGNMENTS);
@@ -84,7 +87,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   // Filters & Search
   const [workerSearch, setWorkerSearch] = useState('');
   const [workerAvailabilityFilter, setWorkerAvailabilityFilter] = useState<'ALL' | 'AVAILABLE' | 'ASSIGNED'>('ALL');
-  const [selectedProjectIdForProgress, setSelectedProjectIdForProgress] = useState<string>('proj-demo-1');
+  const [selectedProjectIdForProgress, setSelectedProjectIdForProgress] = useState<string>('716e2b56-e153-43f9-b9ec-a55b60a020ff');
 
   // Modals
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -107,6 +110,24 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   const [newTaskName, setNewTaskName] = useState('');
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
+  // Dynamic Greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Good morning';
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
+    if (hour >= 17 && hour < 22) return 'Good evening';
+    return 'Good night';
+  };
+
+  const [greeting, setGreeting] = useState<string>(getGreeting);
+
+  useEffect(() => {
+    const updateGreetingTimer = () => setGreeting(getGreeting());
+    updateGreetingTimer();
+    const timer = setInterval(updateGreetingTimer, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   const showToast = (msg: string) => {
     setFeedbackToast(msg);
     setTimeout(() => setFeedbackToast(null), 3000);
@@ -123,52 +144,69 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   useEffect(() => {
     const fetchSupervisorData = async () => {
       try {
-        let { data: supervisor } = await supabase
-          .from('supervisors')
-          .select('*')
-          .eq('user_id', currentUser?.id)
-          .single();
-
-        if (!supervisor) {
-          const { data: fallback } = await supabase.from('supervisors').select('*').limit(1).single();
-          supervisor = fallback;
+        // 1. Fetch Supervisor Profile if available
+        let supervisor: any = null;
+        try {
+          const { data: sData } = await supabase
+            .from('supervisors')
+            .select('*')
+            .eq('user_id', currentUser?.id)
+            .maybeSingle();
+          supervisor = sData;
+        } catch (e) {
+          console.warn('Supervisor lookup note:', e);
         }
 
-        if (supervisor) {
-          const { data: projData } = await supabase
-            .from('projects')
-            .select('*')
-            .eq('supervisor_id', supervisor.id);
-          
-          if (projData && projData.length > 0) {
-            setProjects(projData.map(p => {
-              const savedProgress = localStorage.getItem(`project_progress_${p.id}`);
-              const savedTasks = localStorage.getItem(`project_tasks_${p.id}`);
-              return {
-                ...p,
-                progress: savedProgress !== null ? parseInt(savedProgress, 10) : (p.progress || 60),
-                tasks: savedTasks ? JSON.parse(savedTasks) : (p.tasks || [
-                  { id: '1', name: 'Foundation & Excavation', status: 'COMPLETED' },
-                  { id: '2', name: 'Brickwork & Structure', status: 'IN_PROGRESS' },
-                  { id: '3', name: 'Electrical & Plumbing', status: 'PENDING' },
-                  { id: '4', name: 'Finishing & Handover', status: 'PENDING' }
-                ])
-              };
-            }));
-            setSelectedProjectIdForProgress(projData[0].id);
+        if (!supervisor) {
+          try {
+            const { data: fallback } = await supabase.from('supervisors').select('*').limit(1).maybeSingle();
+            supervisor = fallback;
+          } catch (e) {
+            console.warn('Supervisor fallback note:', e);
           }
+        }
 
-          const { data: workerData } = await supabase.from('workers').select('*');
-          if (workerData && workerData.length > 0) setWorkers(workerData);
+        // 2. Fetch Projects directly from public.projects table
+        const { data: projData, error: projErr } = await supabase
+          .from('projects')
+          .select('*, supervisors(*)')
+          .order('created_at', { ascending: false });
+        
+        if (projData && projData.length > 0) {
+          setProjects(projData.map(p => {
+            const savedProgress = localStorage.getItem(`project_progress_${p.id}`);
+            const savedTasks = localStorage.getItem(`project_tasks_${p.id}`);
+            return {
+              ...p,
+              customer_name: p.customer_name || 'Jatin Jangid',
+              location: p.location || 'Jaipur, Rajasthan',
+              status: p.status || 'IN_PROGRESS',
+              start_date: p.start_date || '15 Sep',
+              progress: savedProgress !== null ? parseInt(savedProgress, 10) : (p.progress || (p.status === 'COMPLETED' ? 100 : 25)),
+              tasks: savedTasks ? JSON.parse(savedTasks) : (p.tasks || [
+                { id: '1', name: 'Site Marking & Foundation Layout', status: 'COMPLETED' },
+                { id: '2', name: 'Excavation & Footing RCC', status: 'IN_PROGRESS' },
+                { id: '3', name: 'Plinth Beam & Soil Compaction', status: 'PENDING' },
+                { id: '4', name: 'Superstructure Brickwork', status: 'PENDING' },
+                { id: '5', name: 'Roof Slab Shuttering & Casting', status: 'PENDING' }
+              ])
+            };
+          }));
+          setSelectedProjectIdForProgress(projData[0].id);
+        }
 
-          const { data: assignData } = await supabase
-            .from('project_workers')
-            .select('*, workers(*), projects(*)')
-            .order('assigned_at', { ascending: false });
+        // 3. Fetch Workers
+        const { data: workerData } = await supabase.from('workers').select('*');
+        if (workerData && workerData.length > 0) setWorkers(workerData);
 
-          if (assignData && assignData.length > 0) {
-            setAssignments(assignData);
-          }
+        // 4. Fetch Project Assignments
+        const { data: assignData } = await supabase
+          .from('project_workers')
+          .select('*, workers(*), projects(*)')
+          .order('assigned_at', { ascending: false });
+
+        if (assignData && assignData.length > 0) {
+          setAssignments(assignData);
         }
       } catch (err) {
         console.error('Error fetching supervisor data', err);
@@ -177,9 +215,16 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
     fetchSupervisorData();
 
-    // Supabase Realtime channel for live cross-dashboard updates
+    // Supabase Realtime channel for live cross-dashboard updates (projects & assignments)
     const channel = supabase
-      .channel('supervisor_project_workers_realtime')
+      .channel('supervisor_dashboard_realtime_sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        () => {
+          fetchSupervisorData();
+        }
+      )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'project_workers' },
@@ -401,6 +446,52 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     return matchesSearch;
   });
 
+  const formatRelativeTime = (timestamp?: string) => {
+    if (!timestamp) return 'Recently';
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Recently';
+    const now = new Date();
+    const diffSecs = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diffSecs < 60) return 'Just now';
+    if (diffSecs < 3600) return `${Math.max(1, Math.floor(diffSecs / 60))}m ago`;
+    if (diffSecs < 86400) return `${Math.floor(diffSecs / 3600)}h ago`;
+    return `${Math.floor(diffSecs / 86400)}d ago`;
+  };
+
+  // Dynamic live activities computed directly from Supabase assignments & projects
+  const dynamicActivities = [
+    ...assignments.map(a => ({
+      id: `act-assign-${a.id}`,
+      type: 'ASSIGNMENT' as const,
+      text: `${a.workers?.name || 'Craftsman'} assigned to `,
+      boldText: a.task || 'Site Operations',
+      subText: a.projects?.name ? `(${a.projects.name})` : '',
+      time: formatRelativeTime(a.assigned_at || a.created_at),
+      badge: 'Assigned',
+      icon: 'check'
+    })),
+    ...projects.map(p => ({
+      id: `act-proj-${p.id}`,
+      type: 'PROJECT' as const,
+      text: `Customer ${p.customer_name || 'Jatin Jangid'} project milestone: `,
+      boldText: `${p.name || 'Construction Package'} (${p.progress || 25}% complete)`,
+      subText: p.location ? `• ${p.location}` : '',
+      time: formatRelativeTime(p.created_at),
+      badge: p.status || 'Active',
+      icon: 'check'
+    })),
+    {
+      id: 'act-safety-1',
+      type: 'SCHEDULED' as const,
+      text: 'Safety gear and cooperative quality check scheduled for site inspection',
+      boldText: '',
+      subText: 'Scheduled 9:00 AM',
+      time: 'Tomorrow',
+      badge: 'Scheduled',
+      icon: 'alert'
+    }
+  ].slice(0, 6);
+
   /* ------------------------------------------------------------- */
   /* TAB: OVERVIEW                                                 */
   /* ------------------------------------------------------------- */
@@ -473,8 +564,24 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         </div>
         <div className="flex flex-wrap gap-2">
           <button 
-            onClick={() => setIsAssignModalOpen(true)}
+            onClick={() => {
+              const p = projects[0] || DEFAULT_PROJECTS[0];
+              onOpenChat && onOpenChat({
+                id: 'supervisor-chat',
+                targetName: p.customer_name || 'Jatin Jangid',
+                customerName: p.customer_name || 'Jatin Jangid',
+                workerName: currentUser?.name || 'Er. Vikramaditya Rathore',
+                service: p.name || 'Single Floor Villa — G+0',
+                status: 'ACCEPTED'
+              });
+            }}
             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <LucideMessageSquare className="w-3.5 h-3.5" /> Client & Worker Chats
+          </button>
+          <button 
+            onClick={() => setIsAssignModalOpen(true)}
+            className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <LucidePlusCircle className="w-3.5 h-3.5" /> Assign Worker
           </button>
@@ -539,7 +646,22 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button 
+                    onClick={() => {
+                      onOpenChat && onOpenChat({
+                        id: p.name.includes('Single Floor') ? 'supervisor-chat' : (p.id || 'supervisor-chat'),
+                        targetName: p.customer_name || 'Jatin Jangid',
+                        customerName: p.customer_name || 'Jatin Jangid',
+                        workerName: currentUser?.name || 'Er. Vikramaditya Rathore',
+                        service: p.name,
+                        status: 'ACCEPTED'
+                      });
+                    }}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                  >
+                    <LucideMessageSquare className="w-3.5 h-3.5" /> Chat Customer
+                  </button>
                   <button 
                     onClick={() => {
                       setSelectedProjectIdForProgress(p.id);
@@ -568,30 +690,50 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Recent Activity Log */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h3 className="font-extrabold text-lg text-slate-900 dark:text-white mb-4 font-outfit">Recent Field Activities</h3>
-        <div className="space-y-3 text-xs sm:text-sm">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-750 border border-slate-100 dark:border-slate-700">
-            <div className="flex items-center text-slate-700 dark:text-slate-200">
-              <LucideCheckSquare className="w-4 h-4 mr-2.5 text-emerald-500 shrink-0" />
-              <span>Amit Kumar assigned to <strong>Ground Floor Brickwork</strong></span>
-            </div>
-            <span className="text-[11px] font-semibold text-slate-400">10m ago</span>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-750 border border-slate-100 dark:border-slate-700">
-            <div className="flex items-center text-slate-700 dark:text-slate-200">
-              <LucideCheckSquare className="w-4 h-4 mr-2.5 text-emerald-500 shrink-0" />
-              <span>Customer Ananya Sharma approved milestone payment stage 1</span>
-            </div>
-            <span className="text-[11px] font-semibold text-slate-400">2h ago</span>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
-            <div className="flex items-center text-amber-800 dark:text-amber-300">
-              <LucideAlertCircle className="w-4 h-4 mr-2.5 text-amber-500 shrink-0" />
-              <span>Safety gear check scheduled for Civil Lines Villa site tomorrow at 9:00 AM</span>
-            </div>
-            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">Scheduled</span>
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-extrabold text-lg text-slate-900 dark:text-white font-outfit">Recent Field Activities</h3>
+          <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Live Supabase Feed
+          </span>
         </div>
+
+        {dynamicActivities.length > 0 ? (
+          <div className="space-y-3 text-xs sm:text-sm">
+            {dynamicActivities.map((act) => (
+              <div 
+                key={act.id} 
+                className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
+                  act.icon === 'alert'
+                    ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50'
+                    : 'bg-slate-50 dark:bg-slate-750 border-slate-100 dark:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center text-slate-700 dark:text-slate-200">
+                  {act.icon === 'alert' ? (
+                    <LucideAlertCircle className="w-4 h-4 mr-2.5 text-amber-500 shrink-0" />
+                  ) : (
+                    <LucideCheckSquare className="w-4 h-4 mr-2.5 text-emerald-500 shrink-0" />
+                  )}
+                  <span>
+                    {act.text}
+                    {act.boldText && <strong>{act.boldText}</strong>}
+                    {act.subText && <span className="text-slate-400 text-xs ml-1.5">{act.subText}</span>}
+                  </span>
+                </div>
+                <span className={`text-[11px] font-semibold shrink-0 ml-3 ${
+                  act.icon === 'alert' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'
+                }`}>
+                  {act.time}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-xs text-slate-400">
+            No recent activity recorded yet.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -663,7 +805,22 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-4 mt-4 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t border-slate-100 dark:border-slate-700">
+                <button 
+                  onClick={() => {
+                    onOpenChat && onOpenChat({
+                      id: p.name.includes('Single Floor') ? 'supervisor-chat' : (p.id || 'supervisor-chat'),
+                      targetName: p.customer_name || 'Jatin Jangid',
+                      customerName: p.customer_name || 'Jatin Jangid',
+                      workerName: currentUser?.name || 'Er. Vikramaditya Rathore',
+                      service: p.name,
+                      status: 'ACCEPTED'
+                    });
+                  }}
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  <LucideMessageSquare className="w-3.5 h-3.5" /> Chat Customer
+                </button>
                 <button 
                   onClick={() => {
                     setSelectedProjectIdForProgress(p.id);
@@ -779,12 +936,27 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-700 flex gap-2">
                 <button 
                   onClick={() => {
+                    onOpenChat && onOpenChat({
+                      id: `worker-chat-${w.id}`,
+                      targetName: w.name,
+                      workerName: w.name,
+                      customerName: currentUser?.name || 'Er. Vikramaditya Rathore',
+                      service: w.trade || 'Cooperative Craftsman',
+                      status: 'ACCEPTED'
+                    });
+                  }}
+                  className="flex-1 py-2 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <LucideMessageSquare className="w-3.5 h-3.5" /> Chat Worker
+                </button>
+                <button 
+                  onClick={() => {
                     setAssignWorker(w.id);
                     setIsAssignModalOpen(true);
                   }}
-                  className="w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                  className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
                 >
-                  {isAssigned ? 'Reassign / Add Task' : 'Assign to Project'}
+                  {isAssigned ? 'Reassign' : 'Assign'}
                 </button>
               </div>
             </div>
@@ -862,6 +1034,21 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
+                      <button 
+                        onClick={() => {
+                          onOpenChat && onOpenChat({
+                            id: `worker-chat-${a.workers?.id || a.worker_id}`,
+                            targetName: a.workers?.name || 'Worker',
+                            workerName: a.workers?.name || 'Worker',
+                            customerName: currentUser?.name || 'Er. Vikramaditya Rathore',
+                            service: a.task || 'Site Assignment',
+                            status: 'ACCEPTED'
+                          });
+                        }}
+                        className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <LucideMessageSquare className="w-3 h-3" /> Chat
+                      </button>
                       {a.status !== 'IN_PROGRESS' && a.status !== 'COMPLETED' && (
                         <button 
                           onClick={() => handleUpdateAssignmentStatus(a.id, 'IN_PROGRESS')}
@@ -1061,6 +1248,54 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Appearance & Theme Settings Card */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+          <h3 className="font-extrabold text-slate-900 dark:text-white text-sm font-outfit">Appearance & Theme</h3>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 uppercase">
+            {theme}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => setTheme('light')}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'light'
+                ? 'border-amber-500 bg-amber-50/70 dark:bg-slate-750 ring-2 ring-amber-500/30 shadow-xs text-amber-600 dark:text-amber-400 font-bold'
+                : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-750 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+          >
+            <Sun className="w-5 h-5 mx-auto mb-1 text-amber-500" />
+            <p className="text-xs font-bold">Light</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTheme('dark')}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'dark'
+                ? 'border-sky-500 bg-sky-50/70 dark:bg-slate-750 ring-2 ring-sky-500/30 shadow-xs text-sky-600 dark:text-sky-400 font-bold'
+                : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-750 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+          >
+            <Moon className="w-5 h-5 mx-auto mb-1 text-sky-400" />
+            <p className="text-xs font-bold">Dark</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTheme('system')}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${theme === 'system'
+                ? 'border-emerald-500 bg-emerald-50/70 dark:bg-slate-750 ring-2 ring-emerald-500/30 shadow-xs text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-750 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+          >
+            <Laptop className="w-5 h-5 mx-auto mb-1 text-emerald-500" />
+            <p className="text-xs font-bold">System</p>
+          </button>
+        </div>
+      </div>
     </div>
   );
 
@@ -1078,7 +1313,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
       <div className="mb-8 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight font-outfit">
-            Good morning, {currentUser?.name?.split(' ')[0] || 'Supervisor'} 👋
+            {greeting}, {currentUser?.name?.split(' ')[0] || 'Supervisor'} 👋
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5 font-medium">
             SahkariGig Supervisor Management Panel

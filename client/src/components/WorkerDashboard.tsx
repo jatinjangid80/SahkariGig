@@ -26,9 +26,14 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 }) => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { theme, isDark, setTheme } = useTheme();
+  const VALID_WORKER_TABS = ['feed', 'active', 'earnings', 'rights', 'profile'];
   const [localTab, setLocalTab] = useState<'feed' | 'active' | 'earnings' | 'rights' | 'profile'>('feed');
-  const currentTab = activeTab || localTab;
+  const currentTab: 'feed' | 'active' | 'earnings' | 'rights' | 'profile' = 
+    (activeTab && VALID_WORKER_TABS.includes(activeTab)) 
+      ? (activeTab as any) 
+      : (localTab || 'feed');
   const setTab = onTabChange || setLocalTab;
+  const [rightsLang, setRightsLang] = useState<'en' | 'hi'>('en');
 
   const [requests, setRequests] = useState<any[]>([]);
   const [payoutLoading, setPayoutLoading] = useState(false);
@@ -128,10 +133,25 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             bankDetails: { accountName: '', bankName: '', accountNumber: '', ifscCode: '', upiId: '' }
           };
           setProfile(loadedProfile);
-          localStorage.setItem(`worker_profile_${currentUser.id}`, JSON.stringify(loadedProfile));
         } else {
-          // If no profile exists locally OR in Supabase, they must finish onboarding!
-          window.location.href = '/worker-onboarding';
+          const defaultProfile = {
+            fullName: currentUser.name || 'Worker Member',
+            skill: 'Cleaner',
+            coop: 'Haryana Karigar Association',
+            location: 'Jaipur, Rajasthan',
+            phone: '+91 98765 43210',
+            experience: '2-4 years',
+            language: 'English',
+            avatarUrl: currentUser.avatarUrl || '',
+            verified: true,
+            radius: 15,
+            availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            timeWindow: '9:00 AM - 6:00 PM',
+            uploadedDocs: { aadhaar: 'aadhaar_verified.pdf', membership: 'coop_card.pdf', skill: 'skill_cert.pdf', background: 'pcc_cert.pdf' },
+            bankDetails: { accountName: currentUser.name || 'Tarun Bhaiya', bankName: 'State Bank of India', accountNumber: '38924719283', ifscCode: 'SBIN0001234', upiId: `${(currentUser.name || 'tarun').toLowerCase().replace(/\s+/g, '')}@upi` }
+          };
+          setProfile(defaultProfile);
+          localStorage.setItem(`worker_profile_${currentUser.id}`, JSON.stringify(defaultProfile));
         }
       };
 
@@ -819,6 +839,40 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           {currentTab === 'rights' && (
             <div className="space-y-6 animate-in fade-in duration-200">
 
+              {/* Language Switcher Bar */}
+              <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+                <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 text-xs font-bold font-outfit">
+                  <Globe className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>{rightsLang === 'hi' ? 'भाषा चुनें (Language):' : 'Select Language:'}</span>
+                </div>
+                
+                {/* Segmented Switch */}
+                <div className="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setRightsLang('en')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      rightsLang === 'en'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    🇬🇧 English
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRightsLang('hi')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      rightsLang === 'hi'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    🇮🇳 हिन्दी (Hindi)
+                  </button>
+                </div>
+              </div>
+
               {/* Hero Banner with Cooperative Shield */}
               <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-900 to-slate-900 text-white p-6 sm:p-8 shadow-xl border border-emerald-700/50">
                 <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
@@ -828,26 +882,37 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <div className="space-y-3 max-w-2xl">
                     <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold">
                       <Scale className="w-3.5 h-3.5 text-emerald-300" />
-                      <span>Cooperative Labour Protection Charter</span>
+                      <span>{rightsLang === 'hi' ? 'सहकारी श्रमिक सुरक्षा अधिकार पत्र' : 'Cooperative Labour Protection Charter'}</span>
                     </div>
 
                     <h2 className="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">
-                      Your Guaranteed Worker Rights & Protections
+                      {rightsLang === 'hi' ? 'आपके गारंटीकृत श्रमिक अधिकार और सुरक्षा' : 'Your Guaranteed Worker Rights & Protections'}
                     </h2>
 
                     <p className="text-sm text-emerald-100/90 leading-relaxed font-normal">
-                      At <span className="font-bold text-white">SahkariGig</span>, you are a member-owner, not a disposable contractor. Every gig you accept is protected by cooperative statute: <span className="font-semibold text-emerald-300">0% platform commission</span>, <span className="font-semibold text-emerald-300">guaranteed minimum floor rates</span>, <span className="font-semibold text-emerald-300">emergency medical coverage</span>, and <span className="font-semibold text-emerald-300">democratic union voting rights</span>.
+                      {rightsLang === 'hi' ? (
+                        <>
+                          <span className="font-bold text-white">सहकारी गिग (SahkariGig)</span> में आप एक सदस्य-मालिक हैं, कोई अस्थायी ठेका मजदूर नहीं। आपका हर काम सहकारी नियमों द्वारा सुरक्षित है: <span className="font-semibold text-emerald-300">0% प्लेटफ़ॉर्म कमीशन</span>, <span className="font-semibold text-emerald-300">तय न्यूनतम आधार वेतन</span>, <span className="font-semibold text-emerald-300">आपातकालीन चिकित्सा सहायता</span>, और <span className="font-semibold text-emerald-300">लोकतांत्रिक यूनियन मतदान अधिकार</span>।
+                        </>
+                      ) : (
+                        <>
+                          At <span className="font-bold text-white">SahkariGig</span>, you are a member-owner, not a disposable contractor. Every gig you accept is protected by cooperative statute: <span className="font-semibold text-emerald-300">0% platform commission</span>, <span className="font-semibold text-emerald-300">guaranteed minimum floor rates</span>, <span className="font-semibold text-emerald-300">emergency medical coverage</span>, and <span className="font-semibold text-emerald-300">democratic union voting rights</span>.
+                        </>
+                      )}
                     </p>
 
                     <div className="flex flex-wrap items-center gap-2 pt-2">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/10 text-emerald-200 text-[11px] font-bold border border-white/10">
-                        <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-400" /> 100% Payout Sovereignty
+                        <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-400" /> 
+                        {rightsLang === 'hi' ? '100% भुगतान स्वामित्व' : '100% Payout Sovereignty'}
                       </span>
                       <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/10 text-emerald-200 text-[11px] font-bold border border-white/10">
-                        <Vote className="w-3.5 h-3.5 mr-1 text-amber-400" /> 1 Worker = 1 Vote
+                        <Vote className="w-3.5 h-3.5 mr-1 text-amber-400" /> 
+                        {rightsLang === 'hi' ? '1 श्रमिक = 1 वोट' : '1 Worker = 1 Vote'}
                       </span>
                       <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/10 text-emerald-200 text-[11px] font-bold border border-white/10">
-                        <Heart className="w-3.5 h-3.5 mr-1 text-rose-400" /> ₹25,000 Emergency Mutual Fund
+                        <Heart className="w-3.5 h-3.5 mr-1 text-rose-400" /> 
+                        {rightsLang === 'hi' ? '₹25,000 आपातकालीन सहायता कोष' : '₹25,000 Emergency Mutual Fund'}
                       </span>
                     </div>
                   </div>
@@ -862,7 +927,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                       className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg hover:shadow-emerald-500/25 flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <HeartHandshake className="w-4 h-4 text-slate-950" />
-                      <span>Apply Emergency Relief Fund</span>
+                      <span>{rightsLang === 'hi' ? 'आपातकालीन सहायता कोष आवेदन' : 'Apply Emergency Relief Fund'}</span>
                     </button>
 
                     <button
@@ -874,7 +939,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                       className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors border border-white/20 flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <AlertCircle className="w-4 h-4 text-amber-300" />
-                      <span>File Worker Grievance / Dispute</span>
+                      <span>{rightsLang === 'hi' ? 'श्रमिक शिकायत / विवाद दर्ज करें' : 'File Worker Grievance / Dispute'}</span>
                     </button>
                   </div>
                 </div>
@@ -884,133 +949,145 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
 
                 {/* 1. Zero Commission */}
-                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold group-hover:scale-105 transition-transform">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/90 dark:border-slate-700 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold group-hover:scale-105 transition-transform">
                     <IndianRupee className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      Right #1 · Zero Cut
+                    <span className="text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                      {rightsLang === 'hi' ? 'अधिकार #1 · शून्य कटौती' : 'Right #1 · Zero Cut'}
                     </span>
-                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
-                      0% Platform Commission
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base mt-2 font-outfit">
+                      {rightsLang === 'hi' ? '0% प्लेटफ़ॉर्म कमीशन' : '0% Platform Commission'}
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    You keep 100% of the customer's payment. Unlike corporate gig apps that extract 20%–30% in fees, SahkariGig charges ₹0 to workers. Escrow releases directly to your bank account.
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                    {rightsLang === 'hi' 
+                      ? "आपको ग्राहक के भुगतान का 100% हिस्सा मिलता है। अन्य ऐप्स 20%–30% तक काटते हैं, लेकिन सहकारी गिग में श्रमिकों से ₹0 शुल्क लिया जाता है। पैसा सीधे आपके बैंक खाते में आता है।"
+                      : "You keep 100% of the customer's payment. Unlike corporate gig apps that extract 20%–30% in fees, SahkariGig charges ₹0 to workers. Escrow releases directly to your bank account."}
                   </p>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-emerald-700">
-                    <span>Active Benefit: 100% Retained</span>
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                    <span>{rightsLang === 'hi' ? 'सक्रिय लाभ: 100% कमाई आपकी' : 'Active Benefit: 100% Retained'}</span>
                     <CheckCircle className="w-4 h-4" />
                   </div>
                 </div>
 
                 {/* 2. Guaranteed Minimum Floor Rate */}
-                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 font-bold group-hover:scale-105 transition-transform">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/90 dark:border-slate-700 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold group-hover:scale-105 transition-transform">
                     <Scale className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-blue-800 uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                      Right #2 · Fair Wage
+                    <span className="text-[10px] font-extrabold text-blue-800 dark:text-blue-300 uppercase tracking-wider bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                      {rightsLang === 'hi' ? 'अधिकार #2 · उचित मजदूरी' : 'Right #2 · Fair Wage'}
                     </span>
-                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
-                      Fair Floor Wage Protection
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base mt-2 font-outfit">
+                      {rightsLang === 'hi' ? 'न्यूनतम गारंटीकृत आधार वेतन' : 'Fair Floor Wage Protection'}
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    Customers cannot force predatory low-ball pricing. Minimum base rates are collectively determined by the trade union federation ({profile.skill}: ₹400–₹700 min visit base) ensuring dignified livelihood.
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                    {rightsLang === 'hi'
+                      ? `ग्राहक कम दाम लगाने का दबाव नहीं बना सकते। यूनियन फेडरेशन द्वारा आधार दरें तय की जाती हैं (${profile.skill}: ₹400–₹700 न्यूनतम विजिट दर), जिससे गरिमापूर्ण आजीविका सुनिश्चित होती है।`
+                      : `Customers cannot force predatory low-ball pricing. Minimum base rates are collectively determined by the trade union federation (${profile.skill}: ₹400–₹700 min visit base) ensuring dignified livelihood.`}
                   </p>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-blue-700">
-                    <span>Enforced Baseline Rates</span>
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-[11px] font-bold text-blue-700 dark:text-blue-400">
+                    <span>{rightsLang === 'hi' ? 'लागू न्यूनतम दर सुरक्षा' : 'Enforced Baseline Rates'}</span>
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                 </div>
 
                 {/* 3. Emergency Relief Fund */}
-                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-700 font-bold group-hover:scale-105 transition-transform">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/90 dark:border-slate-700 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-rose-700 dark:text-rose-400 font-bold group-hover:scale-105 transition-transform">
                     <HeartHandshake className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-rose-800 uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                      Right #3 · Mutual Aid
+                    <span className="text-[10px] font-extrabold text-rose-800 dark:text-rose-300 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800">
+                      {rightsLang === 'hi' ? 'अधिकार #3 · आपसी सहायता' : 'Right #3 · Mutual Aid'}
                     </span>
-                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
-                      Cooperative Emergency Relief Fund
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base mt-2 font-outfit">
+                      {rightsLang === 'hi' ? 'सहकारी आपातकालीन सहायता कोष' : 'Cooperative Emergency Relief Fund'}
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    Instant mutual aid grant up to ₹25,000 for on-job physical injuries, acute medical hospitalizations, or critical equipment theft/breakdown. Fast-track disbursement within 24 hours.
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                    {rightsLang === 'hi'
+                      ? "कार्यस्थल पर चोट लगने, अचानक अस्पताल में भर्ती होने या औजारों की चोरी/खराबी पर ₹25,000 तक की तत्काल सहायता। 24 घंटे के भीतर त्वरित भुगतान।"
+                      : "Instant mutual aid grant up to ₹25,000 for on-job physical injuries, acute medical hospitalizations, or critical equipment theft/breakdown. Fast-track disbursement within 24 hours."}
                   </p>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-rose-700">
-                    <span>Coverage: Up to ₹25,000</span>
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-[11px] font-bold text-rose-700 dark:text-rose-400">
+                    <span>{rightsLang === 'hi' ? 'कवरेज: ₹25,000 तक' : 'Coverage: Up to ₹25,000'}</span>
                     <Heart className="w-4 h-4 fill-rose-500" />
                   </div>
                 </div>
 
                 {/* 4. Democratic Union Representation */}
-                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 font-bold group-hover:scale-105 transition-transform">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/90 dark:border-slate-700 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold group-hover:scale-105 transition-transform">
                     <Vote className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-amber-800 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                      Right #4 · Governance
+                    <span className="text-[10px] font-extrabold text-amber-800 dark:text-amber-300 uppercase tracking-wider bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                      {rightsLang === 'hi' ? 'अधिकार #4 · लोकतांत्रिक शासन' : 'Right #4 · Governance'}
                     </span>
-                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
-                      Democratic Voting & Transparency
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base mt-2 font-outfit">
+                      {rightsLang === 'hi' ? 'लोकतांत्रिक मतदान और पारदर्शिता' : 'Democratic Voting & Transparency'}
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    You have an equal vote in cooperative governance, fee schedules, and policy updates. Algorithms are open and auditable: no random shadow-banning or automated account terminations.
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                    {rightsLang === 'hi'
+                      ? "सहकारी समिति के निर्णयों, नियमों और दरों में आपका समान वोट है। कोई मनमाना खाता निलंबन या छिपा हुआ एल्गोरिदम नहीं।"
+                      : "You have an equal vote in cooperative governance, fee schedules, and policy updates. Algorithms are open and auditable: no random shadow-banning or automated account terminations."}
                   </p>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-amber-700">
-                    <span>1 Member = 1 Equal Vote</span>
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                    <span>{rightsLang === 'hi' ? '1 सदस्य = 1 समान वोट' : '1 Member = 1 Equal Vote'}</span>
                     <CheckCircle className="w-4 h-4" />
                   </div>
                 </div>
 
                 {/* 5. Legal Ombudsman & Free Arbitration */}
-                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700 font-bold group-hover:scale-105 transition-transform">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/90 dark:border-slate-700 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-purple-700 dark:text-purple-400 font-bold group-hover:scale-105 transition-transform">
                     <Shield className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-purple-800 uppercase tracking-wider bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-                      Right #5 · Legal Defense
+                    <span className="text-[10px] font-extrabold text-purple-800 dark:text-purple-300 uppercase tracking-wider bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
+                      {rightsLang === 'hi' ? 'अधिकार #5 · कानूनी रक्षा' : 'Right #5 · Legal Defense'}
                     </span>
-                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
-                      Free Legal Aid & Dispute Ombudsman
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base mt-2 font-outfit">
+                      {rightsLang === 'hi' ? 'मुफ़्त कानूनी सहायता और लोकपाल' : 'Free Legal Aid & Dispute Ombudsman'}
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    Full federation legal support for unpaid invoices, client misconduct, or unfair damages accusations. An independent worker-customer ombudsman resolves cases fairly within 48 hours.
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                    {rightsLang === 'hi'
+                      ? "भुगतान विवाद या ग्राहक के दुर्व्यवहार पर महासंघ की ओर से निशुल्क कानूनी सहायता। निष्पक्ष लोकपाल द्वारा 48 घंटे में समाधान।"
+                      : "Full federation legal support for unpaid invoices, client misconduct, or unfair damages accusations. An independent worker-customer ombudsman resolves cases fairly within 48 hours."}
                   </p>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-purple-700">
-                    <span>Ombudsman Resolution: 48h</span>
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-[11px] font-bold text-purple-700 dark:text-purple-400">
+                    <span>{rightsLang === 'hi' ? 'लोकपाल समाधान: 48 घंटे में' : 'Ombudsman Resolution: 48h'}</span>
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                 </div>
 
                 {/* 6. Social Security & Pension Integration */}
-                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold group-hover:scale-105 transition-transform">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/90 dark:border-slate-700 shadow-xs hover:shadow-md p-6 space-y-3.5 transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 flex items-center justify-center text-teal-700 dark:text-teal-400 font-bold group-hover:scale-105 transition-transform">
                     <Building2 className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-teal-800 uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                      Right #6 · Social Security
+                    <span className="text-[10px] font-extrabold text-teal-800 dark:text-teal-300 uppercase tracking-wider bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded border border-teal-200 dark:border-teal-800">
+                      {rightsLang === 'hi' ? 'अधिकार #6 · सामाजिक सुरक्षा' : 'Right #6 · Social Security'}
                     </span>
-                    <h3 className="font-extrabold text-slate-900 text-base mt-2 font-outfit">
-                      e-Shram & Pension Linkage
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base mt-2 font-outfit">
+                      {rightsLang === 'hi' ? 'ई-श्रम और पेंशन योजना लिंकेज' : 'e-Shram & Pension Linkage'}
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    Seamless integration with Ministry of Labour e-Shram portal and Pradhan Mantri Shram Yogi Maandhan (PM-SYM). Sahkari cooperative matches community welfare points for pension credits.
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                    {rightsLang === 'hi'
+                      ? "श्रम मंत्रालय के ई-श्रम पोर्टल और प्रधानमंत्री श्रम योगी मानधन (PM-SYM) से सीधा जुड़ाव। सहकारी कल्याण पॉइंट्स पेंशन में जोड़े जाते हैं।"
+                      : "Seamless integration with Ministry of Labour e-Shram portal and Pradhan Mantri Shram Yogi Maandhan (PM-SYM). Sahkari cooperative matches community welfare points for pension credits."}
                   </p>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-teal-700">
-                    <span>Verified e-Shram Connected</span>
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-[11px] font-bold text-teal-700 dark:text-teal-400">
+                    <span>{rightsLang === 'hi' ? 'सत्यापित ई-श्रम कनेक्टेड' : 'Verified e-Shram Connected'}</span>
                     <CheckCircle className="w-4 h-4" />
                   </div>
                 </div>
@@ -1024,9 +1101,13 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                     <PhoneCall className="w-7 h-7" />
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-white text-base font-outfit">24x7 Cooperative Union Hotline & SOS</h4>
+                    <h4 className="font-extrabold text-white text-base font-outfit">
+                      {rightsLang === 'hi' ? '24x7 सहकारी यूनियन हेल्पलाइन और आपातकालीन सहायता' : '24x7 Cooperative Union Hotline & SOS'}
+                    </h4>
                     <p className="text-xs text-slate-300 mt-1 max-w-xl">
-                      Need immediate assistance on a job site or facing client harassment? Call our emergency union desk toll-free or connect directly with your regional labor coordinator.
+                      {rightsLang === 'hi'
+                        ? "कार्यस्थल पर किसी भी समस्या, दुर्घटना या उत्पीड़न की स्थिति में हमारे आपातकालीन यूनियन डेस्क पर तुरंत कॉल करें।"
+                        : "Need immediate assistance on a job site or facing client harassment? Call our emergency union desk toll-free or connect directly with your regional labor coordinator."}
                     </p>
                   </div>
                 </div>
@@ -1037,17 +1118,19 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                     className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-md flex items-center space-x-2"
                   >
                     <PhoneCall className="w-3.5 h-3.5" />
-                    <span>Call 1800-SAHKARI</span>
+                    <span>{rightsLang === 'hi' ? '1800-SAHKARI पर कॉल करें' : 'Call 1800-SAHKARI'}</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => {
-                      alert("Opening Sahkari Cooperative Federation Labour Charter (PDF)\n\nUnder section 42 of the Cooperative Labour Act, all members retain 100% of gig remuneration and are covered under collective bargaining agreements.");
+                      alert(rightsLang === 'hi' 
+                        ? "सहकारी महासंघ श्रमिक चार्टर (PDF)\n\nसहकारी श्रम अधिनियम की धारा 42 के तहत, सभी सदस्य 100% पारिश्रमिक के हकदार हैं और सामूहिक कल्याण समझौते के तहत सुरक्षित हैं।" 
+                        : "Opening Sahkari Cooperative Federation Labour Charter (PDF)\n\nUnder section 42 of the Cooperative Labour Act, all members retain 100% of gig remuneration and are covered under collective bargaining agreements.");
                     }}
                     className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-colors flex items-center space-x-1.5 cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    <span>View Charter</span>
+                    <span>{rightsLang === 'hi' ? 'चार्टर नियम देखें' : 'View Charter'}</span>
                   </button>
                 </div>
               </div>

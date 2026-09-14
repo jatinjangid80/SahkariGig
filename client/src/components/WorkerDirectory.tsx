@@ -108,10 +108,9 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
               const uniqueDist = Number(w.distance_km) || (meta.baseDist + ((hash % 18) / 10));
               const uniqueRating = Number(w.rating) || (4.7 + ((hash % 3) / 10));
 
-              let finalAvatar = w.avatar;
-              if (!finalAvatar || finalAvatar.includes('1540569014015-19a7be504e3a')) {
-                finalAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(finalName || 'Worker')}&background=${meta.bg}&color=fff&size=150`;
-              }
+              const finalAvatar = (w.avatar && !w.avatar.includes('images.unsplash.com') && !w.avatar.includes('unsplash') && !w.avatar.includes('1540569014015')) 
+                ? w.avatar 
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(finalName || 'Worker')}&background=${meta.bg}&color=fff&size=150`;
               return {
                 id: w.id,
                 name: finalName,

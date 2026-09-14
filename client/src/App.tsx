@@ -16,7 +16,7 @@ import { HouseConstructionPackages } from './components/HouseConstructionPackage
 import { SupervisorDashboard } from './components/SupervisorDashboard';
 import { ProjectControlCenter } from './components/ProjectControlCenter';
 import { ContractsView } from './components/ContractsView';
-import { VerifyWorkerPage } from './components/VerifyWorkerPage';
+import { MessengerView } from './components/MessengerView';
 import { BookingModal } from './components/BookingModal';
 import { ChatModal } from './components/ChatModal';
 import { PaymentModal } from './components/PaymentModal';
@@ -282,27 +282,25 @@ export default function App() {
       {/* Main Page Content */}
       <main className="flex-1">
         {/* Supervisor Unified Views */}
-        {currentUser?.role === 'Supervisor' && (
-          ['/', '/dashboard', '/projects', '/workers', '/assignments', '/progress', '/control-center', '/project-control-center'].includes(currentPath) ? (
-            <SupervisorDashboard
-              currentUser={currentUser}
-              onNavigate={navigateTo}
-              onOpenChat={handleOpenChat}
-              activeTab={
-                currentPath === '/projects' ? 'projects' :
-                  currentPath === '/workers' ? 'workers' :
-                    currentPath === '/assignments' ? 'assignments' :
-                      currentPath === '/progress' ? 'progress' :
-                        (workerActiveTab || 'overview')
+        {currentUser?.role === 'Supervisor' && currentPath !== '/control-center' && currentPath !== '/project-control-center' && currentPath !== '/contracts' && (
+          <SupervisorDashboard
+            currentUser={currentUser}
+            onNavigate={navigateTo}
+            onOpenChat={handleOpenChat}
+            activeTab={
+              currentPath === '/projects' ? 'projects' :
+                currentPath === '/workers' ? 'workers' :
+                  currentPath === '/assignments' ? 'assignments' :
+                    currentPath === '/progress' ? 'progress' :
+                      (workerActiveTab || 'overview')
+            }
+            onTabChange={(tab) => {
+              setWorkerActiveTab(tab);
+              if (currentPath !== '/dashboard') {
+                navigateTo('/dashboard');
               }
-              onTabChange={(tab) => {
-                setWorkerActiveTab(tab);
-                if (currentPath !== '/dashboard') {
-                  navigateTo('/dashboard');
-                }
-              }}
-            />
-          ) : null
+            }}
+          />
         )}
 
         {currentPath === '/' && currentUser?.role !== 'Supervisor' && (
@@ -482,8 +480,8 @@ export default function App() {
             {currentUser?.role === 'Worker' && (
               <WorkerDashboard
                 currentUser={currentUser}
-                activeTab={workerActiveTab}
-                onTabChange={setWorkerActiveTab}
+                activeTab={(!workerActiveTab || workerActiveTab === 'overview') ? 'feed' : (workerActiveTab as any)}
+                onTabChange={setWorkerActiveTab as any}
                 onProfileUpdate={(updatedUser) => {
                   setCurrentUser(prev => prev ? { ...prev, ...updatedUser } : null);
                   try {
@@ -534,26 +532,11 @@ export default function App() {
           />
         )}
 
-        {currentPath === '/messages' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center min-h-[60vh]">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-700 shadow-sm max-w-lg">
-              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Messages Hub</h2>
-              <p className="text-slate-600 dark:text-slate-400 mb-8">
-                Your centralized inbox for all cooperative worker communications is currently under development. You can still message workers directly from active bookings in your Dashboard!
-              </p>
-              <button
-                onClick={() => navigateTo('/dashboard')}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-sm cursor-pointer"
-              >
-                Go to My Dashboard
-              </button>
-            </div>
-          </div>
+        {currentPath === '/messages' && currentUser?.role !== 'Supervisor' && (
+          <MessengerView
+            currentUser={currentUser}
+            onNavigate={navigateTo}
+          />
         )}
 
         {(currentPath === '/control-center' || currentPath === '/project-control-center') && (
@@ -683,22 +666,24 @@ export default function App() {
         />
       )}
 
-      {/* Global Sahkari AI Assistant Chat Bot Widget */}
-      <ChatBotWidget
-        onNavigate={navigateTo}
-        onOpenBooking={(tradeOrWorker) => {
-          if (typeof tradeOrWorker === 'string') {
-            handleOpenBooking({ trade: tradeOrWorker });
-          } else {
-            handleOpenBooking(tradeOrWorker);
-          }
-        }}
-        onVerifyWorker={(workerId) => {
-          setVerifyWorkerId(workerId || 'WORKER-DEL-8901');
-          setVerifyModalOpen(true);
-        }}
-        currentUser={currentUser}
-      />
+      {/* Global Sahkari AI Assistant Chat Bot Widget (Shown for Customer & Public visitors only) */}
+      {(!currentUser || currentUser.role === 'Customer') && (
+        <ChatBotWidget
+          onNavigate={navigateTo}
+          onOpenBooking={(tradeOrWorker) => {
+            if (typeof tradeOrWorker === 'string') {
+              handleOpenBooking({ trade: tradeOrWorker });
+            } else {
+              handleOpenBooking(tradeOrWorker);
+            }
+          }}
+          onVerifyWorker={(workerId) => {
+            setVerifyWorkerId(workerId || 'WORKER-DEL-8901');
+            setVerifyModalOpen(true);
+          }}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }

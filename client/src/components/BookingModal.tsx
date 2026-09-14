@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, CheckCircle, Calendar, MapPin, ShieldCheck, Star, Clock, 
-  ArrowRight, ArrowLeft, Printer, Zap, Droplet, Hammer, Paintbrush, 
-  Home, Heart, HeartHandshake, Car, Trees, Sparkles, Cog, 
+import {
+  X, CheckCircle, Calendar, MapPin, ShieldCheck, Star, Clock,
+  ArrowRight, ArrowLeft, Printer, Zap, Droplet, Hammer, Paintbrush,
+  Home, Heart, HeartHandshake, Car, Trees, Sparkles, Cog,
   User, Users, Plus, Minus, Check, HardHat, Briefcase, Layers
 } from 'lucide-react';
 // @ts-ignore
@@ -134,8 +134,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         bookingType: bookingMode,
         workerCount: bookingMode === 'SINGLE' ? 1 : workerCount,
         shiftType: bookingMode === 'MULTIPLE' ? shiftType : undefined,
-        workerName: bookingMode === 'SINGLE' 
-          ? defaultWorker.name 
+        workerName: bookingMode === 'SINGLE'
+          ? defaultWorker.name
           : `${defaultWorker.name} (Lead) + ${workerCount - 1} Crew Members`,
         workerTrade: defaultWorker.trade,
         workerId: defaultWorker.workerId,
@@ -257,7 +257,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 w-full max-w-4xl h-[94vh] max-h-[720px] rounded-3xl shadow-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row my-auto transition-all duration-300">
-        
+
         {/* Persistent Summary Sidebar */}
         <div className="w-full md:w-80 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white p-6 md:p-7 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-slate-800 shrink-0">
           {/* Decorative subtle ambient glow */}
@@ -288,7 +288,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <span className="text-[10px] text-slate-400 uppercase font-semibold block mb-1.5">Selected Services</span>
                 <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1">
                   {selectedTrades.map((t) => (
-                    <span 
+                    <span
                       key={t}
                       className="inline-flex items-center text-xs font-bold bg-emerald-950/70 text-emerald-300 border border-emerald-800/60 px-2.5 py-1 rounded-lg"
                     >
@@ -347,7 +347,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
         {/* Multi-step Form Content */}
         <div className="flex-1 p-5 sm:p-7 flex flex-col justify-between bg-white dark:bg-slate-900 transition-colors overflow-hidden">
-          
+
           {/* Header & Step Indicator */}
           <div className="shrink-0">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
@@ -383,31 +383,28 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           if (s.num < currentStep) setCurrentStep(s.num);
                         }}
                         disabled={s.num > currentStep}
-                        className={`group text-left transition-all duration-200 ${
-                          s.num < currentStep ? 'cursor-pointer' : 'cursor-default'
-                        }`}
+                        className={`group text-left transition-all duration-200 ${s.num < currentStep ? 'cursor-pointer' : 'cursor-default'
+                          }`}
                       >
                         {/* Step Label & Number Badge */}
                         <div className="flex items-center space-x-1.5 mb-1.5">
                           <span
-                            className={`text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 transition-all ${
-                              isCompleted
-                                ? 'bg-emerald-600 text-white shadow-xs'
-                                : isActive
+                            className={`text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 transition-all ${isCompleted
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : isActive
                                 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 ring-2 ring-emerald-500 font-extrabold'
                                 : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
-                            }`}
+                              }`}
                           >
                             {isCompleted ? '✓' : s.num}
                           </span>
                           <span
-                            className={`text-xs font-bold truncate transition-colors ${
-                              isActive
-                                ? 'text-emerald-700 dark:text-emerald-400 font-extrabold'
-                                : isCompleted
+                            className={`text-xs font-bold truncate transition-colors ${isActive
+                              ? 'text-emerald-700 dark:text-emerald-400 font-extrabold'
+                              : isCompleted
                                 ? 'text-slate-700 dark:text-slate-300'
                                 : 'text-slate-400 dark:text-slate-500 font-medium'
-                            }`}
+                              }`}
                           >
                             {s.label}
                           </span>
@@ -416,11 +413,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         {/* Aligned Line Segment for Each Step */}
                         <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all duration-500 ease-out ${
-                              s.num <= currentStep
-                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
-                                : 'bg-transparent'
-                            }`}
+                            className={`h-full rounded-full transition-all duration-500 ease-out ${s.num <= currentStep
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
+                              : 'bg-transparent'
+                              }`}
                           />
                         </div>
                       </button>
@@ -445,11 +441,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSetBookingMode('SINGLE')}
-                      className={`p-3 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer ${
-                        bookingMode === 'SINGLE'
-                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-md border border-emerald-500'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
+                      className={`p-3 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer ${bookingMode === 'SINGLE'
+                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-md border border-emerald-500'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
                     >
                       <div className="flex items-center space-x-3">
                         <div className={`p-2 rounded-xl ${bookingMode === 'SINGLE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-200/70 text-slate-500 dark:bg-slate-800'}`}>
@@ -460,9 +455,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           <p className="text-[11px] text-slate-500 hidden sm:block">1 Professional for routine fix</p>
                         </div>
                       </div>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                        bookingMode === 'SINGLE' ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600'
-                      }`}>
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${bookingMode === 'SINGLE' ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600'
+                        }`}>
                         {bookingMode === 'SINGLE' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                       </div>
                     </button>
@@ -470,11 +464,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSetBookingMode('MULTIPLE')}
-                      className={`p-3 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer ${
-                        bookingMode === 'MULTIPLE'
-                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-md border border-emerald-500'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
+                      className={`p-3 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer ${bookingMode === 'MULTIPLE'
+                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-md border border-emerald-500'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
                     >
                       <div className="flex items-center space-x-3">
                         <div className={`p-2 rounded-xl ${bookingMode === 'MULTIPLE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-200/70 text-slate-500 dark:bg-slate-800'}`}>
@@ -485,9 +478,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           <p className="text-[11px] text-slate-500 hidden sm:block">Team / Crew for projects</p>
                         </div>
                       </div>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                        bookingMode === 'MULTIPLE' ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600'
-                      }`}>
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${bookingMode === 'MULTIPLE' ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600'
+                        }`}>
                         {bookingMode === 'MULTIPLE' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                       </div>
                     </button>
@@ -505,7 +497,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         </span>
                         <p className="text-[11px] text-slate-500">Includes 1 cooperative supervisor + skilled crew</p>
                       </div>
-                      
+
                       {/* Counter Controls */}
                       <div className="flex items-center space-x-2">
                         <button
@@ -542,11 +534,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           key={preset.count}
                           type="button"
                           onClick={() => setWorkerCount(preset.count)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                            workerCount === preset.count
-                              ? 'bg-emerald-600 text-white shadow-sm'
-                              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400'
-                          }`}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${workerCount === preset.count
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                            }`}
                         >
                           {preset.label}
                         </button>
@@ -560,22 +551,20 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setShiftType('HALF_DAY')}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                            shiftType === 'HALF_DAY'
-                              ? 'bg-emerald-600 text-white shadow-xs'
-                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
-                          }`}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${shiftType === 'HALF_DAY'
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                            }`}
                         >
                           Half Day (4h)
                         </button>
                         <button
                           type="button"
                           onClick={() => setShiftType('FULL_DAY')}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                            shiftType === 'FULL_DAY'
-                              ? 'bg-emerald-600 text-white shadow-xs'
-                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
-                          }`}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${shiftType === 'FULL_DAY'
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                            }`}
                         >
                           Full Day (8h)
                         </button>
@@ -591,12 +580,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                       {bookingMode === 'SINGLE' ? 'Select Required Trade' : 'Select Required Trades (Multi-Select)'}
                     </h3>
                     <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                      {bookingMode === 'SINGLE' 
-                        ? `${selectedTrades[0] || '1 Trade'} Selected` 
+                      {bookingMode === 'SINGLE'
+                        ? `${selectedTrades[0] || '1 Trade'} Selected`
                         : `${selectedTrades.length} ${selectedTrades.length > 1 ? 'Trades Selected' : 'Trade Selected'}`}
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-52 overflow-y-auto pr-1">
                     {['Electrician', 'Plumber', 'Carpenter', 'Painter', 'Domestic Helper', 'Caregiver', 'Driver', 'Gardener', 'Cleaner', 'Technician'].map((trade) => {
                       const isSelected = selectedTrades.includes(trade);
@@ -605,32 +594,29 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           key={trade}
                           type="button"
                           onClick={() => handleTradeClick(trade)}
-                          className={`p-3 rounded-2xl border text-left font-semibold text-xs sm:text-sm flex flex-col justify-between transition-all duration-200 cursor-pointer ${
-                            isSelected
-                              ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-200 shadow-sm ring-1 ring-emerald-500'
-                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:border-emerald-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
-                          }`}
+                          className={`p-3 rounded-2xl border text-left font-semibold text-xs sm:text-sm flex flex-col justify-between transition-all duration-200 cursor-pointer ${isSelected
+                            ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-200 shadow-sm ring-1 ring-emerald-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:border-emerald-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                            }`}
                         >
                           <div className="w-full flex items-center justify-between mb-1">
                             <div className={`p-1.5 rounded-xl ${isSelected ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                               {tradeIcons[trade]}
                             </div>
-                            
+
                             {/* Single Worker mode: Radio Button; Multiple Workers mode: Checkbox */}
                             {bookingMode === 'SINGLE' ? (
-                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                                isSelected 
-                                  ? 'border-emerald-500 bg-emerald-500 text-white shadow-xs' 
-                                  : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
-                              }`}>
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected
+                                ? 'border-emerald-500 bg-emerald-500 text-white shadow-xs'
+                                : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
+                                }`}>
                                 {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                               </div>
                             ) : (
-                              <div className={`w-4.5 h-4.5 rounded-md flex items-center justify-center transition-all ${
-                                isSelected 
-                                  ? 'bg-emerald-600 text-white shadow-xs' 
-                                  : 'border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
-                              }`}>
+                              <div className={`w-4.5 h-4.5 rounded-md flex items-center justify-center transition-all ${isSelected
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
+                                }`}>
                                 {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                               </div>
                             )}
@@ -650,7 +636,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <h3 className="text-base font-bold text-slate-900 dark:text-white font-outfit">
                   {bookingMode === 'SINGLE' ? 'Verified Professional Profile' : 'Cooperative Crew Assignment'}
                 </h3>
-                
+
                 {bookingMode === 'SINGLE' ? (
                   <div className="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 flex flex-col space-y-4">
                     <div className="flex items-start justify-between">
@@ -746,11 +732,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           key={d.val}
                           type="button"
                           onClick={() => setBookingDate(d.val)}
-                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                            bookingDate === d.val
-                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 ring-1 ring-emerald-500 shadow-sm'
-                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'
-                          }`}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${bookingDate === d.val
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 ring-1 ring-emerald-500 shadow-sm'
+                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'
+                            }`}
                         >
                           <p className="font-bold text-xs sm:text-sm">{d.title}</p>
                           <p className="text-[10px] text-slate-500 mt-0.5">{d.subtitle}</p>
@@ -772,11 +757,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           key={slot.time}
                           type="button"
                           onClick={() => setBookingTime(slot.time)}
-                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                            bookingTime === slot.time
-                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 ring-1 ring-emerald-500 shadow-sm'
-                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'
-                          }`}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${bookingTime === slot.time
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 ring-1 ring-emerald-500 shadow-sm'
+                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'
+                            }`}
                         >
                           <div className="flex items-center space-x-1.5 text-xs font-bold">
                             <Clock className="w-3.5 h-3.5 text-emerald-600" />
@@ -847,7 +831,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     </span>
                     <span className="text-sm font-semibold text-slate-900 dark:text-white text-right">
                       {bookingMode === 'SINGLE' ? defaultWorker.name : `${defaultWorker.name} (Lead) + ${workerCount - 1} Workers`}
-                      <br/>
+                      <br />
                       <span className="text-xs text-slate-500 font-normal">{defaultWorker.coopName}</span>
                     </span>
                   </div>
@@ -855,7 +839,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Schedule</span>
                     <span className="text-sm font-semibold text-slate-900 dark:text-white text-right">
                       {bookingDate}
-                      <br/>
+                      <br />
                       <span className="text-xs text-slate-500 font-normal">{bookingTime}</span>
                     </span>
                   </div>
