@@ -165,15 +165,19 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         if (currentUser?.id) {
           // Fetch internal worker ID by user_id or direct ID
           let internalWorkerId: string | null = null;
+          let displayWorkerId = `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`;
           const { data: workerData } = await supabase
             .from('workers')
-            .select('id')
+            .select('id, worker_id')
             .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id}`)
             .limit(1)
             .maybeSingle();
           
           if (workerData?.id) {
             internalWorkerId = workerData.id;
+            if (workerData.worker_id) {
+              displayWorkerId = workerData.worker_id;
+            }
           } else {
             internalWorkerId = currentUser.id;
           }
@@ -195,7 +199,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   start_date
                 )
               `)
-              .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id}`)
+              .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id},worker_id.eq.${displayWorkerId}`)
               .order('assigned_at', { ascending: false });
 
             if (pwData) {
@@ -219,7 +223,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           const { data: bookData } = await supabase
             .from('bookings')
             .select('*')
-            .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id}`)
+            .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id},worker_id.eq.${displayWorkerId}`)
             .order('created_at', { ascending: false });
 
           if (bookData) {
