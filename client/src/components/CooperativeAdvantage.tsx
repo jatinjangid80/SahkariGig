@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, HeartHandshake, Scale, Award, ArrowRight } from 'lucide-react';
+import { ShieldCheck, HeartHandshake, Scale, Award, ArrowRight, IndianRupee } from 'lucide-react';
 
 interface CooperativeAdvantageProps {
   onNavigate?: (path: string) => void;
@@ -10,20 +10,20 @@ export const CooperativeAdvantage: React.FC<CooperativeAdvantageProps> = ({ onNa
     {
       icon: HeartHandshake,
       title: 'Fair Wages for Workers',
-      description: 'Zero exploitative 25% middlemen cuts. Workers receive 100% of standard earnings, resulting in happier, dedicated professionals who take pride in their craft.',
-      highlight: '100% Direct Pay'
+      description: 'Zero exploitative 25–35% corporate commissions. Workers receive 95% direct pay, ensuring fair wages, job security, and dignity of labour.',
+      highlight: '95% Worker Earnings'
     },
     {
       icon: ShieldCheck,
-      title: 'Higher Customer Accountability',
-      description: 'Backed by registered labour cooperative federations, cryptographic digital worker IDs, and instant QR verification at your doorstep for complete peace of mind.',
-      highlight: 'Verified Safety'
+      title: 'Cooperative Verification & Safety',
+      description: 'Backed by registered labour cooperative societies, skill certifications, digital union IDs, and instant QR verification at your doorstep.',
+      highlight: '100% Verified Trades'
     },
     {
       icon: Scale,
-      title: 'Transparent Community Pricing',
-      description: 'No surge pricing or hidden booking markups. Standardized, fair market rates set collaboratively with local trade unions and municipal benchmarks.',
-      highlight: 'Zero Surge Pricing'
+      title: 'Transparent Money Flow',
+      description: 'Every rupee is accounted for: ₹475 to the worker, ₹15 for cooperative operations, and ₹10 into the worker healthcare & accident welfare fund.',
+      highlight: 'Zero Hidden Charges'
     }
   ];
 
@@ -42,15 +42,14 @@ export const CooperativeAdvantage: React.FC<CooperativeAdvantageProps> = ({ onNa
               Why Choose SahkariGig?
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium max-w-xl">
-              Unlike traditional gig apps that exploit workers with heavy commissions, our cooperative model creates a win-win for both customers and skilled local tradespeople.
+              Unlike traditional gig apps that extract high margins with zero worker protections, our cooperative model creates a sustainable union of local tradespeople.
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => {
-              if (onNavigate) onNavigate('/about');
-              const elem = document.getElementById('how-it-works');
+              const elem = document.getElementById('why-cooperative') || document.getElementById('how-sahkari-works');
               if (elem) elem.scrollIntoView({ behavior: 'smooth' });
             }}
             className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 group cursor-pointer shrink-0"

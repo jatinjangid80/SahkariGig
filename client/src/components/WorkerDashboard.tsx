@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip, CheckCircle2, Navigation, ExternalLink, Sun, Moon, Laptop, Scale, Shield, HeartHandshake, FileText, PhoneCall, Vote, AlertCircle, Sparkles, Building2, HelpCircle, CheckCircle, Heart, ArrowUpRight, Send, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, QrCode, Check, X, Clock, MapPin, Calendar, IndianRupee, Award, Star, MessageSquare, User, Briefcase, DollarSign, Globe, Sliders, ShieldAlert, Camera, Paperclip, CheckCircle2, Navigation, ExternalLink, Sun, Moon, Laptop, Scale, Shield, HeartHandshake, FileText, PhoneCall, Vote, AlertCircle, Sparkles, Building2, HelpCircle, CheckCircle, Heart, ArrowUpRight, Send, AlertTriangle, Copy, Phone } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useTheme } from '../utils/theme';
 // @ts-ignore
@@ -26,12 +26,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 }) => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { theme, isDark, setTheme } = useTheme();
-  const VALID_WORKER_TABS = ['feed', 'active', 'earnings', 'rights', 'profile'];
+  const [isAvailableOnline, setIsAvailableOnline] = useState(true);
   const [localTab, setLocalTab] = useState<'feed' | 'active' | 'earnings' | 'rights' | 'profile'>('feed');
-  const currentTab: 'feed' | 'active' | 'earnings' | 'rights' | 'profile' = 
-    (activeTab && VALID_WORKER_TABS.includes(activeTab)) 
-      ? (activeTab as any) 
-      : (localTab || 'feed');
+  
+  const getMappedTab = (tab?: string): 'feed' | 'active' | 'earnings' | 'rights' | 'profile' => {
+    if (tab === 'wallet') return 'earnings';
+    if (tab === 'availability') return 'feed';
+    if (tab === 'jobs') return 'active';
+    if (tab && ['feed', 'active', 'earnings', 'rights', 'profile'].includes(tab)) return tab as any;
+    return 'feed';
+  };
+
+  const currentTab = getMappedTab(activeTab || localTab);
   const setTab = onTabChange || setLocalTab;
   const [rightsLang, setRightsLang] = useState<'en' | 'hi'>('en');
 
@@ -42,6 +48,14 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const [reliefClaimSubmitted, setReliefClaimSubmitted] = useState(false);
   const [grievanceModalOpen, setGrievanceModalOpen] = useState(false);
   const [grievanceSubmitted, setGrievanceSubmitted] = useState(false);
+  const [callModalData, setCallModalData] = useState<{
+    isOpen: boolean;
+    customerName: string;
+    phone: string;
+    service: string;
+    address: string;
+  } | null>(null);
+  const [copiedPhone, setCopiedPhone] = useState(false);
   const [claimData, setClaimData] = useState({
     type: 'medical',
     amount: '5000',
@@ -231,11 +245,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               id: b.id,
               isProjectTask: false,
               service: b.service_name || b.service || 'Direct Booking',
+              customerId: b.customer_id,
               customerName: b.customer_name || 'Verified Customer',
-              supervisorName: 'Cooperative Direct',
+              customerPhone: b.customer_phone || '+91 98765 43210',
               address: b.customer_address || b.address || 'Jaipur, Rajasthan',
               task: b.service_name || b.notes || 'Direct Service Call',
-              startDate: b.scheduled_date || b.date_time || 'Today',
+              startDate: b.scheduled_date || b.booking_date || b.date_time || 'Today',
               status: b.status || 'REQUESTED',
               amount: b.amount ? `₹${b.amount}` : '₹500',
               paymentStatus: b.payment_status || 'PENDING'
@@ -532,31 +547,47 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             })()}
           </div>
 
-          <button
-            onClick={() => {
-              if (onOpenWorkerIdCard) {
-                const generatedWorkerId = currentUser?.id
-                  ? `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`
-                  : 'WORKER-DEL-8901';
-                onOpenWorkerIdCard({
-                  name: profile.fullName,
-                  trade: profile.skill,
-                  coopName: profile.coop,
-                  workerId: generatedWorkerId,
-                  rating: 4.8,
-                  reviewsCount: 12,
-                  hourlyRate: profile.skill === 'Electrician' ? '₹400–₹700 / visit' : (profile.skill === 'Plumber' ? '₹350–₹650 / visit' : '₹500–₹900 / visit'),
-                  distanceKm: 2.0,
-                  isAvailableToday: true,
-                  avatar: profile.avatarUrl || ''
-                });
-              }
-            }}
-            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center space-x-2 self-start md:self-auto"
-          >
-            <QrCode className="w-4 h-4 text-emerald-400" />
-            <span>Digital ID Card</span>
-          </button>
+          <div className="flex items-center space-x-2.5 self-start md:self-auto">
+            {/* Live Availability Toggle Pill */}
+            <button
+              onClick={() => setIsAvailableOnline(!isAvailableOnline)}
+              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 border cursor-pointer shadow-2xs ${
+                isAvailableOnline
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                  : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
+              }`}
+              title="Toggle Live Availability on SahkariGig"
+            >
+              <span className={`w-2 h-2 rounded-full ${isAvailableOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+              <span>{isAvailableOnline ? 'Available (Online)' : 'Offline'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (onOpenWorkerIdCard) {
+                  const generatedWorkerId = currentUser?.id
+                    ? `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`
+                    : 'WORKER-DEL-8901';
+                  onOpenWorkerIdCard({
+                    name: profile.fullName,
+                    trade: profile.skill,
+                    coopName: profile.coop,
+                    workerId: generatedWorkerId,
+                    rating: 4.8,
+                    reviewsCount: 12,
+                    hourlyRate: profile.skill === 'Electrician' ? '₹400–₹700 / visit' : (profile.skill === 'Plumber' ? '₹350–₹650 / visit' : '₹500–₹900 / visit'),
+                    distanceKm: 2.0,
+                    isAvailableToday: isAvailableOnline,
+                    avatar: profile.avatarUrl || ''
+                  });
+                }
+              }}
+              className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center space-x-2 cursor-pointer"
+            >
+              <QrCode className="w-4 h-4 text-emerald-400" />
+              <span>Digital ID Card</span>
+            </button>
+          </div>
         </div>
 
         {/* Tab Content Panels */}
@@ -582,8 +613,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                       
                       <div className="text-sm font-medium text-slate-600 space-y-1">
                         <p>Customer: <span className="font-bold text-slate-900">{req.customerName}</span></p>
-                        <p>Supervisor: <span className="font-bold text-slate-900">{req.supervisorName}</span></p>
                         <p>Location: <span className="font-bold text-slate-900">{req.address}</span></p>
+                        <p>Cooperative Payout: <span className="font-bold text-emerald-700">{req.amount}</span> <span className="text-xs text-slate-500 font-normal">(95% Worker Guaranteed)</span></p>
                       </div>
 
                       <div className="pt-2">
@@ -599,13 +630,13 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                     <div className="flex sm:flex-col gap-2 shrink-0 self-end sm:self-start">
                       <button
                         onClick={() => handleAccept(req.id)}
-                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs"
+                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs cursor-pointer"
                       >
                         Accept Assignment
                       </button>
                       <button
                         onClick={() => handleReject(req.id)}
-                        className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center"
+                        className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center cursor-pointer"
                       >
                         Decline
                       </button>
@@ -644,8 +675,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                       
                       <div className="text-sm font-medium text-slate-600 space-y-1">
                         <p>Customer: <span className="font-bold text-slate-900">{req.customerName}</span></p>
-                        <p>Supervisor: <span className="font-bold text-slate-900">{req.supervisorName}</span></p>
                         <p>Location: <span className="font-bold text-slate-900">{req.address}</span></p>
+                        <p>Estimated Payout: <span className="font-bold text-emerald-700">{req.amount}</span></p>
                       </div>
 
                       <div className="pt-2">
@@ -664,16 +695,38 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
                     <div className="flex sm:flex-col gap-2 shrink-0 self-end sm:self-start">
                       <button
-                        onClick={() => {}}
-                        className="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs"
+                        onClick={() => onOpenChat && onOpenChat({
+                          id: req.id,
+                          bookingId: req.id,
+                          customer_id: req.customerId || req.customer_id,
+                          customerName: req.customerName,
+                          worker_id: currentUser?.id,
+                          workerName: currentUser?.name,
+                          service: req.service
+                        })}
+                        className="px-5 py-2.5 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer"
+                        title="Chat directly with the Customer"
                       >
-                        View Project
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Chat with Customer</span>
                       </button>
                       <button
-                        onClick={() => onOpenChat && onOpenChat({ ...req, workerName: req.supervisorName, service: 'Supervisor' })}
-                        className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs"
+                        type="button"
+                        onClick={() => {
+                          setCopiedPhone(false);
+                          setCallModalData({
+                            isOpen: true,
+                            customerName: req.customerName,
+                            phone: req.customerPhone || '+91 98765 43210',
+                            service: req.service,
+                            address: req.address
+                          });
+                        }}
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer"
+                        title="Call or view customer contact details"
                       >
-                        Contact Supervisor
+                        <PhoneCall className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Call Customer</span>
                       </button>
                     </div>
                   </div>
@@ -1913,6 +1966,70 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Call Customer Direct Modal */}
+      {callModalData?.isOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                  <PhoneCall className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base font-outfit">Contact Customer</h3>
+                  <p className="text-[11px] text-slate-500">{callModalData.service} · Direct Contact</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCallModalData(null)}
+                className="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="py-5 space-y-4 text-center">
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Customer Name</p>
+                <p className="text-lg font-black text-slate-900 dark:text-white font-outfit mt-0.5">{callModalData.customerName}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{callModalData.address}</p>
+              </div>
+
+              {/* Number Card */}
+              <div className="p-4 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-2xl border border-emerald-100 dark:border-emerald-800/60 text-center">
+                <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider block">Customer Phone Number</span>
+                <p className="text-xl font-black text-slate-900 dark:text-white font-mono mt-0.5 tracking-wide">{callModalData.phone}</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <a
+                  href={`tel:${callModalData.phone.replace(/\s+/g, '')}`}
+                  className="py-3 px-4 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Dial on Mobile</span>
+                </a>
+                <a
+                  href={`https://wa.me/${callModalData.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Namaste ${callModalData.customerName}, I am ${currentUser?.name || 'your SahkariGig professional'} regarding your ${callModalData.service} service request.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-3 px-4 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </a>
+              </div>
+
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 pt-1">
+                🔒 Cooperative Privacy: Direct communication for arrival coordination & safety.
+              </p>
+            </div>
           </div>
         </div>
       )}

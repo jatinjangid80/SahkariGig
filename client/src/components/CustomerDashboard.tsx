@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle, Send, CheckCheck, Lock, Circle, Smile, Paperclip, ArrowLeft, Camera, Sun, Moon, Laptop, Palette, Check } from 'lucide-react';
+import { Calendar, Clock, MapPin, QrCode, MessageSquare, CreditCard, Star, ShieldCheck, CheckCircle2, AlertCircle, Send, CheckCheck, Lock, Circle, Smile, Paperclip, ArrowLeft, Camera, Sun, Moon, Laptop, Palette, Check, FileText, PhoneCall, Zap, AlertTriangle } from 'lucide-react';
 import { supabase } from '../supabase';
 import { io } from 'socket.io-client';
 import { encryptMessage, decryptMessage } from '../utils/crypto';
@@ -11,6 +11,7 @@ interface CustomerDashboardProps {
   onOpenChat: (booking: any) => void;
   onOpenPayment: (booking: any) => void;
   onOpenReview: (booking: any) => void;
+  onOpenInvoice?: (booking: any) => void;
   onVerifyQrCode: (workerId: string) => void;
   onNavigate: (path: string) => void;
   refreshTrigger?: number;
@@ -24,6 +25,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onOpenChat,
   onOpenPayment,
   onOpenReview,
+  onOpenInvoice,
   onVerifyQrCode,
   onNavigate,
   refreshTrigger,
@@ -830,14 +832,78 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 bookings.filter(b => ['REQUESTED', 'ACCEPTED', 'IN_PROGRESS'].includes(b.status)).map((booking) => (
                   <div key={booking.id} className="p-5 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
 
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="font-bold text-slate-900 text-base font-outfit">{booking.service}</h3>
-                        {getStatusBadge(booking.status)}
+                    <div className="space-y-3 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center space-x-3">
+                          <h3 className="font-bold text-slate-900 dark:text-white text-base font-outfit">{booking.service}</h3>
+                          {getStatusBadge(booking.status)}
+                        </div>
+                        <span className="text-xs font-mono font-bold text-slate-400">
+                          #{booking.booking_code || booking.id?.slice(0, 8) || 'SG-10482'}
+                        </span>
                       </div>
 
-                      <p className="text-xs text-slate-600">
-                        Assigned: <span className="font-semibold text-slate-900">{booking.workerName}</span> ({booking.coopName})
+                      {/* 5-Stage Live Booking Timeline */}
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/60">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">Live Service Progress</span>
+                        <div className="grid grid-cols-5 gap-1 text-[10px] font-bold text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">✓</span>
+                            <span className="text-emerald-700 dark:text-emerald-400 mt-1">Request Created</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                              ['ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'RATED'].includes(booking.status)
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-400'
+                            }`}>
+                              {['ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'RATED'].includes(booking.status) ? '✓' : '2'}
+                            </span>
+                            <span className={['ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'RATED'].includes(booking.status) ? 'text-emerald-700 dark:text-emerald-400 mt-1' : 'text-slate-400 mt-1'}>
+                              Worker Assigned
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                              ['ACCEPTED', 'IN_PROGRESS'].includes(booking.status)
+                                ? 'bg-emerald-600 text-white animate-pulse'
+                                : (['COMPLETED', 'RATED'].includes(booking.status) ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-400')
+                            }`}>
+                              {['COMPLETED', 'RATED'].includes(booking.status) ? '✓' : '●'}
+                            </span>
+                            <span className={['ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'RATED'].includes(booking.status) ? 'text-emerald-700 dark:text-emerald-400 mt-1' : 'text-slate-400 mt-1'}>
+                              On The Way
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                              booking.status === 'IN_PROGRESS'
+                                ? 'bg-indigo-600 text-white animate-pulse'
+                                : (['COMPLETED', 'RATED'].includes(booking.status) ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-400')
+                            }`}>
+                              {['COMPLETED', 'RATED'].includes(booking.status) ? '✓' : '4'}
+                            </span>
+                            <span className={['IN_PROGRESS', 'COMPLETED', 'RATED'].includes(booking.status) ? 'text-indigo-700 dark:text-indigo-400 mt-1' : 'text-slate-400 mt-1'}>
+                              Service Started
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                              ['COMPLETED', 'RATED'].includes(booking.status)
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-400'
+                            }`}>
+                              {['COMPLETED', 'RATED'].includes(booking.status) ? '✓' : '5'}
+                            </span>
+                            <span className={['COMPLETED', 'RATED'].includes(booking.status) ? 'text-emerald-700 dark:text-emerald-400 mt-1' : 'text-slate-400 mt-1'}>
+                              Completed
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        Assigned: <span className="font-semibold text-slate-900 dark:text-white">{booking.workerName}</span> ({booking.coopName})
                       </p>
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
@@ -858,12 +924,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-end gap-4">
+                    <div className="flex flex-wrap items-center justify-end gap-3 pt-2 md:pt-0">
                       {/* Actions */}
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => onVerifyQrCode(booking.workerId)}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                          className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
                         >
                           <QrCode className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Verify QR</span>
@@ -871,25 +937,36 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
 
                         <button
                           onClick={() => onOpenChat(booking)}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                          className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
                           <span>Chat</span>
                         </button>
+
+                        {onOpenInvoice && (
+                          <button
+                            onClick={() => onOpenInvoice(booking)}
+                            className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
+                            title="View Cooperative Invoice with Breakdown"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Invoice</span>
+                          </button>
+                        )}
                       </div>
 
                       <div className="text-right">
                         {booking.status === 'COMPLETED' ? (
                           <button
                             onClick={() => onOpenReview(booking)}
-                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1"
+                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
                           >
                             <Star className="w-3.5 h-3.5 fill-white" />
                             <span>Review</span>
                           </button>
                         ) : booking.paymentStatus === 'PAID' ? (
                           <div className="flex flex-col items-end gap-1">
-                            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-semibold text-xs rounded-lg flex items-center space-x-1 border border-emerald-200">
+                            <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold text-xs rounded-lg flex items-center space-x-1 border border-emerald-200 dark:border-emerald-800">
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               <span>Paid</span>
                             </span>
@@ -898,7 +975,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                         ) : (
                           <button
                             onClick={() => onOpenPayment(booking)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors flex items-center space-x-1"
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors flex items-center space-x-1 cursor-pointer"
                           >
                             <CreditCard className="w-3.5 h-3.5" />
                             <span>Pay ({booking.amount})</span>

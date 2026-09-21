@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  Search, ShieldCheck, CheckCircle2, Star, MapPin, ArrowRight, 
-  Sparkles, Check, QrCode, Lock, CreditCard, Building2, UserCheck, 
-  SlidersHorizontal, Briefcase, ChevronRight
+import {
+  Search, ShieldCheck, CheckCircle2, Star, MapPin, ArrowRight,
+  Check, QrCode, Lock, CreditCard, Building2, UserCheck,
+  Briefcase, ChevronRight, Zap, Users, Award, HeartHandshake, PhoneCall, AlertTriangle
 } from 'lucide-react';
-import { CONFIG } from '../config';
 
 interface HeroSectionProps {
   currentUser?: { name: string; role: string; id: string; email: string } | null;
@@ -12,6 +11,8 @@ interface HeroSectionProps {
   onNavigate?: (path: string) => void;
   selectedLocation?: string;
   onLocationChange?: (loc: string) => void;
+  onOpenBooking?: (workerOrTrade?: any) => void;
+  onOpenAuth?: (role: 'Customer' | 'Worker', mode: 'signin' | 'signup') => void;
 }
 
 const POPULAR_CITIES = [
@@ -25,23 +26,31 @@ const POPULAR_CITIES = [
   'Lucknow, Uttar Pradesh'
 ];
 
+const SERVICES_DATA = [
+  { name: 'Electrician', icon: '🔧', desc: 'Wiring, switchboards, fan & appliance repair', startPrice: '₹350' },
+  { name: 'Plumbing', icon: '🚰', desc: 'Pipe leakage, tap fittings & water tank repair', startPrice: '₹300' },
+  { name: 'Carpentry', icon: '🪚', desc: 'Furniture assembly, doors, locks & woodwork', startPrice: '₹400' },
+  { name: 'Cleaning', icon: '🧹', desc: 'Deep home cleaning, kitchen & washroom sanitation', startPrice: '₹450' },
+  { name: 'Painting', icon: '🎨', desc: 'Interior, exterior wall painting & putty finish', startPrice: '₹600' },
+  { name: 'AC Repair', icon: '❄️', desc: 'AC filter cleaning, gas refill & cooling service', startPrice: '₹499' },
+  { name: 'Gardening', icon: '🌱', desc: 'Lawn trimming, plant care & soil maintenance', startPrice: '₹350' },
+  { name: 'Masonry', icon: '🔨', desc: 'Tile fixing, plaster repair & civil construction', startPrice: '₹550' },
+];
+
 export const HeroSection: React.FC<HeroSectionProps> = ({
   currentUser,
   onSearchService,
   onNavigate,
   selectedLocation: externalLocation,
-  onLocationChange
+  onLocationChange,
+  onOpenBooking,
+  onOpenAuth
 }) => {
   const [searchPrompt, setSearchPrompt] = useState('');
   const [currentCity, setCurrentCity] = useState(externalLocation || 'Jaipur, Rajasthan');
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [citySearchQuery, setCitySearchQuery] = useState('');
-  const [isClassifying, setIsClassifying] = useState(false);
-  const [aiResult, setAiResult] = useState<{
-    category: string;
-    confidence: number;
-    reason: string;
-  } | null>(null);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
 
   const handleSelectCity = (city: string) => {
     setCurrentCity(city);
@@ -50,10 +59,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     setCitySearchQuery('');
   };
 
-  const handlePopularTagClick = (tag: string) => {
-    setSearchPrompt(tag);
+  const handleServiceClick = (serviceName: string) => {
+    setSelectedService(serviceName);
+    setSearchPrompt(serviceName);
     if (onSearchService) {
-      onSearchService(tag, currentCity);
+      onSearchService(serviceName, currentCity);
     }
     const elem = document.getElementById('workers-directory');
     if (elem) {
@@ -61,367 +71,256 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     }
   };
 
-  const handleSearchSubmit = async (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const query = searchPrompt.trim();
-    if (!query) {
-      const elem = document.getElementById('workers-directory');
-      if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-      return;
+    if (onSearchService) {
+      onSearchService(query || 'All', currentCity);
     }
-
-    setIsClassifying(true);
-    try {
-      const apiUrl = CONFIG.apiUrl || import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      const res = await fetch(`${apiUrl}/api/categories/ai-classify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query })
-      }).catch(() => null);
-
-      if (res && res.ok) {
-        const json = await res.json();
-        if (json.success && json.data?.matched && json.data?.category) {
-          setAiResult({
-            category: json.data.category.name,
-            confidence: json.data.confidence === 'HIGH' ? 96 : 85,
-            reason: json.data.category.description || `Classified based on service taxonomy.`
-          });
-          if (onSearchService) onSearchService(json.data.category.name, currentCity);
-          setIsClassifying(false);
-          return;
-        }
-      }
-
-      // Rule-based classification fallback
-      const text = query.toLowerCase();
-      let matchedCategory = 'Technician';
-      let reason = 'Matched home technician and repair services.';
-
-      if (text.includes('fan') || text.includes('wire') || text.includes('switch') || text.includes('light') || text.includes('mcb') || text.includes('electr')) {
-        matchedCategory = 'Electrician';
-        reason = 'Matched electrical repair, wiring & lighting troubleshooting.';
-      } else if (text.includes('pipe') || text.includes('leak') || text.includes('tap') || text.includes('drain') || text.includes('sink') || text.includes('plumb')) {
-        matchedCategory = 'Plumber';
-        reason = 'Matched plumbing fixtures, water supply & drain repairs.';
-      } else if (text.includes('ac') || text.includes('cool') || text.includes('filter') || text.includes('air cond')) {
-        matchedCategory = 'AC Repair';
-        reason = 'Matched AC servicing, cooling troubleshooting & HVAC.';
-      } else if (text.includes('paint') || text.includes('wall') || text.includes('color') || text.includes('putty')) {
-        matchedCategory = 'Painter';
-        reason = 'Matched interior/exterior wall painting & touch-up work.';
-      } else if (text.includes('clean') || text.includes('dust') || text.includes('maid') || text.includes('sweep')) {
-        matchedCategory = 'Cleaning';
-        reason = 'Matched deep home cleaning, housekeeping & sanitize service.';
-      } else if (text.includes('door') || text.includes('wood') || text.includes('table') || text.includes('carpenter') || text.includes('furniture')) {
-        matchedCategory = 'Carpenter';
-        reason = 'Matched woodwork, furniture assembly & door fitting.';
-      }
-
-      setAiResult({
-        category: matchedCategory,
-        confidence: 94,
-        reason
-      });
-
-      if (onSearchService) {
-        onSearchService(matchedCategory, currentCity);
-      }
-    } catch (err) {
-      if (onSearchService) onSearchService(query, currentCity);
-    } finally {
-      setIsClassifying(false);
+    const elem = document.getElementById('workers-directory');
+    if (elem) {
+      elem.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  // Filtered city list for location modal
-  const filteredCities = POPULAR_CITIES.filter(c => 
+  const filteredCities = POPULAR_CITIES.filter(c =>
     c.toLowerCase().includes(citySearchQuery.toLowerCase())
   );
 
-  // Role-based CTA Button Text
-  const getCtaButtonText = () => {
-    if (currentUser?.role === 'Worker') return 'Find Jobs';
-    if (currentUser?.role === 'Supervisor') return 'Open Projects';
-    return 'Find Workers';
-  };
-
   return (
-    <section className="relative bg-white dark:bg-[#0b0f19] min-h-[calc(100vh-4rem)] flex flex-col justify-center items-center pt-10 pb-20 sm:pt-14 sm:pb-24 overflow-hidden border-b border-slate-100 dark:border-slate-800/80">
-      {/* Background Soft Ambient Light */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1400px] h-full">
-          <div className="absolute top-[5%] right-[5%] w-[550px] h-[450px] bg-emerald-100/40 dark:bg-emerald-500/10 rounded-full blur-[100px] opacity-80" />
-          <div className="absolute top-[20%] left-[-5%] w-[500px] h-[400px] bg-sky-100/35 dark:bg-cyan-500/10 rounded-full blur-[90px] opacity-70" />
-        </div>
-      </div>
+    <div className="bg-[#F8FAFC] text-[#0F172A]">
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
+      {/* Hero Section with light green tint */}
+      <section className="bg-[#F4FBF7] border-b border-[#E2E8F0] pt-12 pb-16 sm:pt-16 sm:pb-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
 
-        {/* Top Trust Badge */}
-        <div className="flex justify-center mb-4">
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-50/90 dark:bg-emerald-950/70 border border-emerald-200/90 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold shadow-2xs backdrop-blur-xs">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse shrink-0" />
-            <span className="tracking-wider uppercase text-[10px] sm:text-xs font-extrabold">Verified Cooperative Network</span>
+          {/* Trust Badge */}
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#166534] text-xs font-bold">
+            <span>Cooperative Workforce Platform · Work Together. Earn Fairly. Grow Together.</span>
           </div>
-        </div>
 
-        {/* Hero Main Heading & Copy */}
-        <div className="text-center max-w-4xl mx-auto space-y-3">
-          <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-900 dark:text-white tracking-tight leading-[1.15] font-outfit">
-            {currentUser?.role === 'Worker' ? (
-              <>
-                Find verified local jobs. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-300">
-                  Build with your cooperative union.
-                </span>
-              </>
-            ) : (
-              <>
-                Find verified local workers. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-300">
-                  Manage your work, from hire to completion.
-                </span>
-              </>
-            )}
+          {/* Clean Main Title */}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#0F172A] tracking-tight leading-[1.15] font-outfit">
+            Trusted Local Services <br />
+            <span className="text-[#166534]">Through Cooperatives</span>
           </h1>
 
-          <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 font-semibold tracking-wide flex items-center justify-center gap-2 sm:gap-3 flex-wrap pt-1">
-            <span>Trusted workers</span>
-            <span className="text-slate-300 dark:text-slate-600">•</span>
-            <span>Fair pricing</span>
-            <span className="text-slate-300 dark:text-slate-600">•</span>
-            <span>Verified cooperative ID</span>
+          {/* Subtitle */}
+          <p className="text-base sm:text-lg text-[#64748B] max-w-2xl mx-auto font-medium leading-relaxed">
+            Find verified local professionals for your home and business services — with transparent pricing and fair worker earnings.
           </p>
-        </div>
 
-        {/* Actionable Search & Location Card */}
-        <div id="ai-request-box" className="mt-8 max-w-4xl mx-auto z-20 relative">
-          <div className="bg-white dark:bg-slate-900/95 rounded-3xl p-5 sm:p-7 border border-slate-200/90 dark:border-slate-800 shadow-2xl">
-            
-            <div className="flex items-center justify-between mb-2.5 px-1">
-              <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 font-outfit uppercase tracking-wider flex items-center gap-1.5">
-                <Search className="w-3.5 h-3.5 text-emerald-600" />
-                What do you need help with?
-              </h3>
-              <span className="text-[10px] text-slate-400 font-bold hidden sm:inline-block">Instant Cooperative Match</span>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
+            <button
+              onClick={() => {
+                const elem = document.getElementById('service-discovery') || document.getElementById('workers-directory');
+                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-6 py-3 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-sm rounded-lg shadow-xs hover:shadow-md transition-all flex items-center space-x-2 cursor-pointer"
+            >
+              <span>Book a Service</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => {
+                if (onOpenAuth) onOpenAuth('Worker', 'signup');
+                else if (onNavigate) onNavigate('/for-workers');
+              }}
+              className="px-6 py-3 bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-sm rounded-lg shadow-xs hover:shadow-md transition-all flex items-center space-x-2 cursor-pointer"
+            >
+              <HeartHandshake className="w-4 h-4" />
+              <span>Join as a Worker</span>
+            </button>
+          </div>
+
+          {/* 4 Core Trust Checkmarks */}
+          <div className="pt-6 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-bold text-[#0F172A]">
+            <div className="flex items-center space-x-2">
+              <span className="text-[#16A34A] font-extrabold text-sm">✓</span>
+              <span>Verified Workers</span>
             </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[#16A34A] font-extrabold text-sm">✓</span>
+              <span>Transparent Pricing</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[#16A34A] font-extrabold text-sm">✓</span>
+              <span>Local Service</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[#16A34A] font-extrabold text-sm">✓</span>
+              <span>Cooperative Model</span>
+            </div>
+          </div>
 
-            {/* Search Form */}
-            <form onSubmit={handleSearchSubmit} className="space-y-3">
-              <div className="flex flex-col sm:flex-row gap-2">
+        </div>
+      </section>
 
-                {/* Search Input */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={searchPrompt}
-                    onChange={(e) => setSearchPrompt(e.target.value)}
-                    placeholder="Search plumber, AC repair, electrician, painter, carpenter..."
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/90 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs sm:text-sm font-medium focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all"
-                  />
-                </div>
+      {/* Service Discovery Section */}
+      <section id="service-discovery" className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                {/* Primary Role-Aware CTA Button */}
-                <button
-                  type="submit"
-                  disabled={isClassifying}
-                  className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-md hover:shadow-lg hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
-                >
-                  {isClassifying ? (
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>{getCtaButtonText()}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </div>
+        {/* Header & Location Row */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-outfit">
+              Explore Verified Services
+            </h2>
+            <p className="text-sm text-[#64748B] mt-1">
+              Select a trade to connect directly with cooperative-verified professionals
+            </p>
+          </div>
 
-              {/* Location Selector & Popular Chips */}
-              <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-300 gap-2">
-                
-                {/* Clickable Location Control */}
-                <button
-                  type="button"
-                  onClick={() => setIsCityModalOpen(true)}
-                  className="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold transition-colors cursor-pointer group"
-                >
-                  <MapPin className="w-3.5 h-3.5 text-emerald-600 mr-1.5 shrink-0 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-bold">{currentCity}</span>
-                  <span className="ml-2 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold underline">Change</span>
-                </button>
+          {/* Location Selector */}
+          <button
+            type="button"
+            onClick={() => setIsCityModalOpen(true)}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-white border border-[#E2E8F0] hover:border-[#166534] text-xs font-bold text-[#0F172A] transition-colors cursor-pointer shadow-xs"
+          >
+            <MapPin className="w-4 h-4 text-[#166534] mr-2 shrink-0" />
+            <span>📍 {currentCity}</span>
+            <span className="ml-2.5 text-[11px] text-[#166534] font-bold underline">Change</span>
+          </button>
+        </div>
 
-                {/* Popular Tags */}
-                <div className="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 overflow-x-auto pb-1 sm:pb-0">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 hidden md:inline">Popular:</span>
-                  <div className="flex flex-wrap gap-1">
-                    {['AC Repair', 'Plumbing', 'Electrician', 'Painting', 'Cleaning'].map((tag) => {
-                      const isSelected = searchPrompt.toLowerCase() === tag.toLowerCase();
-                      return (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => handlePopularTagClick(tag)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${isSelected
-                            ? 'bg-emerald-600 text-white border border-emerald-600 shadow-sm'
-                            : 'bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                            }`}
-                        >
-                          {tag}
-                        </button>
-                      );
-                    })}
+        {/* Search Bar */}
+        <form onSubmit={handleSearchSubmit} className="mb-8 flex flex-col sm:flex-row gap-2 max-w-2xl">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+            <input
+              type="text"
+              value={searchPrompt}
+              onChange={e => setSearchPrompt(e.target.value)}
+              placeholder="Search electrician, plumber, AC repair, carpenter, painter..."
+              className="w-full pl-10 pr-4 py-3 bg-white border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#166534] focus:ring-1 focus:ring-[#166534]"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-6 py-3 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-sm rounded-lg transition-colors cursor-pointer flex items-center justify-center space-x-1.5 shrink-0"
+          >
+            <span>Search</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </form>
+
+        {/* 8 Clean Service Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {SERVICES_DATA.map((srv) => {
+            const isSelected = selectedService === srv.name;
+            return (
+              <div
+                key={srv.name}
+                onClick={() => handleServiceClick(srv.name)}
+                className={`group bg-white rounded-xl p-5 border transition-all duration-200 cursor-pointer flex flex-col justify-between hover:-translate-y-1 ${isSelected
+                    ? 'border-[#166534] shadow-md ring-1 ring-[#166534]'
+                    : 'border-[#E2E8F0] hover:border-[#166534] hover:shadow-md'
+                  }`}
+              >
+                <div className="space-y-3">
+                  <div className="w-11 h-11 rounded-lg bg-[#F1F5F9] group-hover:bg-[#DCFCE7] flex items-center justify-center text-2xl transition-colors">
+                    {srv.icon}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-base text-[#0F172A] font-outfit group-hover:text-[#166534] transition-colors">
+                        {srv.name}
+                      </h3>
+                      <span className="text-xs font-bold text-[#166534] bg-[#F0FDF4] px-2 py-0.5 rounded border border-[#DCFCE7]">
+                        From {srv.startPrice}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
+                      {srv.desc}
+                    </p>
                   </div>
                 </div>
-              </div>
-            </form>
 
-            {/* AI Classification Feedback */}
-            {aiResult && !isClassifying && (
-              <div className="mt-3 p-3 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-start space-x-3 animate-in slide-in-from-top-1 duration-200">
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 text-base font-bold">
-                  ⚡
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white font-outfit">
-                      {aiResult.category} Recommended
-                    </h4>
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300 rounded-full">
-                      {aiResult.confidence}% match
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{aiResult.reason}</p>
-
-                  <button
-                    onClick={() => {
-                      if (onSearchService) onSearchService(aiResult.category, currentCity);
-                      const elem = document.getElementById('workers-directory');
-                      if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="mt-2 w-full py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <span>View Verified {aiResult.category} Workers</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
+                <div className="pt-4 mt-2 border-t border-[#F1F5F9] flex items-center justify-between text-xs font-bold text-[#166534] group-hover:translate-x-0.5 transition-transform">
+                  <span>Explore →</span>
+                  <span className="text-[11px] text-[#64748B] font-normal">Verified near you</span>
                 </div>
               </div>
-            )}
-          </div>
+            );
+          })}
         </div>
 
-        {/* Immediate 4 Trust Badges Under Search Box */}
-        <div className="mt-4 max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-[11px] font-bold text-slate-600 dark:text-slate-300">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>Cooperative Verified</span>
+        {/* Transparent Money Flow Banner */}
+        <div className="mt-8 p-4 rounded-xl bg-white border border-[#E2E8F0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center space-x-2.5">
+            <span className="px-2.5 py-1 rounded bg-[#DCFCE7] text-[#166534] font-extrabold text-[11px]">
+              TRANSPARENT COOPERATIVE PRICING
+            </span>
+            <span className="text-[#0F172A] font-medium">
+              On every ₹500 job: <strong className="text-[#166534]">₹475 (95%)</strong> goes directly to worker · <strong>₹15 (3%)</strong> coop operations · <strong>₹10 (2%)</strong> worker welfare & accident pool
+            </span>
           </div>
-
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>Transparent Rates</span>
-          </div>
-
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>Digital Worker ID</span>
-          </div>
-
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>QR Verification</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const elem = document.getElementById('why-cooperative');
+              if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="text-[#166534] font-bold hover:underline shrink-0 cursor-pointer"
+          >
+            Learn How It Works →
+          </button>
         </div>
 
-      </div>
+      </section>
 
-      {/* Floating Animated SCROLL Down Indicator Pinned at Bottom of Viewport */}
-      <div 
-        onClick={() => {
-          const elem = document.getElementById('popular-services') || document.getElementById('how-sahkari-works') || document.getElementById('workers-directory');
-          if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-        }}
-        className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center cursor-pointer group select-none transition-all z-20 hover:scale-105"
-        title="Scroll to explore"
-      >
-        <span className="text-[9px] sm:text-[10px] font-extrabold tracking-[0.35em] uppercase text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors font-outfit mb-1.5">
-          SCROLL
-        </span>
-        <div className="relative w-[1.5px] h-8 sm:h-10 bg-slate-200 dark:bg-slate-700/80 rounded-full overflow-hidden">
-          <div className="w-full h-full bg-gradient-to-b from-transparent via-emerald-500 dark:via-emerald-400 to-emerald-600 dark:to-teal-300 rounded-full animate-scroll-line" />
-        </div>
-      </div>
-
-      {/* Select Location Modal */}
+      {/* Location Modal */}
       {isCityModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-150 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl border border-[#E2E8F0] space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white font-outfit text-base">Choose Your Location</h3>
+                <MapPin className="w-5 h-5 text-[#166534]" />
+                <h3 className="font-extrabold text-base text-[#0F172A] font-outfit">Select Cooperative District</h3>
               </div>
               <button
                 onClick={() => setIsCityModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold p-1 cursor-pointer"
+                className="text-[#64748B] hover:text-[#0F172A] font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            {/* City Search Bar */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-3" />
               <input
                 type="text"
                 value={citySearchQuery}
                 onChange={e => setCitySearchQuery(e.target.value)}
-                placeholder="Search city or area..."
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="Search city or district..."
+                className="w-full pl-9 pr-3 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#166534]"
               />
             </div>
 
-            {/* Popular City Grid */}
-            <div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Popular Cities</span>
-              <div className="grid grid-cols-2 gap-2">
-                {filteredCities.map((city) => {
-                  const isSelected = currentCity === city;
-                  return (
-                    <button
-                      key={city}
-                      onClick={() => handleSelectCity(city)}
-                      className={`text-left px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${isSelected
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold shadow-2xs'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-750'
-                        }`}
-                    >
-                      <span className="truncate">{city.split(',')[0]}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1" />}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              {filteredCities.map((city) => {
+                const isSelected = currentCity === city;
+                return (
+                  <button
+                    key={city}
+                    onClick={() => handleSelectCity(city)}
+                    className={`text-left px-3 py-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${isSelected
+                        ? 'bg-[#F0FDF4] border-[#166534] text-[#166534] font-bold'
+                        : 'bg-white border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]'
+                      }`}
+                  >
+                    <span className="truncate">{city.split(',')[0]}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-[#166534] shrink-0" />}
+                  </button>
+                );
+              })}
             </div>
-
-            {/* Custom Manual Input */}
-            {citySearchQuery && filteredCities.length === 0 && (
-              <button
-                type="button"
-                onClick={() => handleSelectCity(citySearchQuery)}
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
-              >
-                Set Location to "{citySearchQuery}"
-              </button>
-            )}
           </div>
         </div>
       )}
-    </section>
+
+    </div>
   );
 };

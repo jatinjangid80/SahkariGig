@@ -34,7 +34,8 @@ import { HelpView } from './components/HelpView';
 import { HowItWorksView } from './components/HowItWorksView';
 import { WorkerOnboarding } from './components/WorkerOnboarding';
 import { CustomerOnboarding } from './components/CustomerOnboarding';
-import { ChatBotWidget } from './components/ChatBotWidget';
+import { SupportDeskWidget } from './components/SupportDeskWidget';
+import { InvoiceModal } from './components/InvoiceModal';
 import { PopularServicesSection } from './components/PopularServicesSection';
 import { HowSahkariWorksSection } from './components/HowSahkariWorksSection';
 import { initTheme } from './utils/theme';
@@ -149,6 +150,9 @@ export default function App() {
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [activeBookingForPayment, setActiveBookingForPayment] = useState<any>(null);
+
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [activeBookingForInvoice, setActiveBookingForInvoice] = useState<any>(null);
 
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [activeBookingForReview, setActiveBookingForReview] = useState<any>(null);
@@ -316,6 +320,8 @@ export default function App() {
               onNavigate={navigateTo}
               selectedLocation={selectedLocation}
               onLocationChange={(loc) => setSelectedLocation(loc)}
+              onOpenBooking={handleOpenBooking}
+              onOpenAuth={handleOpenAuth}
             />
 
             {/* Cooperative Advantage Value Proposition */}
@@ -444,6 +450,10 @@ export default function App() {
                 onOpenChat={handleOpenChat}
                 onOpenPayment={handleOpenPayment}
                 onOpenReview={handleOpenReview}
+                onOpenInvoice={(booking) => {
+                  setActiveBookingForInvoice(booking);
+                  setInvoiceModalOpen(true);
+                }}
                 onVerifyQrCode={handleVerifyQrCode}
                 onNavigate={navigateTo}
                 refreshTrigger={refreshTrigger}
@@ -659,6 +669,12 @@ export default function App() {
         worker={activeWorkerIdCard}
       />
 
+      <InvoiceModal
+        isOpen={invoiceModalOpen}
+        onClose={() => setInvoiceModalOpen(false)}
+        booking={activeBookingForInvoice}
+      />
+
       {verifyModalOpen && (
         <VerifyWorkerPage
           workerId={verifyWorkerId || 'WORKER-DEL-8901'}
@@ -666,9 +682,9 @@ export default function App() {
         />
       )}
 
-      {/* Global Sahkari AI Assistant Chat Bot Widget (Shown for Customer & Public visitors only) */}
+      {/* Sahkari Sahayak Cooperative Helpdesk & Quick Navigator */}
       {(!currentUser || currentUser.role === 'Customer') && (
-        <ChatBotWidget
+        <SupportDeskWidget
           onNavigate={navigateTo}
           onOpenBooking={(tradeOrWorker) => {
             if (typeof tradeOrWorker === 'string') {
