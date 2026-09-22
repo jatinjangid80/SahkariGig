@@ -269,28 +269,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           })}
         </div>
 
-        {/* Transparent Money Flow Banner */}
-        <div className="mt-8 p-4 rounded-xl bg-white border border-[#E2E8F0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center space-x-2.5">
-            <span className="px-2.5 py-1 rounded bg-[#DCFCE7] text-[#166534] font-extrabold text-[11px]">
-              TRANSPARENT COOPERATIVE PRICING
-            </span>
-            <span className="text-[#0F172A] font-medium">
-              On every ₹500 job: <strong className="text-[#166534]">₹475 (95%)</strong> goes directly to worker · <strong>₹15 (3%)</strong> coop operations · <strong>₹10 (2%)</strong> worker welfare & accident pool
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              const elem = document.getElementById('why-cooperative');
-              if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="text-[#166534] font-bold hover:underline shrink-0 cursor-pointer"
-          >
-            Learn How It Works →
-          </button>
-        </div>
-
       </section>
 
       {/* Location Modal */}

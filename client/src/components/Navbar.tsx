@@ -107,20 +107,19 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 sm:top-2.5 z-50 w-full px-3 sm:px-6 lg:px-8 py-2 pointer-events-none transition-all duration-300">
       <div className="max-w-7xl mx-auto pointer-events-auto">
-        
+
         {/* Floating Glassmorphism Pill Container */}
-        <div className={`rounded-full transition-all duration-300 px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between border ${
-          scrolled
+        <div className={`rounded-full transition-all duration-300 px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between border ${scrolled
             ? 'bg-white/90 backdrop-blur-xl border-white/80 shadow-lg shadow-slate-900/5'
             : 'bg-white/80 backdrop-blur-lg border-white/60 shadow-md shadow-slate-900/5'
-        }`}>
+          }`}>
 
           {/* Brand Logo */}
           <div
             className="flex items-center space-x-2.5 cursor-pointer select-none group shrink-0"
             onClick={() => handleNavClick(currentUser ? '/dashboard' : '/')}
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#166534] to-[#15803d] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-8 h-8 rounded-full bg-[#166534] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-xs group-hover:scale-105 transition-transform shrink-0 font-outfit">
               SG
             </div>
             <div className="flex items-center space-x-1.5">
@@ -138,11 +137,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={link.label}
                   onClick={() => handleNavClick(link.path, link.tab)}
-                  className={`text-sm font-semibold transition-all cursor-pointer relative py-1 ${
-                    active
+                  className={`text-sm font-semibold transition-all cursor-pointer relative py-1 ${active
                       ? 'text-[#166534] font-bold'
                       : 'text-[#475569] hover:text-[#0F172A]'
-                  }`}
+                    }`}
                 >
                   {link.label}
                   {active && (

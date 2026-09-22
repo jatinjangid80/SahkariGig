@@ -9,16 +9,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
   return (
     <footer className="bg-[#0F172A] text-white pt-14 pb-10 border-t border-slate-800 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        
+
         {/* Top Brand & Mission Summary */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-slate-800/80">
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => onNavigate('/')}>
-              <div className="w-8 h-8 rounded-lg bg-[#166534] flex items-center justify-center text-white font-black text-sm font-outfit shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-[#166534] flex items-center justify-center text-white font-black text-xs font-outfit shadow-sm shrink-0">
                 SG
               </div>
               <span className="text-2xl font-black text-white font-outfit tracking-tight">
-                SahkariGig
+                Sahkari<span className="text-emerald-400">Gig</span>
               </span>
             </div>
             <p className="text-sm text-[#94A3B8] leading-relaxed">
@@ -29,7 +29,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
 
         {/* 4 Clean Columns Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-sm">
-          
+
           {/* Column 1: PLATFORM */}
           <div className="space-y-3.5">
             <h4 className="font-bold text-xs uppercase tracking-widest text-[#94A3B8]">
