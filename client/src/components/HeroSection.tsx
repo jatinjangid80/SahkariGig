@@ -90,34 +90,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   return (
     <div className="bg-[#F8FAFC] text-[#0F172A]">
 
-      {/* Hero Section with light green tint */}
-      <section className="bg-[#F4FBF7] border-b border-[#E2E8F0] pt-12 pb-16 sm:pt-16 sm:pb-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+      {/* True Full-Screen Hero Landing Experience */}
+      <section className="bg-gradient-to-b from-[#F4FBF7] via-[#F8FAFC] to-[#F1F5F9] border-b border-[#E2E8F0] min-h-[calc(100vh-68px)] lg:h-[calc(100vh-68px)] flex flex-col justify-between items-center pt-8 pb-4 sm:pt-12 sm:pb-6 relative overflow-hidden">
+        
+        {/* Subtle decorative background glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-emerald-100/50 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        {/* Centered Main Hero Content */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-7 my-auto w-full">
 
           {/* Trust Badge */}
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#166534] text-xs font-bold">
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#166534] text-xs sm:text-sm font-bold shadow-2xs">
             <span>Cooperative Workforce Platform · Work Together. Earn Fairly. Grow Together.</span>
           </div>
 
           {/* Clean Main Title */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#0F172A] tracking-tight leading-[1.15] font-outfit">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#0F172A] tracking-tight leading-[1.12] font-outfit">
             Trusted Local Services <br />
             <span className="text-[#166534]">Through Cooperatives</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-base sm:text-lg text-[#64748B] max-w-2xl mx-auto font-medium leading-relaxed">
+          <p className="text-base sm:text-xl text-[#64748B] max-w-2xl mx-auto font-medium leading-relaxed">
             Find verified local professionals for your home and business services — with transparent pricing and fair worker earnings.
           </p>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <button
               onClick={() => {
                 const elem = document.getElementById('service-discovery') || document.getElementById('workers-directory');
                 if (elem) elem.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="px-6 py-3 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-sm rounded-lg shadow-xs hover:shadow-md transition-all flex items-center space-x-2 cursor-pointer"
+              className="px-8 py-3.5 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
             >
               <span>Book a Service</span>
               <ArrowRight className="w-4 h-4" />
@@ -128,7 +133,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 if (onOpenAuth) onOpenAuth('Worker', 'signup');
                 else if (onNavigate) onNavigate('/for-workers');
               }}
-              className="px-6 py-3 bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-sm rounded-lg shadow-xs hover:shadow-md transition-all flex items-center space-x-2 cursor-pointer"
+              className="px-8 py-3.5 bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
             >
               <HeartHandshake className="w-4 h-4" />
               <span>Join as a Worker</span>
@@ -136,25 +141,42 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* 4 Core Trust Checkmarks */}
-          <div className="pt-6 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-bold text-[#0F172A]">
+          <div className="pt-4 sm:pt-6 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm font-bold text-[#0F172A]">
             <div className="flex items-center space-x-2">
-              <span className="text-[#16A34A] font-extrabold text-sm">✓</span>
+              <span className="text-[#16A34A] font-extrabold text-base">✓</span>
               <span>Verified Workers</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-[#16A34A] font-extrabold text-sm">✓</span>
+              <span className="text-[#16A34A] font-extrabold text-base">✓</span>
               <span>Transparent Pricing</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-[#16A34A] font-extrabold text-sm">✓</span>
+              <span className="text-[#16A34A] font-extrabold text-base">✓</span>
               <span>Local Service</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-[#16A34A] font-extrabold text-sm">✓</span>
+              <span className="text-[#16A34A] font-extrabold text-base">✓</span>
               <span>Cooperative Model</span>
             </div>
           </div>
 
+        </div>
+
+        {/* Floating SCROLL Indicator at bottom of Full Screen Hero */}
+        <div className="pt-2 pb-2 flex flex-col items-center justify-center">
+          <button
+            onClick={() => {
+              const elem = document.getElementById('service-discovery') || document.getElementById('workers-directory');
+              if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="group flex flex-col items-center cursor-pointer transition-all hover:scale-105 select-none focus:outline-none"
+            title="Scroll to explore services"
+          >
+            <span className="text-[11px] font-extrabold tracking-[0.3em] text-[#64748B] group-hover:text-[#166534] transition-colors">
+              SCROLL
+            </span>
+            <div className="w-[2px] h-8 bg-gradient-to-b from-[#166534] via-[#0F766E] to-transparent rounded-full mt-1.5 animate-bounce group-hover:h-10 transition-all shadow-xs" />
+          </button>
         </div>
       </section>
 
