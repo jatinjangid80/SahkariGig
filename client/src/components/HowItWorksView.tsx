@@ -71,25 +71,6 @@ export const HowItWorksView: React.FC = () => {
           })}
         </div>
 
-        {/* State Machine Visualization banner */}
-        <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 text-center space-y-4">
-          <h3 className="text-lg font-bold font-outfit">State-Enforced Booking Lifespans</h3>
-          
-          <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] font-bold font-mono">
-            <span className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400">REQUESTED</span>
-            <span className="text-slate-600">→</span>
-            <span className="px-3 py-1.5 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400">ACCEPTED</span>
-            <span className="text-slate-600">→</span>
-            <span className="px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">IN PROGRESS</span>
-            <span className="text-slate-600">→</span>
-            <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">COMPLETED</span>
-          </div>
-          
-          <p className="text-[11px] text-slate-400 max-w-md mx-auto leading-relaxed">
-            Every booking transitions dynamically through strict status stages, providing absolute visibility for customer safety and cooperative audits.
-          </p>
-        </div>
-
       </div>
     </div>
   );
