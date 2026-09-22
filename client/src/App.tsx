@@ -339,6 +339,7 @@ export default function App() {
             {/* How SahkariGig Works */}
             <HowSahkariWorksSection
               onNavigate={navigateTo}
+              onOpenAuth={handleOpenAuth}
               onExploreServices={() => {
                 const elem = document.getElementById('popular-services');
                 if (elem) elem.scrollIntoView({ behavior: 'smooth' });
@@ -414,7 +415,10 @@ export default function App() {
         )}
 
         {currentPath === '/how-it-works' && (
-          <HowItWorksView />
+          <HowItWorksView
+            onNavigate={navigateTo}
+            onOpenAuth={handleOpenAuth}
+          />
         )}
 
         {currentPath === '/contact' && (
