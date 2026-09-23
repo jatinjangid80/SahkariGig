@@ -38,6 +38,7 @@ import { SupportDeskWidget } from './components/SupportDeskWidget';
 import { InvoiceModal } from './components/InvoiceModal';
 import { PopularServicesSection } from './components/PopularServicesSection';
 import { HowSahkariWorksSection } from './components/HowSahkariWorksSection';
+import { VerifyWorkerPage } from './components/VerifyWorkerPage';
 import { initTheme } from './utils/theme';
 
 export default function App() {
@@ -72,7 +73,11 @@ export default function App() {
 
     // Hardcoded Admin Bypass
     if (localStorage.getItem('mockAdmin') === 'true') {
-      setCurrentUser({ id: 'admin-123', name: 'jatin Admin', email: 'admin@gmail.com', role: 'Admin' });
+      const adminUser = { id: 'admin-123', name: 'jatin Admin', email: 'admin@gmail.com', role: 'Admin' };
+      setCurrentUser(adminUser);
+      if (currentPath === '/') {
+        navigateTo('/dashboard');
+      }
       return;
     }
 
@@ -81,7 +86,7 @@ export default function App() {
     if (savedDemoUser) {
       const parsed = JSON.parse(savedDemoUser);
       setCurrentUser(parsed);
-      if (parsed.role === 'Supervisor' && (currentPath === '/' || currentPath === '/projects')) {
+      if ((parsed.role === 'Supervisor' || parsed.role === 'Admin') && (currentPath === '/' || currentPath === '/projects')) {
         navigateTo('/dashboard');
       }
       return;
@@ -97,7 +102,7 @@ export default function App() {
           avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
         };
         setCurrentUser(u);
-        if (u.role === 'Supervisor' && (currentPath === '/' || currentPath === '/projects')) {
+        if ((u.role === 'Supervisor' || u.role === 'Admin') && (currentPath === '/' || currentPath === '/projects')) {
           navigateTo('/dashboard');
         }
       } else {
@@ -125,7 +130,7 @@ export default function App() {
           avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
         };
         setCurrentUser(u);
-        if (u.role === 'Supervisor' && (currentPath === '/' || currentPath === '/projects')) {
+        if ((u.role === 'Supervisor' || u.role === 'Admin') && (currentPath === '/' || currentPath === '/projects')) {
           navigateTo('/dashboard');
         }
       } else {
@@ -386,6 +391,7 @@ export default function App() {
 
         {currentPath === '/services' && (
           <ServicesView
+            currentUser={currentUser}
             onSelectCategory={(category) => {
               setSelectedCategory(category);
               navigateTo('/workers');

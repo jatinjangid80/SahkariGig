@@ -51,15 +51,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
     if (currentUser?.role === 'Admin') {
       return [
-        { label: 'Overview', path: '/dashboard', tab: 'overview' },
-        { label: 'Workers', path: '/dashboard', tab: 'kyc' },
-        { label: 'Bookings', path: '/dashboard', tab: 'bookings' },
-        { label: 'Allocation', path: '/dashboard', tab: 'allocation' },
-        { label: 'Payments', path: '/dashboard', tab: 'payments' },
-        { label: 'Welfare', path: '/dashboard', tab: 'welfare' },
-        { label: 'Complaints', path: '/dashboard', tab: 'disputes' },
-        { label: 'Reports', path: '/dashboard', tab: 'reports' },
-        { label: 'Settings', path: '/dashboard', tab: 'settings' },
+        { label: 'Operations Center', path: '/dashboard' },
+        { label: 'Worker Directory', path: '/workers' },
+        { label: 'Services', path: '/services' },
+        { label: 'Construction Packages', path: '/projects' },
       ];
     }
 

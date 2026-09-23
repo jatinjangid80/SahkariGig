@@ -1,21 +1,19 @@
 import React from 'react';
 import { CategoryGrid } from './CategoryGrid';
-import { ShieldCheck, Search, Flame, Sparkles } from 'lucide-react';
 
 interface ServicesViewProps {
   onSelectCategory: (category: string) => void;
+  currentUser?: { name?: string; role?: string; email?: string } | null;
 }
 
-export const ServicesView: React.FC<ServicesViewProps> = ({ onSelectCategory }) => {
+export const ServicesView: React.FC<ServicesViewProps> = ({ onSelectCategory, currentUser }) => {
   return (
     <div className="py-10 bg-slate-50 min-h-[calc(100vh-4rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         
-
-
         {/* CategoryGrid rendering */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-          <CategoryGrid onSelectCategory={onSelectCategory} />
+          <CategoryGrid onSelectCategory={onSelectCategory} currentUser={currentUser} />
         </div>
 
         {/* Quality Guarantee Card */}

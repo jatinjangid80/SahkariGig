@@ -100,21 +100,56 @@ router.post('/', authenticate, (req, res) => {
   return sendSuccess(res, { category: newCat }, 'Skill submitted for admin approval.', 201);
 });
 
-// PATCH /api/categories/:id/approve - Admin approves skill category
-router.patch('/:id/approve', authenticate, requireRole('Admin'), (req, res) => {
-  const cat = categories.find(c => c.id === req.params.id);
+// POST /api/categories/admin - Admin creates and publishes a new category immediately
+router.post('/admin', authenticate, requireRole('Admin'), (req, res) => {
+  const { name, description, icon } = req.body;
+  if (!name) {
+    return sendError(res, 'Category name is required.', 400);
+  }
+
+  const newCat = {
+    id: `cat-${Date.now()}`,
+    name,
+    icon: icon || 'Zap',
+    description: description || 'Cooperative-approved verified service category',
+    status: 'approved',
+    popular: true,
+    createdBy: req.user.id,
+    createdAt: new Date().toISOString()
+  };
+
+  categories.push(newCat);
+  categoryKeywords[newCat.name] = newCat.name.toLowerCase().split(' ');
+
+  return sendSuccess(res, { category: newCat }, `Category '${newCat.name}' created successfully.`, 201);
+});
+
+// DELETE /api/categories/:id - Admin deletes a category
+router.delete('/:id', authenticate, requireRole('Admin'), (req, res) => {
+  const idx = categories.findIndex(c => c.id === req.params.id || c.name.toLowerCase() === req.params.id.toLowerCase());
+  if (idx === -1) {
+    return sendError(res, 'Category not found.', 404);
+  }
+
+  const removed = categories.splice(idx, 1)[0];
+  delete categoryKeywords[removed.name];
+
+  return sendSuccess(res, { removed }, `Category '${removed.name}' removed successfully.`);
+});
+
+// PUT /api/categories/:id - Admin updates a category
+router.put('/:id', authenticate, requireRole('Admin'), (req, res) => {
+  const cat = categories.find(c => c.id === req.params.id || c.name.toLowerCase() === req.params.id.toLowerCase());
   if (!cat) {
     return sendError(res, 'Category not found.', 404);
   }
 
-  cat.status = 'approved';
+  const { name, description, icon } = req.body;
+  if (name) cat.name = name;
+  if (description) cat.description = description;
+  if (icon) cat.icon = icon;
 
-  // Add to AI keyword routing automatically
-  if (!categoryKeywords[cat.name]) {
-    categoryKeywords[cat.name] = cat.name.toLowerCase().split(' ');
-  }
-
-  return sendSuccess(res, { category: cat }, `Category '${cat.name}' approved and live.`);
+  return sendSuccess(res, { category: cat }, `Category '${cat.name}' updated successfully.`);
 });
 
 module.exports = router;

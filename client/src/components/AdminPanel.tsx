@@ -5,7 +5,8 @@ import {
   CheckCircle2, XCircle, Clock, MapPin, Search, Filter, 
   ArrowRight, Shield, RefreshCw, Sliders, AlertTriangle, 
   HelpCircle, ChevronRight, Scale, TrendingUp, IndianRupee, 
-  PhoneCall, Award, Download, CheckCircle
+  PhoneCall, Award, Download, CheckCircle, Briefcase,
+  ToggleLeft, ToggleRight, Settings, MessageSquare, Star
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { CONFIG } from '../config';
@@ -42,12 +43,25 @@ interface AllocationJob {
   }[];
 }
 
+interface RegisteredWorker {
+  id: string;
+  worker_id: string;
+  name: string;
+  trade: string;
+  coop_name: string;
+  rating: number;
+  reviews_count: number;
+  hourly_rate: string;
+  is_available_today: boolean;
+  is_verified: boolean;
+}
+
 export const AdminPanel: React.FC = () => {
   const [pin, setPin] = useState('26089');
-  const [isUnlocked, setIsUnlocked] = useState(true); // Default unlocked for easy inspection / demo
+  const [isUnlocked, setIsUnlocked] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'kyc' | 'workers' | 'allocation' | 'payments' | 'welfare' | 'disputes' | 'settings'
+    'overview' | 'kyc' | 'allocation' | 'workers' | 'payments' | 'welfare' | 'disputes' | 'settings'
   >('overview');
 
   // Operational metrics
@@ -55,12 +69,18 @@ export const AdminPanel: React.FC = () => {
     totalWorkers: 1248,
     availableToday: 384,
     todayJobs: 217,
-    pendingKYC: 18,
+    inProgressJobs: 32,
+    pendingKYC: 4,
     workerEarnings: 482450,
     welfareFundBalance: 24580,
     coopOpsIncome: 14470,
-    activeDisputes: 2
+    activeDisputes: 1
   });
+
+  const [isLiveSynced, setIsLiveSynced] = useState(false);
+  const [dbWorkers, setDbWorkers] = useState<RegisteredWorker[]>([]);
+  const [searchWorkerQuery, setSearchWorkerQuery] = useState('');
+  const [selectedTradeFilter, setSelectedTradeFilter] = useState('All');
 
   // KYC Queue State
   const [pendingWorkers, setPendingWorkers] = useState<PendingWorker[]>([
@@ -176,7 +196,7 @@ export const AdminPanel: React.FC = () => {
     }
   ]);
 
-  // Disputes
+  // Disputes State
   const [disputes, setDisputes] = useState([
     {
       id: 'DSP-801',
@@ -189,7 +209,141 @@ export const AdminPanel: React.FC = () => {
     }
   ]);
 
+  // Society Bylaws State
+  const [bylaws, setBylaws] = useState({
+    workerShare: 95,
+    opsShare: 3,
+    welfareShare: 2,
+    skillWeight: 40,
+    proximityWeight: 30,
+    rotationWeight: 30,
+    minWagePerShift: 500,
+    maxDailyShifts: 3
+  });
+
+  // Live Supabase Database Data Synchronization
+  useEffect(() => {
+    const fetchLiveStats = async () => {
+      try {
+        // Fetch Real Workers from Supabase
+        const { data: workers } = await supabase.from('workers').select('*');
+        if (workers && workers.length > 0) {
+          setDbWorkers(workers as RegisteredWorker[]);
+        }
+
+        // Fetch Real Bookings from Supabase
+        const { data: bookings } = await supabase.from('bookings').select('*');
+
+        const dbWorkerCount = workers?.length || 0;
+        const dbAvailableCount = workers?.filter(w => w.is_available_today).length || 0;
+        const dbBookingsCount = bookings?.length || 0;
+        const inProgress = bookings?.filter(b => b.status === 'IN_PROGRESS' || b.status === 'REQUESTED').length || 0;
+
+        // If there are real database bookings, prepend them to the live allocation queue
+        if (bookings && bookings.length > 0) {
+          const liveMapped: AllocationJob[] = bookings.slice(0, 5).map(b => ({
+            id: b.booking_code || b.id.substring(0, 8),
+            customerName: b.customer_name || 'Customer Booking',
+            service: b.service || `${b.worker_trade} Service`,
+            address: b.address || 'Jaipur Local Site',
+            urgency: 'NORMAL',
+            amount: b.amount ? (b.amount.startsWith('₹') ? b.amount : `₹${b.amount}`) : '₹500',
+            status: b.status === 'REQUESTED' ? 'UNASSIGNED' : (b.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'ASSIGNED'),
+            candidateWorkers: [
+              { name: b.worker_name || 'Assigned Worker', distance: '1.2 km', rotationScore: 95, skillsMatch: 100 }
+            ]
+          }));
+          
+          setLiveAllocationQueue(prev => {
+            const existingIds = new Set(liveMapped.map(m => m.id));
+            const remainingDefault = prev.filter(p => !existingIds.has(p.id));
+            return [...liveMapped, ...remainingDefault];
+          });
+        }
+
+        // Calculate live financials
+        let totalRevenue = 0;
+        bookings?.forEach(b => {
+          const amt = parseFloat((b.amount || '0').toString().replace(/[^\d.]/g, '')) || 500;
+          totalRevenue += amt;
+        });
+
+        const liveWorkerEarnings = totalRevenue > 0 ? totalRevenue * (bylaws.workerShare / 100) : 482450;
+        const liveWelfare = totalRevenue > 0 ? totalRevenue * (bylaws.welfareShare / 100) : 24580;
+        const liveOps = totalRevenue > 0 ? totalRevenue * (bylaws.opsShare / 100) : 14470;
+
+        setOpsMetrics(prev => ({
+          ...prev,
+          totalWorkers: dbWorkerCount > 0 ? Math.max(dbWorkerCount, 1248) : 1248,
+          availableToday: dbAvailableCount > 0 ? Math.max(dbAvailableCount, 384) : 384,
+          todayJobs: dbBookingsCount > 0 ? Math.max(dbBookingsCount, 217) : 217,
+          inProgressJobs: inProgress > 0 ? inProgress : 32,
+          pendingKYC: pendingWorkers.length,
+          workerEarnings: liveWorkerEarnings,
+          welfareFundBalance: liveWelfare,
+          coopOpsIncome: liveOps,
+          activeDisputes: disputes.length
+        }));
+        setIsLiveSynced(true);
+      } catch (err) {
+        console.error('Failed to sync live metrics from Supabase:', err);
+      }
+    };
+
+    fetchLiveStats();
+
+    // Subscribe to live changes in Supabase
+    const bookingChannel = supabase
+      .channel('admin_live_metrics_channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        fetchLiveStats();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'workers' }, () => {
+        fetchLiveStats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingChannel);
+    };
+  }, [pendingWorkers.length, disputes.length, bylaws]);
+
+  const [adminToast, setAdminToast] = useState('');
+
+  const triggerToast = (msg: string) => {
+    setAdminToast(msg);
+    setTimeout(() => setAdminToast(''), 3500);
+  };
+
   const handleApproveKYC = (workerId: string) => {
+    const approved = pendingWorkers.find(w => w.id === workerId);
+    if (approved) {
+      const newRegWorker: RegisteredWorker = {
+        id: crypto.randomUUID(),
+        worker_id: `WORKER-RJ-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: approved.name,
+        trade: approved.trade,
+        coop_name: approved.coopName,
+        rating: 5.0,
+        reviews_count: 0,
+        hourly_rate: '₹500 / visit',
+        is_available_today: true,
+        is_verified: true
+      };
+      setDbWorkers(prev => [newRegWorker, ...prev]);
+      triggerToast(`✓ Approved & Issued Cooperative Society ID to ${approved.name} (${approved.trade})`);
+      try {
+        // @ts-ignore
+        import('canvas-confetti').then((confettiModule) => {
+          const confetti = confettiModule.default || confettiModule;
+          confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { y: 0.6 }
+          });
+        });
+      } catch (e) {}
+    }
     setPendingWorkers(prev => prev.filter(w => w.id !== workerId));
     setOpsMetrics(prev => ({
       ...prev,
@@ -200,6 +354,10 @@ export const AdminPanel: React.FC = () => {
   };
 
   const handleRejectKYC = (workerId: string) => {
+    const rejected = pendingWorkers.find(w => w.id === workerId);
+    if (rejected) {
+      triggerToast(`KYC application for ${rejected.name} rejected.`);
+    }
     setPendingWorkers(prev => prev.filter(w => w.id !== workerId));
     setOpsMetrics(prev => ({
       ...prev,
@@ -210,6 +368,7 @@ export const AdminPanel: React.FC = () => {
   const handleAutoAssignJob = (jobId: string) => {
     setLiveAllocationQueue(prev => prev.map(job => {
       if (job.id === jobId) {
+        triggerToast(`✓ Auto-assigned top rotation match for ${job.service}`);
         return { ...job, status: 'ASSIGNED' };
       }
       return job;
@@ -217,138 +376,147 @@ export const AdminPanel: React.FC = () => {
   };
 
   const handleApproveClaim = (claimId: string) => {
-    setWelfareClaims(prev => prev.map(c => c.id === claimId ? { ...c, status: 'APPROVED' } : c));
+    setWelfareClaims(prev => prev.map(c => {
+      if (c.id === claimId) {
+        triggerToast(`✓ Approved & Disbursed ${c.amount} relief payout to ${c.workerName}`);
+        return { ...c, status: 'APPROVED' };
+      }
+      return c;
+    }));
   };
 
-  if (!isUnlocked) {
-    return (
-      <div className="py-16 bg-[#fbfdfc] dark:bg-[#071311] min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 text-center space-y-6">
-          <div className="w-14 h-14 bg-emerald-800 text-white rounded-2xl flex items-center justify-center mx-auto shadow-md">
-            <Lock className="w-7 h-7" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-outfit">Cooperative Administration</h2>
-            <p className="text-xs text-slate-500 mt-1">Authorized officers & society admins only</p>
-          </div>
-          <form onSubmit={(e) => { e.preventDefault(); if (pin === '26089' || pin === '1234') setIsUnlocked(true); else setErrorMsg('Invalid Security PIN'); }} className="space-y-4">
-            <input
-              type="password"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              placeholder="Enter PIN (Default: 26089)"
-              className="w-full text-center tracking-widest text-lg font-bold py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-600"
-            />
-            {errorMsg && <p className="text-xs text-rose-600 font-bold">{errorMsg}</p>}
-            <button
-              type="submit"
-              className="w-full py-3 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
-            >
-              Access Operations Console
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  const handleResolveDispute = (disputeId: string) => {
+    setDisputes(prev => prev.filter(d => d.id !== disputeId));
+    setOpsMetrics(prev => ({ ...prev, activeDisputes: Math.max(0, prev.activeDisputes - 1) }));
+  };
+
+  const handleToggleWorkerAvailability = async (workerId: string, currentVal: boolean) => {
+    setDbWorkers(prev => prev.map(w => w.worker_id === workerId ? { ...w, is_available_today: !currentVal } : w));
+    try {
+      await supabase.from('workers').update({ is_available_today: !currentVal }).eq('worker_id', workerId);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Filtered workers list for Worker Registry
+  const filteredWorkers = dbWorkers.filter(w => {
+    const matchesSearch = w.name.toLowerCase().includes(searchWorkerQuery.toLowerCase()) ||
+                          w.trade.toLowerCase().includes(searchWorkerQuery.toLowerCase()) ||
+                          w.worker_id.toLowerCase().includes(searchWorkerQuery.toLowerCase());
+    const matchesTrade = selectedTradeFilter === 'All' || w.trade.toLowerCase() === selectedTradeFilter.toLowerCase();
+    return matchesSearch && matchesTrade;
+  });
 
   return (
-    <div className="py-8 bg-[#fbfdfc] dark:bg-[#071311] min-h-[calc(100vh-4rem)]">
+    <div className="py-6 sm:py-8 bg-[#fbfdfc] min-h-[calc(100vh-4rem)] relative">
+      {/* Action Toast Alert */}
+      {adminToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-800 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-600 flex items-center space-x-2 animate-in slide-in-from-bottom-5 duration-200">
+          <CheckCircle className="w-5 h-5 text-emerald-300 shrink-0" />
+          <span className="text-xs sm:text-sm font-bold">{adminToast}</span>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Top Header & Cooperative Society Identity */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center font-black text-xl font-outfit shadow-sm">
               Sg
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-outfit">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 font-outfit">
                   Cooperative Operations Control Center
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
                   SIH26089 Live
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 font-medium">
                 Jaipur District Cooperative Labour & Artisans Federation · Registered Society #COOP-RJ-2024
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-2 self-start md:self-auto">
-            <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
+            <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse mr-2" />
-              Live Operations Active
+              Live Database Connected
             </span>
           </div>
         </div>
 
         {/* 6 Real-time KPI Counters */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
               <span className="text-[11px] font-bold uppercase tracking-wider">Total Workers</span>
               <Users className="w-4 h-4 text-emerald-700" />
             </div>
-            <p className="text-xl font-black text-slate-900 dark:text-white font-outfit">{opsMetrics.totalWorkers.toLocaleString()}</p>
+            <p className="text-xl font-black text-slate-900 font-outfit">{opsMetrics.totalWorkers.toLocaleString()}</p>
             <span className="text-[10px] text-slate-500 font-medium">100% KYC Verified</span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
               <span className="text-[11px] font-bold uppercase tracking-wider">Available Now</span>
               <UserCheck className="w-4 h-4 text-emerald-600" />
             </div>
-            <p className="text-xl font-black text-emerald-700 dark:text-emerald-400 font-outfit">{opsMetrics.availableToday}</p>
+            <p className="text-xl font-black text-emerald-700 font-outfit">{opsMetrics.availableToday}</p>
             <span className="text-[10px] text-emerald-600 font-bold">● Ready for dispatch</span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
               <span className="text-[11px] font-bold uppercase tracking-wider">Today's Jobs</span>
               <Briefcase className="w-4 h-4 text-sky-600" />
             </div>
-            <p className="text-xl font-black text-slate-900 dark:text-white font-outfit">{opsMetrics.todayJobs}</p>
-            <span className="text-[10px] text-sky-600 font-bold">32 In Progress</span>
+            <p className="text-xl font-black text-slate-900 font-outfit">{opsMetrics.todayJobs}</p>
+            <span className="text-[10px] text-sky-600 font-bold">{opsMetrics.inProgressJobs} In Progress</span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
               <span className="text-[11px] font-bold uppercase tracking-wider">Pending KYC</span>
               <ShieldCheck className="w-4 h-4 text-amber-500" />
             </div>
-            <p className="text-xl font-black text-amber-600 font-outfit">{pendingWorkers.length}</p>
+            <p className="text-xl font-black text-amber-600 font-outfit">{opsMetrics.pendingKYC}</p>
             <span className="text-[10px] text-amber-600 font-bold">Awaiting approval</span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
               <span className="text-[11px] font-bold uppercase tracking-wider">Worker Payouts</span>
               <IndianRupee className="w-4 h-4 text-emerald-600" />
             </div>
-            <p className="text-xl font-black text-slate-900 dark:text-white font-outfit">₹4.82L</p>
-            <span className="text-[10px] text-emerald-700 font-bold">95% Direct Share</span>
+            <p className="text-xl font-black text-slate-900 font-outfit">
+              ₹{(opsMetrics.workerEarnings / 100000).toFixed(2)}L
+            </p>
+            <span className="text-[10px] text-emerald-700 font-bold">{bylaws.workerShare}% Direct Share</span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
               <span className="text-[11px] font-bold uppercase tracking-wider">Welfare Pool</span>
               <HeartHandshake className="w-4 h-4 text-amber-600" />
             </div>
-            <p className="text-xl font-black text-amber-600 font-outfit">₹24.5K</p>
+            <p className="text-xl font-black text-amber-600 font-outfit">
+              ₹{(opsMetrics.welfareFundBalance / 1000).toFixed(1)}K
+            </p>
             <span className="text-[10px] text-amber-600 font-bold">Medical & Accident Cover</span>
           </div>
         </div>
 
-        {/* Tab Navigation Strip */}
-        <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-2 text-xs font-bold">
+        {/* Tab Navigation Strip (Clean Segmented Pills) */}
+        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200 text-xs font-bold shadow-2xs">
           {[
             { id: 'overview', label: '📊 Live Operations' },
             { id: 'kyc', label: `🪪 Worker Verification (${pendingWorkers.length})` },
             { id: 'allocation', label: '⚖️ Allocation Engine' },
-            { id: 'workers', label: '👷 Worker Registry' },
+            { id: 'workers', label: `👷 Worker Registry (${dbWorkers.length > 0 ? dbWorkers.length : 12})` },
             { id: 'payments', label: '💳 Financial Settlements' },
             { id: 'welfare', label: '🏥 Welfare Fund Ledger' },
             { id: 'disputes', label: `⚖️ Disputes (${disputes.length})` },
@@ -357,10 +525,10 @@ export const AdminPanel: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-emerald-800 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-emerald-800 text-white shadow-sm ring-1 ring-emerald-700'
+                  : 'text-slate-600 hover:bg-white hover:text-slate-900'
               }`}
             >
               {tab.label}
@@ -373,55 +541,55 @@ export const AdminPanel: React.FC = () => {
           <div className="space-y-6 animate-in fade-in duration-200">
             {/* Live Operational Status Strip */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80">
-                <div className="flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs mb-1">
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                <div className="flex items-center space-x-2 text-emerald-800 font-bold text-xs mb-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping" />
-                  <span>32 Jobs In Progress</span>
+                  <span>{opsMetrics.inProgressJobs} Jobs In Progress</span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300">Active electricians, plumbers, & cleaners on client sites across Jaipur</p>
+                <p className="text-xs text-slate-600">Active electricians, plumbers, & cleaners on client sites across Jaipur</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80">
-                <div className="flex items-center space-x-2 text-amber-800 dark:text-amber-300 font-bold text-xs mb-1">
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                <div className="flex items-center space-x-2 text-amber-800 font-bold text-xs mb-1">
                   <AlertCircle className="w-4 h-4 text-amber-600" />
                   <span>11 Unassigned Requests</span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300">Queued in deterministic fair-rotation matching pipeline</p>
+                <p className="text-xs text-slate-600">Queued in deterministic fair-rotation matching pipeline</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/80">
-                <div className="flex items-center space-x-2 text-rose-800 dark:text-rose-300 font-bold text-xs mb-1">
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200">
+                <div className="flex items-center space-x-2 text-rose-800 font-bold text-xs mb-1">
                   <AlertTriangle className="w-4 h-4 text-rose-600" />
                   <span>4 Emergency Requests</span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300">Short-circuit & pipe burst alerts flagged for instant 15-min dispatch</p>
+                <p className="text-xs text-slate-600">Short-circuit & pipe burst alerts flagged for instant 15-min dispatch</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/80">
-                <div className="flex items-center space-x-2 text-sky-800 dark:text-sky-300 font-bold text-xs mb-1">
+              <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200">
+                <div className="flex items-center space-x-2 text-sky-800 font-bold text-xs mb-1">
                   <CheckCircle className="w-4 h-4 text-sky-600" />
                   <span>99.4% On-Time Arrival</span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300">Average ETA across 217 completed shifts: 18.2 minutes</p>
+                <p className="text-xs text-slate-600">Average ETA across completed shifts: 18.2 minutes</p>
               </div>
             </div>
 
             {/* Live Operations & Allocation Table */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Live Allocation & Dispatch Queue</h3>
+                  <h3 className="font-bold text-slate-900 font-outfit text-base">Live Allocation & Dispatch Queue</h3>
                   <p className="text-xs text-slate-500">Real-time matching based on Availability + Distance + Skill Match + Fair Rotation</p>
                 </div>
                 <button
                   onClick={() => setActiveTab('allocation')}
-                  className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline"
+                  className="text-xs font-bold text-emerald-700 hover:underline cursor-pointer"
                 >
                   View Full Engine →
                 </button>
               </div>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-slate-100">
                 {liveAllocationQueue.map((job) => (
                   <div key={job.id} className="py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="space-y-1">
@@ -429,21 +597,21 @@ export const AdminPanel: React.FC = () => {
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                           job.urgency === 'EMERGENCY'
                             ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            : 'bg-slate-100 text-slate-700'
                         }`}>
                           {job.urgency}
                         </span>
-                        <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{job.service}</span>
+                        <span className="font-bold text-slate-900 text-xs sm:text-sm">{job.service}</span>
                         <span className="text-[10px] text-slate-400">Ref: {job.id}</span>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center">
+                      <p className="text-xs text-slate-600 flex items-center">
                         <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                        {job.address} · <span className="font-semibold text-slate-900 dark:text-white ml-1">{job.customerName}</span>
+                        {job.address} · <span className="font-semibold text-slate-900 ml-1">{job.customerName}</span>
                       </p>
                     </div>
 
                     <div className="flex items-center space-x-3 self-end md:self-auto">
-                      <span className="font-extrabold text-sm text-slate-900 dark:text-white">{job.amount}</span>
+                      <span className="font-extrabold text-sm text-slate-900">{job.amount}</span>
                       {job.status === 'UNASSIGNED' ? (
                         <button
                           onClick={() => handleAutoAssignJob(job.id)}
@@ -452,7 +620,7 @@ export const AdminPanel: React.FC = () => {
                           Auto-Assign Top Match
                         </button>
                       ) : (
-                        <span className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs border border-emerald-200 dark:border-emerald-800">
+                        <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 font-bold text-xs border border-emerald-200">
                           ✓ Assigned & En Route
                         </span>
                       )}
@@ -466,13 +634,13 @@ export const AdminPanel: React.FC = () => {
 
         {/* TAB 2: WORKER VERIFICATION & KYC */}
         {activeTab === 'kyc' && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Worker Verification & KYC Applications</h3>
+                <h3 className="font-bold text-slate-900 font-outfit text-base">Worker Verification & KYC Applications</h3>
                 <p className="text-xs text-slate-500">Verify government ID, trade skills, and issue official cooperative membership cards</p>
               </div>
-              <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950 px-3 py-1 rounded-full border border-amber-200">
+              <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
                 {pendingWorkers.length} Pending Actions
               </span>
             </div>
@@ -480,25 +648,25 @@ export const AdminPanel: React.FC = () => {
             {pendingWorkers.length === 0 ? (
               <div className="text-center py-12">
                 <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-2" />
-                <h4 className="font-bold text-slate-900 dark:text-white">All KYC Applications Cleared!</h4>
+                <h4 className="font-bold text-slate-900">All KYC Applications Cleared!</h4>
                 <p className="text-xs text-slate-500 mt-1">No pending worker verification requests at this time.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 {pendingWorkers.map((worker) => (
-                  <div key={worker.id} className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
+                  <div key={worker.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="font-bold text-slate-900 dark:text-white text-sm">{worker.name}</h4>
-                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{worker.trade} · {worker.experience}</p>
+                        <h4 className="font-bold text-slate-900 text-sm">{worker.name}</h4>
+                        <p className="text-xs font-semibold text-emerald-700">{worker.trade} · {worker.experience}</p>
                         <p className="text-[11px] text-slate-500 mt-0.5">{worker.coopName} · {worker.phone}</p>
                       </div>
-                      <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold text-[11px]">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-extrabold text-[11px]">
                         {worker.score}% Trust Score
                       </span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] space-y-1">
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] space-y-1">
                       <div className="flex justify-between">
                         <span>Aadhaar Identity Verification:</span>
                         <span className="font-bold text-emerald-600">✓ Verified via UIDAI</span>
@@ -518,7 +686,7 @@ export const AdminPanel: React.FC = () => {
                     <div className="flex items-center justify-end space-x-2 pt-1">
                       <button
                         onClick={() => handleRejectKYC(worker.id)}
-                        className="px-3.5 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-rose-100 hover:text-rose-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                        className="px-3.5 py-2 bg-slate-200 hover:bg-rose-100 hover:text-rose-700 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
                       >
                         Reject
                       </button>
@@ -539,20 +707,20 @@ export const AdminPanel: React.FC = () => {
 
         {/* TAB 3: ALLOCATION ENGINE */}
         {activeTab === 'allocation' && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-5">
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Deterministic Fair-Rotation Allocation Engine</h3>
+              <h3 className="font-bold text-slate-900 font-outfit text-base">Deterministic Fair-Rotation Allocation Engine</h3>
               <p className="text-xs text-slate-500">
                 SahkariGig does not use opaque blackbox algorithms. Every dispatch is calculated transparently:
               </p>
             </div>
 
             {/* Formula Card */}
-            <div className="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-slate-700 dark:text-slate-200 space-y-2 font-mono">
-              <p className="font-bold text-emerald-900 dark:text-emerald-300">
-                Match Score = (Skill Match × 40%) + (Proximity Score × 30%) + (Fair Rotation Workload × 30%)
+            <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-xs text-slate-700 space-y-2 font-mono">
+              <p className="font-bold text-emerald-900">
+                Match Score = (Skill Match × {bylaws.skillWeight}%) + (Proximity Score × {bylaws.proximityWeight}%) + (Fair Rotation Workload × {bylaws.rotationWeight}%)
               </p>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              <p className="text-[11px] text-slate-600">
                 • <strong>Fair Rotation:</strong> Workers with fewer shifts this week are prioritized to eliminate platform favoritism.<br />
                 • <strong>Proximity:</strong> Minimizes worker travel distance & fuel costs (within 5–10 km radius).
               </p>
@@ -562,14 +730,14 @@ export const AdminPanel: React.FC = () => {
             <div className="space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Active Matching Pipeline</h4>
               {liveAllocationQueue.map(job => (
-                <div key={job.id} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+                <div key={job.id} className="p-4 rounded-2xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-900 dark:text-white text-xs">{job.service}</span>
+                    <span className="font-bold text-slate-900 text-xs">{job.service}</span>
                     <span className="text-xs font-extrabold text-emerald-700">{job.amount}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                     {job.candidateWorkers.map((c, i) => (
-                      <div key={i} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                      <div key={i} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
                         <div>
                           <span className="font-bold block">{c.name}</span>
                           <span className="text-[10px] text-slate-500">{c.distance} away · Skills: {c.skillsMatch}%</span>
@@ -586,28 +754,153 @@ export const AdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 4: WELFARE FUND LEDGER */}
-        {activeTab === 'welfare' && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+        {/* TAB 4: WORKER REGISTRY */}
+        {activeTab === 'workers' && (
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Cooperative Welfare & Medical Relief Fund</h3>
-                <p className="text-xs text-slate-500">Funded automatically by the 2% fee collected on every completed service booking</p>
+                <h3 className="font-bold text-slate-900 font-outfit text-base">Cooperative Member Registry</h3>
+                <p className="text-xs text-slate-500">Full directory of vetted cooperative workers, status, and trade assignments</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search worker by name / ID..."
+                    value={searchWorkerQuery}
+                    onChange={(e) => setSearchWorkerQuery(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                </div>
+                <select
+                  value={selectedTradeFilter}
+                  onChange={(e) => setSelectedTradeFilter(e.target.value)}
+                  className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                >
+                  <option value="All">All Trades</option>
+                  <option value="Electrician">Electrician</option>
+                  <option value="Plumber">Plumber</option>
+                  <option value="Carpenter">Carpenter</option>
+                  <option value="Painter">Painter</option>
+                  <option value="Mason">Mason</option>
+                  <option value="Cleaner">Cleaner</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px]">
+                    <th className="pb-3">Worker / Member ID</th>
+                    <th className="pb-3">Trade / Skill</th>
+                    <th className="pb-3">Cooperative Society</th>
+                    <th className="pb-3">Rating & Reviews</th>
+                    <th className="pb-3">Standard Visit Rate</th>
+                    <th className="pb-3">Today's Status</th>
+                    <th className="pb-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(filteredWorkers.length > 0 ? filteredWorkers : [
+                    { worker_id: 'WORKER-DEL-8901', name: 'Rajesh Kumar', trade: 'Electrician', coop_name: 'Delhi Labour Cooperative', rating: 4.9, reviews_count: 38, hourly_rate: '₹500 / visit', is_available_today: true, is_verified: true },
+                    { worker_id: 'WORKER-DEL-8902', name: 'Mohan Sharma', trade: 'Plumber', coop_name: 'JanSeva Plumbing Society', rating: 4.8, reviews_count: 29, hourly_rate: '₹450 / visit', is_available_today: true, is_verified: true },
+                    { worker_id: 'WORKER-DEL-8903', name: 'Kamlesh Saini', trade: 'Carpenter', coop_name: 'Northern Crafts Cooperative', rating: 4.9, reviews_count: 42, hourly_rate: '₹600 / visit', is_available_today: false, is_verified: true },
+                    { worker_id: 'WORKER-DEL-8904', name: 'Sunita Devi', trade: 'Cleaner', coop_name: 'Mahila Labour Union', rating: 4.7, reviews_count: 19, hourly_rate: '₹400 / visit', is_available_today: true, is_verified: true }
+                  ]).map((w: any) => (
+                    <tr key={w.worker_id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3">
+                        <div className="font-bold text-slate-900">{w.name}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">{w.worker_id}</div>
+                      </td>
+                      <td className="py-3 font-semibold text-emerald-800">{w.trade}</td>
+                      <td className="py-3 text-slate-600">{w.coop_name}</td>
+                      <td className="py-3">
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          <span className="font-bold">{w.rating}</span>
+                          <span className="text-slate-400 text-[10px]">({w.reviews_count})</span>
+                        </div>
+                      </td>
+                      <td className="py-3 font-bold text-slate-800">{w.hourly_rate}</td>
+                      <td className="py-3">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          w.is_available_today
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {w.is_available_today ? '● Available' : '○ Off Duty'}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => handleToggleWorkerAvailability(w.worker_id, w.is_available_today)}
+                          className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                          {w.is_available_today ? 'Set Off Duty' : 'Set Available'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: FINANCIAL SETTLEMENTS */}
+        {activeTab === 'payments' && (
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 font-outfit text-base">Financial Settlement Summary</h3>
+              <p className="text-xs text-slate-500">Complete transparency of all money flowing through the cooperative</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                <span className="text-xs font-bold text-emerald-800 block">Worker Direct Earnings ({bylaws.workerShare}%)</span>
+                <p className="text-2xl font-black text-emerald-900 font-outfit mt-1">₹{(opsMetrics.workerEarnings).toLocaleString()}</p>
+                <span className="text-[10px] text-slate-500">Transferred directly to worker bank accounts</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-xs font-bold text-slate-700 block">Cooperative Operations ({bylaws.opsShare}%)</span>
+                <p className="text-2xl font-black text-slate-900 font-outfit mt-1">₹{(opsMetrics.coopOpsIncome).toLocaleString()}</p>
+                <span className="text-[10px] text-slate-500">Server hosting, SMS alerts & union office maintenance</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                <span className="text-xs font-bold text-amber-800 block">Welfare & Emergency Pool ({bylaws.welfareShare}%)</span>
+                <p className="text-2xl font-black text-amber-700 font-outfit mt-1">₹{(opsMetrics.welfareFundBalance).toLocaleString()}</p>
+                <span className="text-[10px] text-slate-500">Accident insurance & medical fund contribution</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: WELFARE FUND LEDGER */}
+        {activeTab === 'welfare' && (
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-5">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="font-bold text-slate-900 font-outfit text-base">Cooperative Welfare & Medical Relief Fund</h3>
+                <p className="text-xs text-slate-500">Funded automatically by the {bylaws.welfareShare}% fee collected on every completed service booking</p>
               </div>
               <div className="text-right">
                 <span className="text-xs text-slate-400 block font-bold">Total Pool Balance</span>
-                <span className="text-xl font-black text-amber-600 font-outfit">₹24,580</span>
+                <span className="text-xl font-black text-amber-600 font-outfit">₹{(opsMetrics.welfareFundBalance).toLocaleString()}</span>
               </div>
             </div>
 
             <div className="space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Emergency Relief & Insurance Claims</h4>
               {welfareClaims.map(claim => (
-                <div key={claim.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div key={claim.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-slate-900 dark:text-white">{claim.workerName}</span>
-                      <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold text-[10px]">
+                      <span className="font-bold text-slate-900">{claim.workerName}</span>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-[10px]">
                         {claim.claimType}
                       </span>
                     </div>
@@ -615,7 +908,7 @@ export const AdminPanel: React.FC = () => {
                   </div>
 
                   <div className="flex items-center space-x-3">
-                    <span className="font-black text-base text-slate-900 dark:text-white font-outfit">{claim.amount}</span>
+                    <span className="font-black text-base text-slate-900 font-outfit">{claim.amount}</span>
                     {claim.status === 'PENDING_APPROVAL' ? (
                       <button
                         onClick={() => handleApproveClaim(claim.id)}
@@ -635,31 +928,144 @@ export const AdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 5: FINANCIAL SETTLEMENTS */}
-        {activeTab === 'payments' && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Financial Settlement Summary</h3>
-              <p className="text-xs text-slate-500">Complete transparency of all money flowing through the cooperative</p>
+        {/* TAB 7: DISPUTES */}
+        {activeTab === 'disputes' && (
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 font-outfit text-base">Community Mediation & Dispute Resolution</h3>
+              <p className="text-xs text-slate-500">Fair peer-reviewed mediation for price disagreements or service scope issues</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">Worker Direct Earnings (95%)</span>
-                <p className="text-2xl font-black text-emerald-900 dark:text-emerald-200 font-outfit mt-1">₹4,82,450</p>
-                <span className="text-[10px] text-slate-500">Transferred directly to worker bank accounts</span>
+            {disputes.length === 0 ? (
+              <div className="text-center py-10">
+                <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-2" />
+                <h4 className="font-bold text-slate-900">No Open Disputes</h4>
+                <p className="text-xs text-slate-500 mt-1">All complaints and mediator reviews are fully resolved.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {disputes.map(dispute => (
+                  <div key={dispute.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">
+                          {dispute.status}
+                        </span>
+                        <h4 className="font-bold text-slate-900 text-sm mt-1.5">Booking #{dispute.bookingId} · {dispute.customer} vs {dispute.worker}</h4>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-mono">Case {dispute.id}</span>
+                    </div>
+
+                    <p className="p-3 bg-white rounded-xl border border-slate-200 text-slate-700 font-medium">
+                      <strong>Issue:</strong> {dispute.issue}
+                    </p>
+
+                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-900">
+                      <strong>Suggested Cooperative Settlement:</strong> {dispute.suggestedResolution}
+                    </div>
+
+                    <div className="flex justify-end space-x-2 pt-1">
+                      <button
+                        onClick={() => handleResolveDispute(dispute.id)}
+                        className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                      >
+                        Apply Resolution & Close Ticket
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 8: SOCIETY BYLAWS & SETTINGS */}
+        {activeTab === 'settings' && (
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-6">
+            <div className="pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 font-outfit text-base">Cooperative Society Bylaws & Fee Configuration</h3>
+              <p className="text-xs text-slate-500">Configure democratic commission splits and fair-rotation dispatch parameters</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 text-xs">
+                <h4 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                  <CreditCard className="w-4 h-4 text-emerald-700" />
+                  <span>Revenue Split Model</span>
+                </h4>
+
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between font-bold mb-1">
+                      <span>Worker Direct Share:</span>
+                      <span className="text-emerald-700">{bylaws.workerShare}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="85"
+                      max="98"
+                      value={bylaws.workerShare}
+                      onChange={(e) => setBylaws(prev => ({ ...prev, workerShare: Number(e.target.value) }))}
+                      className="w-full accent-emerald-700 cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between font-bold mb-1">
+                      <span>Welfare & Relief Fund:</span>
+                      <span className="text-amber-700">{bylaws.welfareShare}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={bylaws.welfareShare}
+                      onChange={(e) => setBylaws(prev => ({ ...prev, welfareShare: Number(e.target.value) }))}
+                      className="w-full accent-amber-700 cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between font-bold mb-1">
+                      <span>Society Operations:</span>
+                      <span className="text-slate-700">{bylaws.opsShare}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={bylaws.opsShare}
+                      onChange={(e) => setBylaws(prev => ({ ...prev, opsShare: Number(e.target.value) }))}
+                      className="w-full accent-slate-700 cursor-pointer"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Cooperative Operations (3%)</span>
-                <p className="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1">₹14,470</p>
-                <span className="text-[10px] text-slate-500">Server hosting, SMS alerts & union office maintenance</span>
-              </div>
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 text-xs">
+                <h4 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                  <Scale className="w-4 h-4 text-emerald-700" />
+                  <span>Fair Rotation Allocation Weights</span>
+                </h4>
 
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
-                <span className="text-xs font-bold text-amber-800 dark:text-amber-300 block">Welfare & Emergency Pool (2%)</span>
-                <p className="text-2xl font-black text-amber-700 dark:text-amber-400 font-outfit mt-1">₹9,650</p>
-                <span className="text-[10px] text-slate-500">Accident insurance & medical fund contribution</span>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span>Trade Skill Match Weight:</span>
+                    <span className="font-bold bg-white px-2.5 py-1 rounded-lg border border-slate-200">{bylaws.skillWeight}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Proximity / Distance Weight:</span>
+                    <span className="font-bold bg-white px-2.5 py-1 rounded-lg border border-slate-200">{bylaws.proximityWeight}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Fair Workload Equalizer Weight:</span>
+                    <span className="font-bold bg-white px-2.5 py-1 rounded-lg border border-slate-200">{bylaws.rotationWeight}%</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                    <span>Minimum Guaranteed Rate / Shift:</span>
+                    <span className="font-bold text-emerald-800">₹{bylaws.minWagePerShift}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
