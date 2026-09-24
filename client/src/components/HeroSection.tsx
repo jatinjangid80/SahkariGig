@@ -88,30 +88,30 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   );
 
   return (
-    <div className="bg-[#F8FAFC] text-[#0F172A]">
+    <div className="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors">
 
       {/* True Full-Screen Hero Landing Experience */}
-      <section className="bg-gradient-to-b from-[#F4FBF7] via-[#F8FAFC] to-[#F1F5F9] border-b border-[#E2E8F0] min-h-[calc(100vh-68px)] lg:h-[calc(100vh-68px)] flex flex-col justify-between items-center pt-8 pb-4 sm:pt-12 sm:pb-6 relative overflow-hidden">
+      <section className="bg-gradient-to-b from-emerald-50/40 via-slate-50 to-slate-100/60 dark:from-slate-950 dark:via-slate-900/90 dark:to-slate-950 border-b border-slate-200 dark:border-slate-800/80 min-h-[calc(100vh-68px)] lg:h-[calc(100vh-68px)] flex flex-col justify-between items-center pt-8 pb-4 sm:pt-12 sm:pb-6 relative overflow-hidden transition-colors">
         
         {/* Subtle decorative background glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-emerald-100/50 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-emerald-100/40 dark:bg-emerald-950/20 rounded-full blur-3xl pointer-events-none -z-10" />
 
         {/* Centered Main Hero Content */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-7 my-auto w-full">
 
           {/* Trust Badge */}
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#166534] text-xs sm:text-sm font-bold shadow-2xs">
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold shadow-2xs">
             <span>Cooperative Workforce Platform · Work Together. Earn Fairly. Grow Together.</span>
           </div>
 
           {/* Clean Main Title */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#0F172A] tracking-tight leading-[1.12] font-outfit">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.12] font-outfit">
             Trusted Local Services <br />
-            <span className="text-[#166534]">Through Cooperatives</span>
+            <span className="text-emerald-700 dark:text-emerald-400">Through Cooperatives</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-base sm:text-xl text-[#64748B] max-w-2xl mx-auto font-medium leading-relaxed">
+          <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto font-medium leading-relaxed">
             Find verified local professionals for your home and business services — with transparent pricing and fair worker earnings.
           </p>
 
@@ -122,7 +122,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 const elem = document.getElementById('service-discovery') || document.getElementById('workers-directory');
                 if (elem) elem.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="px-8 py-3.5 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
+              className="px-8 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
             >
               <span>Book a Service</span>
               <ArrowRight className="w-4 h-4" />
@@ -133,7 +133,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={() => {
                   if (onNavigate) onNavigate('/dashboard');
                 }}
-                className="px-8 py-3.5 bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
+                className="px-8 py-3.5 bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
               >
                 <Briefcase className="w-4 h-4" />
                 <span>My Bookings & Dashboard</span>
@@ -144,7 +144,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   if (onOpenAuth) onOpenAuth('Worker', 'signup');
                   else if (onNavigate) onNavigate('/for-workers');
                 }}
-                className="px-8 py-3.5 bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
+                className="px-8 py-3.5 bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
               >
                 <HeartHandshake className="w-4 h-4" />
                 <span>Join as a Worker</span>
@@ -157,26 +157,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="pt-3 max-w-2xl mx-auto">
               <div
                 onClick={() => { if (onNavigate) onNavigate('/dashboard'); }}
-                className="p-3.5 sm:p-4 bg-white/90 backdrop-blur-md rounded-2xl border border-emerald-200 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-3 text-left group"
+                className="p-3.5 sm:p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-emerald-200 dark:border-emerald-800/60 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-3 text-left group"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center font-bold shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-extrabold text-slate-900 font-outfit">Active Service Booking</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white font-outfit">Active Service Booking</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                         Live Tracking
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 mt-0.5">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                       Track assigned cooperative workers, chat, and view live dispatch status
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-1 text-xs font-bold text-emerald-700 group-hover:translate-x-0.5 transition-transform shrink-0">
+                <div className="flex items-center space-x-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform shrink-0">
                   <span>Go to My Dashboard</span>
                   <ChevronRight className="w-4 h-4" />
                 </div>
@@ -185,21 +185,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           )}
 
           {/* 4 Core Trust Checkmarks */}
-          <div className="pt-2 sm:pt-4 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm font-bold text-[#0F172A]">
+          <div className="pt-2 sm:pt-4 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-200">
             <div className="flex items-center space-x-2">
-              <span className="text-[#16A34A] font-extrabold text-base">✓</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-base">✓</span>
               <span>Verified Workers</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-[#16A34A] font-extrabold text-base">✓</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-base">✓</span>
               <span>Transparent Pricing</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-[#16A34A] font-extrabold text-base">✓</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-base">✓</span>
               <span>Local Service</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-[#16A34A] font-extrabold text-base">✓</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-base">✓</span>
               <span>Cooperative Model</span>
             </div>
           </div>
@@ -216,10 +216,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             className="group flex flex-col items-center cursor-pointer transition-all hover:scale-105 select-none focus:outline-none"
             title="Scroll to explore services"
           >
-            <span className="text-[11px] font-extrabold tracking-[0.3em] text-[#64748B] group-hover:text-[#166534] transition-colors">
+            <span className="text-[11px] font-extrabold tracking-[0.3em] text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
               SCROLL
             </span>
-            <div className="w-[2px] h-8 bg-gradient-to-b from-[#166534] via-[#0F766E] to-transparent rounded-full mt-1.5 animate-bounce group-hover:h-10 transition-all shadow-xs" />
+            <div className="w-[2px] h-8 bg-gradient-to-b from-emerald-600 via-teal-600 to-transparent rounded-full mt-1.5 animate-bounce group-hover:h-10 transition-all shadow-xs" />
           </button>
         </div>
       </section>
@@ -230,10 +230,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Header & Location Row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-outfit">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-outfit">
               Explore Verified Services
             </h2>
-            <p className="text-sm text-[#64748B] mt-1">
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               Select a trade to connect directly with cooperative-verified professionals
             </p>
           </div>
@@ -242,29 +242,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <button
             type="button"
             onClick={() => setIsCityModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-white border border-[#E2E8F0] hover:border-[#166534] text-xs font-bold text-[#0F172A] transition-colors cursor-pointer shadow-xs"
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-600 dark:hover:border-emerald-500 text-xs font-bold text-slate-900 dark:text-white transition-colors cursor-pointer shadow-xs"
           >
-            <MapPin className="w-4 h-4 text-[#166534] mr-2 shrink-0" />
+            <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mr-2 shrink-0" />
             <span>📍 {currentCity}</span>
-            <span className="ml-2.5 text-[11px] text-[#166534] font-bold underline">Change</span>
+            <span className="ml-2.5 text-[11px] text-emerald-700 dark:text-emerald-400 font-bold underline">Change</span>
           </button>
         </div>
 
         {/* Search Bar */}
         <form onSubmit={handleSearchSubmit} className="mb-8 flex flex-col sm:flex-row gap-2 max-w-2xl">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
             <input
               type="text"
               value={searchPrompt}
               onChange={e => setSearchPrompt(e.target.value)}
               placeholder="Search electrician, plumber, AC repair, carpenter, painter..."
-              className="w-full pl-10 pr-4 py-3 bg-white border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#166534] focus:ring-1 focus:ring-[#166534]"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-600 dark:focus:ring-emerald-500 transition-colors"
             />
           </div>
           <button
             type="submit"
-            className="px-6 py-3 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-sm rounded-lg transition-colors cursor-pointer flex items-center justify-center space-x-1.5 shrink-0"
+            className="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm rounded-lg transition-colors cursor-pointer flex items-center justify-center space-x-1.5 shrink-0 shadow-xs"
           >
             <span>Search</span>
             <ArrowRight className="w-4 h-4" />
@@ -279,34 +279,34 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div
                 key={srv.name}
                 onClick={() => handleServiceClick(srv.name)}
-                className={`group bg-white rounded-xl p-5 border transition-all duration-200 cursor-pointer flex flex-col justify-between hover:-translate-y-1 ${isSelected
-                    ? 'border-[#166534] shadow-md ring-1 ring-[#166534]'
-                    : 'border-[#E2E8F0] hover:border-[#166534] hover:shadow-md'
+                className={`group bg-white dark:bg-slate-900 rounded-xl p-5 border transition-all duration-200 cursor-pointer flex flex-col justify-between hover:-translate-y-1 ${isSelected
+                    ? 'border-emerald-600 dark:border-emerald-500 shadow-md ring-1 ring-emerald-600 dark:ring-emerald-500'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md'
                   }`}
               >
                 <div className="space-y-3">
-                  <div className="w-11 h-11 rounded-lg bg-[#F1F5F9] group-hover:bg-[#DCFCE7] flex items-center justify-center text-2xl transition-colors">
+                  <div className="w-11 h-11 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-950/60 flex items-center justify-center text-2xl transition-colors">
                     {srv.icon}
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-base text-[#0F172A] font-outfit group-hover:text-[#166534] transition-colors">
+                      <h3 className="font-bold text-base text-slate-900 dark:text-white font-outfit group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                         {srv.name}
                       </h3>
-                      <span className="text-xs font-bold text-[#166534] bg-[#F0FDF4] px-2 py-0.5 rounded border border-[#DCFCE7]">
+                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                         From {srv.startPrice}
                       </span>
                     </div>
-                    <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
                       {srv.desc}
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-4 mt-2 border-t border-[#F1F5F9] flex items-center justify-between text-xs font-bold text-[#166534] group-hover:translate-x-0.5 transition-transform">
+                <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform">
                   <span>Explore →</span>
-                  <span className="text-[11px] text-[#64748B] font-normal">Verified near you</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">Verified near you</span>
                 </div>
               </div>
             );
@@ -318,28 +318,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* Location Modal */}
       {isCityModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl border border-[#E2E8F0] space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-xl border border-slate-200 dark:border-slate-800 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <MapPin className="w-5 h-5 text-[#166534]" />
-                <h3 className="font-extrabold text-base text-[#0F172A] font-outfit">Select Cooperative District</h3>
+                <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white font-outfit">Select Cooperative District</h3>
               </div>
               <button
                 onClick={() => setIsCityModalOpen(false)}
-                className="text-[#64748B] hover:text-[#0F172A] font-bold p-1 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             <div className="relative">
-              <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
                 type="text"
                 value={citySearchQuery}
                 onChange={e => setCitySearchQuery(e.target.value)}
                 placeholder="Search city or district..."
-                className="w-full pl-9 pr-3 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#166534]"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-500"
               />
             </div>
 
@@ -351,12 +351,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     key={city}
                     onClick={() => handleSelectCity(city)}
                     className={`text-left px-3 py-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${isSelected
-                        ? 'bg-[#F0FDF4] border-[#166534] text-[#166534] font-bold'
-                        : 'bg-white border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 dark:border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold'
+                        : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
                       }`}
                   >
                     <span className="truncate">{city.split(',')[0]}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-[#166534] shrink-0" />}
+                    {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />}
                   </button>
                 );
               })}
