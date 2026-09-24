@@ -444,22 +444,79 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     const nextStatus = !isAvailableOnline;
     setIsAvailableOnline(nextStatus);
 
+    const workerId = currentUser?.id ? `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}` : 'WORKER-DEL-8901';
+    const workerName = profile.fullName || currentUser?.name || 'Tarun';
+
+    // 1. Immediate BroadcastChannel for instant cross-tab sync
+    try {
+      const bc = new BroadcastChannel('sahkarigig_worker_availability');
+      bc.postMessage({
+        name: workerName,
+        userId: currentUser?.id,
+        workerId: workerId,
+        isAvailableToday: nextStatus
+      });
+      bc.close();
+    } catch (e) {}
+
+    // 2. Storage event fallback for cross-tab sync
+    try {
+      localStorage.setItem('last_worker_availability_update', JSON.stringify({
+        name: workerName,
+        userId: currentUser?.id,
+        workerId: workerId,
+        isAvailableToday: nextStatus,
+        timestamp: Date.now()
+      }));
+    } catch (e) {}
+
+    // 3. Custom window event for same-tab sync
+    try {
+      window.dispatchEvent(new CustomEvent('worker_availability_change', {
+        detail: {
+          name: workerName,
+          userId: currentUser?.id,
+          workerId: workerId,
+          isAvailableToday: nextStatus
+        }
+      }));
+    } catch (e) {}
+
+    // 4. Supabase Realtime broadcast message
+    try {
+      const channel = supabase.channel('global_worker_availability');
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          channel.send({
+            type: 'broadcast',
+            event: 'worker_status',
+            payload: {
+              name: workerName,
+              userId: currentUser?.id,
+              workerId: workerId,
+              isAvailableToday: nextStatus
+            }
+          });
+        }
+      });
+    } catch (e) {}
+
+    // 5. Persist to Supabase Database
     if (currentUser) {
       try {
-        const workerId = `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`;
         const { data: updatedRows, error } = await supabase
           .from('workers')
           .update({ is_available_today: nextStatus })
-          .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id},worker_id.eq.${workerId},name.ilike.%${currentUser.name || profile.fullName}%`)
+          .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id},worker_id.eq.${workerId},name.ilike.%${workerName}%`)
           .select();
 
         if (!error && (!updatedRows || updatedRows.length === 0)) {
           await supabase.from('workers').upsert({
             worker_id: workerId,
             user_id: currentUser.id,
-            name: profile.fullName || currentUser.name || 'Verified Worker',
-            trade: profile.skill || 'Electrician',
-            coop_name: profile.coop || 'Delhi Labour Cooperative Federation',
+            name: workerName,
+            trade: profile.skill || 'Cleaner',
+            coop_name: profile.coop || 'Haryana Karigar Association',
             rating: 4.80,
             reviews_count: 12,
             hourly_rate: profile.skill === 'Electrician' ? '₹400–₹700 / visit' : (profile.skill === 'Plumber' ? '₹350–₹650 / visit' : '₹500–₹900 / visit'),

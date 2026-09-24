@@ -49,8 +49,8 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
     }
   }, [selectedCategory]);
 
-  const fetchWorkers = async () => {
-    setIsLoading(true);
+  const fetchWorkers = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('workers')
@@ -113,15 +113,79 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
     } catch (err) {
       console.error("Failed to fetch workers from Supabase:", err);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWorkers();
+    fetchWorkers(true);
 
-    // Supabase Realtime channel subscription for live updates
-    const channel = supabase
+    const updateWorkerStatusLocally = (payload: { name?: string; userId?: string; workerId?: string; isAvailableToday: boolean }) => {
+      if (!payload) return;
+      setWorkers(prev => prev.map(w => {
+        const isMatch = 
+          (payload.userId && w.id === payload.userId) ||
+          (payload.workerId && w.workerId === payload.workerId) ||
+          (payload.name && w.name.toLowerCase() === payload.name.trim().toLowerCase()) ||
+          (payload.name && w.name.toLowerCase().includes(payload.name.trim().toLowerCase())) ||
+          (payload.name && payload.name.trim().toLowerCase().includes(w.name.toLowerCase()));
+
+        if (isMatch) {
+          return {
+            ...w,
+            isAvailableToday: payload.isAvailableToday
+          };
+        }
+        return w;
+      }));
+    };
+
+    // 1. Instant cross-tab BroadcastChannel
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel('sahkarigig_worker_availability');
+      bc.onmessage = (event) => {
+        if (event.data) {
+          updateWorkerStatusLocally(event.data);
+          fetchWorkers(false);
+        }
+      };
+    } catch (e) {}
+
+    // 2. Storage event listener (cross-window fallback)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'last_worker_availability_update' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          updateWorkerStatusLocally(parsed);
+          fetchWorkers(false);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // 3. Custom same-window event listener
+    const handleCustomEvent = (e: any) => {
+      if (e.detail) {
+        updateWorkerStatusLocally(e.detail);
+        fetchWorkers(false);
+      }
+    };
+    window.addEventListener('worker_availability_change', handleCustomEvent);
+
+    // 4. Supabase Realtime broadcast listener
+    const broadcastChannel = supabase
+      .channel('global_worker_availability')
+      .on('broadcast', { event: 'worker_status' }, ({ payload }) => {
+        if (payload) {
+          updateWorkerStatusLocally(payload);
+          fetchWorkers(false);
+        }
+      })
+      .subscribe();
+
+    // 5. Supabase postgres_changes listener
+    const pgChannel = supabase
       .channel('workers-realtime-channel')
       .on(
         'postgres_changes',
@@ -146,13 +210,23 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
               return w;
             }));
           }
-          fetchWorkers();
+          fetchWorkers(false);
         }
       )
       .subscribe();
 
+    // 6. Fast background sync interval (heartbeat every 2.5s)
+    const pollInterval = setInterval(() => {
+      fetchWorkers(false);
+    }, 2500);
+
     return () => {
-      supabase.removeChannel(channel);
+      if (bc) bc.close();
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('worker_availability_change', handleCustomEvent);
+      supabase.removeChannel(broadcastChannel);
+      supabase.removeChannel(pgChannel);
+      clearInterval(pollInterval);
     };
   }, []);
 
