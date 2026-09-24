@@ -419,35 +419,6 @@ export const AdminPanel: React.FC = () => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        
-        {/* Top Header & Cooperative Society Identity */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center font-black text-xl font-outfit shadow-sm">
-              Sg
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-outfit">
-                  Cooperative Operations Control Center
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                  SIH26089 Live
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Jaipur District Cooperative Labour & Artisans Federation · Registered Society #COOP-RJ-2024
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 self-start md:self-auto">
-            <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse mr-2" />
-              Live Database Connected
-            </span>
-          </div>
-        </div>
 
         {/* 6 Real-time KPI Counters */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
