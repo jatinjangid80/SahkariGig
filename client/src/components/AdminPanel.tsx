@@ -91,16 +91,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     if (onTabChange) onTabChange(t);
   };
 
-  // Operational metrics
+  // Operational metrics synced dynamically from Supabase
   const [opsMetrics, setOpsMetrics] = useState({
-    totalWorkers: 1248,
-    availableToday: 384,
-    todayJobs: 217,
-    inProgressJobs: 32,
+    totalWorkers: 0,
+    availableToday: 0,
+    todayJobs: 0,
+    inProgressJobs: 0,
     pendingKYC: 4,
-    workerEarnings: 482450,
-    welfareFundBalance: 24580,
-    coopOpsIncome: 14470,
+    workerEarnings: 0,
+    welfareFundBalance: 0,
+    coopOpsIncome: 0,
     activeDisputes: 1
   });
 
@@ -254,27 +254,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       try {
         // Fetch Real Workers from Supabase
         const { data: workers } = await supabase.from('workers').select('*');
+        let currentWorkers = dbWorkers;
         if (workers && workers.length > 0) {
           setDbWorkers(workers as RegisteredWorker[]);
+          currentWorkers = workers as RegisteredWorker[];
         }
 
         // Fetch Real Bookings from Supabase
         const { data: bookings } = await supabase.from('bookings').select('*');
 
-        const dbWorkerCount = workers?.length || 0;
-        const dbAvailableCount = workers?.filter(w => w.is_available_today).length || 0;
+        const dbWorkerCount = workers ? workers.length : currentWorkers.length;
+        const dbAvailableCount = workers ? workers.filter(w => w.is_available_today).length : currentWorkers.filter(w => w.is_available_today).length;
         const dbBookingsCount = bookings?.length || 0;
-        const inProgress = bookings?.filter(b => b.status === 'IN_PROGRESS' || b.status === 'REQUESTED').length || 0;
+        const inProgress = bookings?.filter(b => b.status === 'IN_PROGRESS' || b.status === 'REQUESTED' || b.status === 'ACCEPTED').length || 0;
 
         // If there are real database bookings, prepend them to the live allocation queue
         if (bookings && bookings.length > 0) {
-          const liveMapped: AllocationJob[] = bookings.slice(0, 5).map(b => ({
-            id: b.booking_code || b.id.substring(0, 8),
+          const liveMapped: AllocationJob[] = bookings.slice(0, 10).map(b => ({
+            id: b.booking_code || (b.id ? b.id.substring(0, 8) : `BK-${Math.floor(100 + Math.random() * 900)}`),
             customerName: b.customer_name || 'Customer Booking',
-            service: b.service || `${b.worker_trade} Service`,
+            service: b.service || `${b.worker_trade || 'Cooperative'} Service`,
             address: b.address || 'Jaipur Local Site',
             urgency: 'NORMAL',
-            amount: b.amount ? (b.amount.startsWith('₹') ? b.amount : `₹${b.amount}`) : '₹500',
+            amount: b.amount ? (b.amount.toString().startsWith('₹') ? b.amount : `₹${b.amount}`) : '₹500',
             status: b.status === 'REQUESTED' ? 'UNASSIGNED' : (b.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'ASSIGNED'),
             candidateWorkers: [
               { name: b.worker_name || 'Assigned Worker', distance: '1.2 km', rotationScore: 95, skillsMatch: 100 }
@@ -290,27 +292,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         // Calculate live financials
         let totalRevenue = 0;
-        bookings?.forEach(b => {
-          const amt = parseFloat((b.amount || '0').toString().replace(/[^\d.]/g, '')) || 500;
-          totalRevenue += amt;
-        });
+        if (bookings && bookings.length > 0) {
+          bookings.forEach(b => {
+            const rawAmt = (b.amount || '0').toString().replace(/[^\d.]/g, '');
+            const amt = parseFloat(rawAmt) || 0;
+            totalRevenue += amt;
+          });
+        }
 
-        const liveWorkerEarnings = totalRevenue > 0 ? totalRevenue * (bylaws.workerShare / 100) : 482450;
-        const liveWelfare = totalRevenue > 0 ? totalRevenue * (bylaws.welfareShare / 100) : 24580;
-        const liveOps = totalRevenue > 0 ? totalRevenue * (bylaws.opsShare / 100) : 14470;
+        const liveWorkerEarnings = totalRevenue * (bylaws.workerShare / 100);
+        const liveWelfare = totalRevenue * (bylaws.welfareShare / 100);
+        const liveOps = totalRevenue * (bylaws.opsShare / 100);
 
-        setOpsMetrics(prev => ({
-          ...prev,
-          totalWorkers: dbWorkerCount > 0 ? Math.max(dbWorkerCount, 1248) : 1248,
-          availableToday: dbAvailableCount > 0 ? Math.max(dbAvailableCount, 384) : 384,
-          todayJobs: dbBookingsCount > 0 ? Math.max(dbBookingsCount, 217) : 217,
-          inProgressJobs: inProgress > 0 ? inProgress : 32,
+        setOpsMetrics({
+          totalWorkers: dbWorkerCount,
+          availableToday: dbAvailableCount,
+          todayJobs: dbBookingsCount,
+          inProgressJobs: inProgress,
           pendingKYC: pendingWorkers.length,
           workerEarnings: liveWorkerEarnings,
           welfareFundBalance: liveWelfare,
           coopOpsIncome: liveOps,
           activeDisputes: disputes.length
-        }));
+        });
         setIsLiveSynced(true);
       } catch (err) {
         console.error('Failed to sync live metrics from Supabase:', err);
@@ -333,7 +337,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     return () => {
       supabase.removeChannel(bookingChannel);
     };
-  }, [pendingWorkers.length, disputes.length, bylaws]);
+  }, [pendingWorkers.length, disputes.length, bylaws.workerShare, bylaws.welfareShare, bylaws.opsShare]);
 
   const [adminToast, setAdminToast] = useState('');
 
@@ -491,7 +495,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <IndianRupee className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <p className="text-xl font-black text-slate-900 dark:text-white font-outfit">
-              ₹{(opsMetrics.workerEarnings / 100000).toFixed(2)}L
+              {(opsMetrics.workerEarnings || 0) >= 100000
+                ? `₹${((opsMetrics.workerEarnings || 0) / 100000).toFixed(2)}L`
+                : (opsMetrics.workerEarnings || 0) >= 1000
+                  ? `₹${((opsMetrics.workerEarnings || 0) / 1000).toFixed(1)}K`
+                  : `₹${Math.round(opsMetrics.workerEarnings || 0).toLocaleString('en-IN')}`}
             </p>
             <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">{bylaws.workerShare}% Direct Share</span>
           </div>
@@ -502,7 +510,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <HeartHandshake className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             </div>
             <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-outfit">
-              ₹{(opsMetrics.welfareFundBalance / 1000).toFixed(1)}K
+              {(opsMetrics.welfareFundBalance || 0) >= 100000
+                ? `₹${((opsMetrics.welfareFundBalance || 0) / 100000).toFixed(2)}L`
+                : (opsMetrics.welfareFundBalance || 0) >= 1000
+                  ? `₹${((opsMetrics.welfareFundBalance || 0) / 1000).toFixed(1)}K`
+                  : `₹${Math.round(opsMetrics.welfareFundBalance || 0).toLocaleString('en-IN')}`}
             </p>
             <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Medical & Accident Cover</span>
           </div>
@@ -819,29 +831,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         {/* TAB 5: FINANCIAL SETTLEMENTS */}
         {activeTab === 'payments' && (
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <div className="pb-3 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 font-outfit text-base">Financial Settlement Summary</h3>
-              <p className="text-xs text-slate-500">Complete transparency of all money flowing through the cooperative</p>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Financial Settlement Summary</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Complete transparency of all money flowing through the cooperative</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
-                <span className="text-xs font-bold text-emerald-800 block">Worker Direct Earnings ({bylaws.workerShare}%)</span>
-                <p className="text-2xl font-black text-emerald-900 font-outfit mt-1">₹{(opsMetrics.workerEarnings).toLocaleString()}</p>
-                <span className="text-[10px] text-slate-500">Transferred directly to worker bank accounts</span>
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">Worker Direct Earnings ({bylaws.workerShare}%)</span>
+                <p className="text-2xl font-black text-emerald-900 dark:text-emerald-400 font-outfit mt-1">₹{(opsMetrics.workerEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">Transferred directly to worker bank accounts</span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <span className="text-xs font-bold text-slate-700 block">Cooperative Operations ({bylaws.opsShare}%)</span>
-                <p className="text-2xl font-black text-slate-900 font-outfit mt-1">₹{(opsMetrics.coopOpsIncome).toLocaleString()}</p>
-                <span className="text-[10px] text-slate-500">Server hosting, SMS alerts & union office maintenance</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Cooperative Operations ({bylaws.opsShare}%)</span>
+                <p className="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1">₹{(opsMetrics.coopOpsIncome || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">Server hosting, SMS alerts & union office maintenance</span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
-                <span className="text-xs font-bold text-amber-800 block">Welfare & Emergency Pool ({bylaws.welfareShare}%)</span>
-                <p className="text-2xl font-black text-amber-700 font-outfit mt-1">₹{(opsMetrics.welfareFundBalance).toLocaleString()}</p>
-                <span className="text-[10px] text-slate-500">Accident insurance & medical fund contribution</span>
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                <span className="text-xs font-bold text-amber-800 dark:text-amber-300 block">Welfare & Emergency Pool ({bylaws.welfareShare}%)</span>
+                <p className="text-2xl font-black text-amber-700 dark:text-amber-400 font-outfit mt-1">₹{(opsMetrics.welfareFundBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">Accident insurance & medical fund contribution</span>
               </div>
             </div>
           </div>
