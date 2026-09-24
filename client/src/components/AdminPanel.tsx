@@ -6,7 +6,7 @@ import {
   ArrowRight, Shield, RefreshCw, Sliders, AlertTriangle, 
   HelpCircle, ChevronRight, Scale, TrendingUp, IndianRupee, 
   PhoneCall, Award, Download, CheckCircle, Briefcase,
-  ToggleLeft, ToggleRight, Settings, MessageSquare, Star
+  ToggleLeft, ToggleRight, Settings, MessageSquare, Star, Activity, Cpu
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { CONFIG } from '../config';
@@ -481,30 +481,44 @@ export const AdminPanel: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Navigation Strip (Clean Segmented Pills) */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-bold shadow-2xs">
+        {/* Tab Navigation Strip (Clean Modern Segmented Bar) */}
+        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-bold shadow-2xs overflow-x-auto no-scrollbar scroll-smooth">
           {[
-            { id: 'overview', label: '📊 Live Operations' },
-            { id: 'kyc', label: `🪪 Worker Verification (${pendingWorkers.length})` },
-            { id: 'allocation', label: '⚖️ Allocation Engine' },
-            { id: 'workers', label: `👷 Worker Registry (${dbWorkers.length > 0 ? dbWorkers.length : 12})` },
-            { id: 'payments', label: '💳 Financial Settlements' },
-            { id: 'welfare', label: '🏥 Welfare Fund Ledger' },
-            { id: 'disputes', label: `⚖️ Disputes (${disputes.length})` },
-            { id: 'settings', label: '⚙️ Society Bylaws' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
-                activeTab === tab.id
-                  ? 'bg-emerald-800 text-white shadow-sm ring-1 ring-emerald-700'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            { id: 'overview', label: 'Live Operations', icon: Activity },
+            { id: 'kyc', label: 'Worker Verification', icon: ShieldCheck, badge: pendingWorkers.length, badgeColor: 'bg-amber-500/20 text-amber-700 dark:text-amber-300' },
+            { id: 'allocation', label: 'Allocation Engine', icon: Cpu },
+            { id: 'workers', label: 'Worker Registry', icon: Users, badge: dbWorkers.length > 0 ? dbWorkers.length : 12 },
+            { id: 'payments', label: 'Financial Settlements', icon: CreditCard },
+            { id: 'welfare', label: 'Welfare Fund Ledger', icon: HeartHandshake },
+            { id: 'disputes', label: 'Disputes', icon: AlertTriangle, badge: disputes.length, badgeColor: disputes.length > 0 ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300' : undefined },
+            { id: 'settings', label: 'Society Bylaws', icon: Sliders }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all duration-150 cursor-pointer whitespace-nowrap shrink-0 ${
+                  isActive
+                    ? 'bg-emerald-800 text-white shadow-sm ring-1 ring-emerald-700'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`} />
+                <span>{tab.label}</span>
+                {typeof tab.badge !== 'undefined' && tab.badge > 0 && (
+                  <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black leading-none ${
+                    isActive
+                      ? 'bg-white/20 text-white'
+                      : tab.badgeColor || 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  }`}>
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* TAB 1: OVERVIEW & LIVE OPERATIONS */}
