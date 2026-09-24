@@ -188,28 +188,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {userDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserDropdownOpen(false)} />
-                    <div className="absolute right-0 mt-2.5 w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#E2E8F0] dark:border-slate-800 py-2.5 z-50 text-xs font-semibold animate-in fade-in zoom-in-95 duration-150">
-                      <div className="px-4 py-2 border-b border-[#E2E8F0] dark:border-slate-800 mb-1">
-                        <p className="font-bold text-[#0F172A] dark:text-white truncate">{currentUser.name}</p>
-                        <p className="text-[11px] text-[#64748B] dark:text-slate-400 truncate">{currentUser.email || 'Verified Member'}</p>
+                    <div className="absolute right-0 mt-2.5 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2.5 z-50 text-xs font-semibold animate-in fade-in zoom-in-95 duration-150">
+                      <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
+                        <p className="font-bold text-slate-900 dark:text-white truncate">{currentUser.name}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{currentUser.email || 'Verified Member'}</p>
                       </div>
 
                       <button
                         onClick={() => handleNavClick('/dashboard', 'profile')}
-                        className="w-full text-left px-4 py-2 text-[#0F172A] dark:text-slate-200 hover:bg-[#F8FAFC] dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                        className="w-full text-left px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer transition-colors"
                       >
-                        <User className="w-3.5 h-3.5 text-[#64748B] dark:text-slate-400" />
+                        <User className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400" />
                         <span>Profile & Settings</span>
                       </button>
 
-                      <div className="border-t border-[#E2E8F0] dark:border-slate-800 my-1 pt-1">
+                      <div className="border-t border-slate-100 dark:border-slate-800 my-1 pt-1">
                         {onLogoutClick && (
                           <button
                             onClick={() => {
                               setUserDropdownOpen(false);
                               onLogoutClick();
                             }}
-                            className="w-full text-left px-4 py-2 text-[#DC2626] dark:text-rose-400 hover:bg-[#FEF2F2] dark:hover:bg-rose-950/40 flex items-center gap-2 cursor-pointer font-bold"
+                            className="w-full text-left px-4 py-2 text-red-600 dark:text-rose-400 hover:bg-red-50 dark:hover:bg-rose-950/40 flex items-center gap-2 cursor-pointer font-bold transition-colors"
                           >
                             <LogOut className="w-3.5 h-3.5" />
                             <span>Log Out</span>
@@ -264,13 +264,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Drawer Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-2 bg-white/95 backdrop-blur-xl border border-[#E2E8F0] shadow-xl rounded-2xl px-5 py-4 space-y-3 animate-in fade-in duration-150">
+          <div className="md:hidden mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl px-5 py-4 space-y-3 animate-in fade-in duration-150">
             <div className="space-y-1">
               {navLinks.map((link) => (
                 <button
                   key={link.label}
                   onClick={() => handleNavClick(link.path, link.tab)}
-                  className="block w-full text-left py-2 px-3 rounded-xl text-sm font-bold text-[#0F172A] hover:bg-[#F8FAFC] hover:text-[#166534] cursor-pointer"
+                  className="block w-full text-left py-2 px-3 rounded-xl text-sm font-bold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 cursor-pointer transition-colors"
                 >
                   {link.label}
                 </button>
