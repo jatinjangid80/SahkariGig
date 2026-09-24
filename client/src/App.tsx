@@ -633,6 +633,21 @@ export default function App() {
             if (error) {
               console.error('Failed to save booking:', error);
             }
+
+            try {
+              const bc = new BroadcastChannel('sahkarigig_booking_channel');
+              bc.postMessage({ type: 'NEW_BOOKING', booking: newBooking });
+              bc.close();
+            } catch (e) {}
+
+            try {
+              localStorage.setItem('last_booking_created', JSON.stringify({
+                workerId: newBooking.workerId,
+                workerName: newBooking.workerName,
+                time: Date.now()
+              }));
+            } catch (e) {}
+
             setRefreshTrigger(prev => prev + 1);
           }
         }}

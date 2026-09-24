@@ -241,10 +241,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           }
 
           let loadedBookings: any[] = [];
+          const workerNameQuery = (currentUser.name || profile.fullName || 'Tarun').trim();
           const { data: bookData } = await supabase
             .from('bookings')
             .select('*')
-            .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id},worker_id.eq.${displayWorkerId}`)
+            .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id},worker_id.eq.${displayWorkerId},worker_name.ilike.%${workerNameQuery}%`)
             .order('created_at', { ascending: false });
 
           if (bookData) {
@@ -259,7 +260,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               task: b.service_name || b.notes || 'Direct Service Call',
               startDate: b.scheduled_date || b.booking_date || b.date_time || 'Today',
               status: b.status || 'REQUESTED',
-              amount: b.amount ? `₹${b.amount}` : '₹500',
+              amount: b.amount ? (String(b.amount).startsWith('₹') ? b.amount : `₹${b.amount}`) : '₹500',
               paymentStatus: b.payment_status || 'PENDING'
             }));
           }
@@ -274,10 +275,28 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
     fetchRequests();
 
-    // Set up realtime subscription across both assignments and direct bookings
+    // 1. Cross-tab instant BroadcastChannel for new bookings
+    let bcBooking: BroadcastChannel | null = null;
+    try {
+      bcBooking = new BroadcastChannel('sahkarigig_booking_channel');
+      bcBooking.onmessage = () => {
+        fetchRequests();
+      };
+    } catch (e) {}
+
+    // 2. Window storage listener for new bookings
+    const handleBookingStorage = (e: StorageEvent) => {
+      if (e.key === 'last_booking_created') {
+        fetchRequests();
+      }
+    };
+    window.addEventListener('storage', handleBookingStorage);
+
+    // 3. Supabase Realtime channel subscription
+    let channel: any = null;
     if (currentUser?.id) {
-      const channel = supabase
-        .channel(`worker_live_jobs_${currentUser.id}`)
+      channel = supabase
+        .channel(`worker_live_jobs_${currentUser.id}_${Date.now()}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'project_workers' },
@@ -293,12 +312,20 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           }
         )
         .subscribe();
-
-      return () => {
-        channel.unsubscribe();
-      };
     }
-  }, [currentUser, refreshTrigger]);
+
+    // 4. Background heartbeat poll (every 3s)
+    const interval = setInterval(() => {
+      fetchRequests();
+    }, 3000);
+
+    return () => {
+      if (bcBooking) bcBooking.close();
+      window.removeEventListener('storage', handleBookingStorage);
+      if (channel) supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
+  }, [currentUser, profile.fullName, refreshTrigger]);
 
   // Recalculate stats whenever requests change
   useEffect(() => {
@@ -701,7 +728,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">Live feed connected</span>
               </div>
 
-              {requests.filter(r => r.status === 'REQUESTED').map(req => (
+              {requests.filter(r => r.status === 'REQUESTED' || r.status === 'PENDING').map(req => (
                 <div key={req.id} className="bg-white rounded-3xl border border-emerald-200 shadow-md p-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60 pointer-events-none" />
 
@@ -745,7 +772,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 </div>
               ))}
 
-              {requests.filter(r => r.status === 'REQUESTED').length === 0 && (
+              {requests.filter(r => r.status === 'REQUESTED' || r.status === 'PENDING').length === 0 && (
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-8 text-center py-12">
                   <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-2" />
                   <p className="text-slate-600 font-bold text-sm font-outfit">Your Inbox is Clear</p>
