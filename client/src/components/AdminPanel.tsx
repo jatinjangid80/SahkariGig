@@ -512,9 +512,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <p className="text-xl font-black text-slate-900 dark:text-white font-outfit">
               {(opsMetrics.workerEarnings || 0) >= 100000
                 ? `₹${((opsMetrics.workerEarnings || 0) / 100000).toFixed(2)}L`
-                : (opsMetrics.workerEarnings || 0) >= 1000
-                  ? `₹${((opsMetrics.workerEarnings || 0) / 1000).toFixed(1)}K`
-                  : `₹${Math.round(opsMetrics.workerEarnings || 0).toLocaleString('en-IN')}`}
+                : `₹${Math.round(opsMetrics.workerEarnings || 0).toLocaleString('en-IN')}`}
             </p>
             <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">{bylaws.workerShare}% Direct Share</span>
           </div>
@@ -527,9 +525,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-outfit">
               {(opsMetrics.welfareFundBalance || 0) >= 100000
                 ? `₹${((opsMetrics.welfareFundBalance || 0) / 100000).toFixed(2)}L`
-                : (opsMetrics.welfareFundBalance || 0) >= 1000
-                  ? `₹${((opsMetrics.welfareFundBalance || 0) / 1000).toFixed(1)}K`
-                  : `₹${Math.round(opsMetrics.welfareFundBalance || 0).toLocaleString('en-IN')}`}
+                : `₹${Math.round(opsMetrics.welfareFundBalance || 0).toLocaleString('en-IN')}`}
             </p>
             <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Medical & Accident Cover</span>
           </div>
