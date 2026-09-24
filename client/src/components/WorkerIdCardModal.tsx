@@ -176,7 +176,7 @@ export const WorkerIdCardModal: React.FC<WorkerIdCardModalProps> = ({
                     Status: {w.isAvailableToday || w.is_available_today ? (
                       <span className="text-emerald-600 font-bold">Available Today</span>
                     ) : (
-                      <span className="text-amber-600 font-bold">Available Tomorrow</span>
+                      <span className="text-slate-500 font-bold">Offline</span>
                     )}
                   </span>
                 </div>

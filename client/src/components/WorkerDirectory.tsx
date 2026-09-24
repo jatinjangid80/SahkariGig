@@ -122,11 +122,30 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
 
     // Supabase Realtime channel subscription for live updates
     const channel = supabase
-      .channel('workers-realtime')
+      .channel('workers-realtime-channel')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'workers' },
-        () => {
+        (payload: any) => {
+          if (payload?.new) {
+            const updated = payload.new;
+            setWorkers(prev => prev.map(w => {
+              const isMatch = 
+                (updated.id && w.id === updated.id) ||
+                (updated.worker_id && w.workerId === updated.worker_id) ||
+                (updated.name && w.name.toLowerCase() === updated.name.trim().toLowerCase());
+
+              if (isMatch) {
+                return {
+                  ...w,
+                  isAvailableToday: updated.is_available_today !== undefined ? updated.is_available_today : w.isAvailableToday,
+                  rating: updated.rating !== undefined ? Number(updated.rating) : w.rating,
+                  reviewsCount: updated.reviews_count !== undefined ? Number(updated.reviews_count) : w.reviewsCount
+                };
+              }
+              return w;
+            }));
+          }
           fetchWorkers();
         }
       )
@@ -374,10 +393,15 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
                         <span className="text-slate-500 dark:text-slate-400 truncate max-w-[170px]" title={worker.coopName}>
                           {worker.coopName}
                         </span>
-                        {worker.isAvailableToday && (
+                        {worker.isAvailableToday ? (
                           <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center shrink-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
                             Available Today
+                          </span>
+                        ) : (
+                          <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 mr-1.5" />
+                            Offline
                           </span>
                         )}
                       </div>

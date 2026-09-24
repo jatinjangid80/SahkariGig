@@ -116,56 +116,63 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             if (!parsed.uploadedDocs) parsed.uploadedDocs = { aadhaar: '', membership: '', skill: '', background: '' };
             if (!parsed.bankDetails) parsed.bankDetails = { accountName: '', bankName: '', accountNumber: '', ifscCode: '', upiId: '' };
             setProfile(parsed);
-            return;
           } catch (e) {
             console.error("Failed to parse saved profile:", e);
           }
         }
 
-        // Then try Supabase
-        const { data, error } = await supabase
-          .from('workers')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .single();
+        // Then sync from Supabase
+        try {
+          const { data, error } = await supabase
+            .from('workers')
+            .select('*')
+            .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id},name.ilike.%${currentUser.name}%`)
+            .limit(1)
+            .maybeSingle();
 
-        if (data && !error) {
-          const loadedProfile = {
-            fullName: data.name || currentUser.name || '',
-            skill: data.trade || 'Electrician',
-            coop: data.coop_name || 'Delhi Labour Cooperative Federation',
-            location: data.location || '',
-            phone: data.phone || '',
-            experience: data.experience || '1-3 years',
-            language: data.language || 'English',
-            avatarUrl: data.avatar || currentUser.avatarUrl || '',
-            verified: data.is_verified ?? true,
-            radius: 15,
-            availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            timeWindow: '9:00 AM - 6:00 PM',
-            uploadedDocs: { aadhaar: '', membership: '', skill: '', background: '' },
-            bankDetails: { accountName: '', bankName: '', accountNumber: '', ifscCode: '', upiId: '' }
-          };
-          setProfile(loadedProfile);
-        } else {
-          const defaultProfile = {
-            fullName: currentUser.name || 'Worker Member',
-            skill: 'Cleaner',
-            coop: 'Haryana Karigar Association',
-            location: 'Jaipur, Rajasthan',
-            phone: '+91 98765 43210',
-            experience: '2-4 years',
-            language: 'English',
-            avatarUrl: currentUser.avatarUrl || '',
-            verified: true,
-            radius: 15,
-            availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            timeWindow: '9:00 AM - 6:00 PM',
-            uploadedDocs: { aadhaar: 'aadhaar_verified.pdf', membership: 'coop_card.pdf', skill: 'skill_cert.pdf', background: 'pcc_cert.pdf' },
-            bankDetails: { accountName: currentUser.name || 'Tarun Bhaiya', bankName: 'State Bank of India', accountNumber: '38924719283', ifscCode: 'SBIN0001234', upiId: `${(currentUser.name || 'tarun').toLowerCase().replace(/\s+/g, '')}@upi` }
-          };
-          setProfile(defaultProfile);
-          localStorage.setItem(`worker_profile_${currentUser.id}`, JSON.stringify(defaultProfile));
+          if (data && !error) {
+            if (typeof data.is_available_today === 'boolean') {
+              setIsAvailableOnline(data.is_available_today);
+            }
+            const loadedProfile = {
+              fullName: data.name || currentUser.name || '',
+              skill: data.trade || 'Electrician',
+              coop: data.coop_name || 'Delhi Labour Cooperative Federation',
+              location: data.location || '',
+              phone: data.phone || '',
+              experience: data.experience || '1-3 years',
+              language: data.language || 'English',
+              avatarUrl: data.avatar || currentUser.avatarUrl || '',
+              verified: data.is_verified ?? true,
+              radius: 15,
+              availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+              timeWindow: '9:00 AM - 6:00 PM',
+              uploadedDocs: { aadhaar: '', membership: '', skill: '', background: '' },
+              bankDetails: { accountName: '', bankName: '', accountNumber: '', ifscCode: '', upiId: '' }
+            };
+            setProfile(loadedProfile);
+          } else if (!savedProfile) {
+            const defaultProfile = {
+              fullName: currentUser.name || 'Worker Member',
+              skill: 'Cleaner',
+              coop: 'Haryana Karigar Association',
+              location: 'Jaipur, Rajasthan',
+              phone: '+91 98765 43210',
+              experience: '2-4 years',
+              language: 'English',
+              avatarUrl: currentUser.avatarUrl || '',
+              verified: true,
+              radius: 15,
+              availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+              timeWindow: '9:00 AM - 6:00 PM',
+              uploadedDocs: { aadhaar: 'aadhaar_verified.pdf', membership: 'coop_card.pdf', skill: 'skill_cert.pdf', background: 'pcc_cert.pdf' },
+              bankDetails: { accountName: currentUser.name || 'Tarun Bhaiya', bankName: 'State Bank of India', accountNumber: '38924719283', ifscCode: 'SBIN0001234', upiId: `${(currentUser.name || 'tarun').toLowerCase().replace(/\s+/g, '')}@upi` }
+            };
+            setProfile(defaultProfile);
+            localStorage.setItem(`worker_profile_${currentUser.id}`, JSON.stringify(defaultProfile));
+          }
+        } catch (err) {
+          console.error("Failed to load worker profile from Supabase:", err);
         }
       };
 
@@ -433,6 +440,42 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     setTimeout(() => setProfileSaved(false), 3000);
   };
 
+  const handleToggleOnlineStatus = async () => {
+    const nextStatus = !isAvailableOnline;
+    setIsAvailableOnline(nextStatus);
+
+    if (currentUser) {
+      try {
+        const workerId = `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`;
+        const { data: updatedRows, error } = await supabase
+          .from('workers')
+          .update({ is_available_today: nextStatus })
+          .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id},worker_id.eq.${workerId},name.ilike.%${currentUser.name || profile.fullName}%`)
+          .select();
+
+        if (!error && (!updatedRows || updatedRows.length === 0)) {
+          await supabase.from('workers').upsert({
+            worker_id: workerId,
+            user_id: currentUser.id,
+            name: profile.fullName || currentUser.name || 'Verified Worker',
+            trade: profile.skill || 'Electrician',
+            coop_name: profile.coop || 'Delhi Labour Cooperative Federation',
+            rating: 4.80,
+            reviews_count: 12,
+            hourly_rate: profile.skill === 'Electrician' ? '₹400–₹700 / visit' : (profile.skill === 'Plumber' ? '₹350–₹650 / visit' : '₹500–₹900 / visit'),
+            distance_km: 2.00,
+            is_available_today: nextStatus,
+            is_top_rated: true,
+            is_verified: true,
+            avatar: profile.avatarUrl || currentUser.avatarUrl || null
+          }, { onConflict: 'worker_id' });
+        }
+      } catch (err) {
+        console.error("Error updating online status in Supabase:", err);
+      }
+    }
+  };
+
   const toggleDay = (day: string) => {
     if (profile.availableDays.includes(day)) {
       setProfile(p => ({ ...p, availableDays: profile.availableDays.filter(d => d !== day) }));
@@ -550,7 +593,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           <div className="flex items-center space-x-2.5 self-start md:self-auto">
             {/* Live Availability Toggle Pill */}
             <button
-              onClick={() => setIsAvailableOnline(!isAvailableOnline)}
+              onClick={handleToggleOnlineStatus}
               className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 border cursor-pointer shadow-2xs ${
                 isAvailableOnline
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
