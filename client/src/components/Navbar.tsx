@@ -247,28 +247,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
             )}
-
-            {/* Sleek Theme Toggle Button */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="p-2 rounded-full bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-2xs hover:scale-105"
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400 animate-in spin-in-90" /> : <Moon className="w-4 h-4 text-slate-700" />}
-            </button>
           </div>
 
-          {/* Mobile Hamburger Button + Theme Toggle */}
-          <div className="md:hidden flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-amber-400 cursor-pointer"
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
-            </button>
+          {/* Mobile Hamburger Button */}
+          <div className="md:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-1.5 text-[#0F172A] dark:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
