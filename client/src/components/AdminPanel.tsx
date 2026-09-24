@@ -831,29 +831,123 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         {/* TAB 5: FINANCIAL SETTLEMENTS */}
         {activeTab === 'payments' && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Financial Settlement Summary</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Complete transparency of all money flowing through the cooperative</p>
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Summary Cards */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Financial Settlement & Escrow Summary</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Complete transparent split of every rupee processed through SahkariGig cooperative escrow</p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Automated Escrow Disbursement
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/40 dark:to-emerald-900/20 border border-emerald-200 dark:border-emerald-800 relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Worker Direct Payout</span>
+                    <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                      <IndianRupee className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-3xl font-black text-emerald-900 dark:text-emerald-400 font-outfit">
+                    ₹{Math.round(opsMetrics.workerEarnings || 0).toLocaleString('en-IN')}
+                  </p>
+                  <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-emerald-200/60 dark:border-emerald-800/60 text-slate-600 dark:text-slate-400">
+                    <span className="font-semibold">{bylaws.workerShare}% Direct Payout</span>
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">Instant UPI / Bank</span>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-850 dark:to-slate-900 border border-slate-200 dark:border-slate-700/80 relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Cooperative Operations</span>
+                    <div className="p-2 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      <Building2 className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-3xl font-black text-slate-900 dark:text-white font-outfit">
+                    ₹{Math.round(opsMetrics.coopOpsIncome || 0).toLocaleString('en-IN')}
+                  </p>
+                  <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+                    <span className="font-semibold">{bylaws.opsShare}% Operating Margin</span>
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Cloud & SMS Gateway</span>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/40 dark:to-amber-900/20 border border-amber-200 dark:border-amber-800 relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-extrabold text-amber-800 dark:text-amber-300 uppercase tracking-wider">Welfare & Emergency Pool</span>
+                    <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300">
+                      <HeartHandshake className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-3xl font-black text-amber-700 dark:text-amber-400 font-outfit">
+                    ₹{Math.round(opsMetrics.welfareFundBalance || 0).toLocaleString('en-IN')}
+                  </p>
+                  <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-amber-200/60 dark:border-amber-800/60 text-slate-600 dark:text-slate-400">
+                    <span className="font-semibold">{bylaws.welfareShare}% Social Security</span>
+                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">Accident & Health Cover</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">Worker Direct Earnings ({bylaws.workerShare}%)</span>
-                <p className="text-2xl font-black text-emerald-900 dark:text-emerald-400 font-outfit mt-1">₹{(opsMetrics.workerEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">Transferred directly to worker bank accounts</span>
+            {/* Live Disbursement Audit Ledger */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white font-outfit text-sm">Automated Settlement Audit Ledger</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Recent completed jobs with immutable 95/3/2% revenue split</p>
+                </div>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  {dbWorkers.length > 0 ? `${dbWorkers.length} Active Accounts` : 'Cooperative Federation'}
+                </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Cooperative Operations ({bylaws.opsShare}%)</span>
-                <p className="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1">₹{(opsMetrics.coopOpsIncome || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">Server hosting, SMS alerts & union office maintenance</span>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
-                <span className="text-xs font-bold text-amber-800 dark:text-amber-300 block">Welfare & Emergency Pool ({bylaws.welfareShare}%)</span>
-                <p className="text-2xl font-black text-amber-700 dark:text-amber-400 font-outfit mt-1">₹{(opsMetrics.welfareFundBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">Accident insurance & medical fund contribution</span>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+                      <th className="pb-3">Disbursement ID</th>
+                      <th className="pb-3">Worker & Trade</th>
+                      <th className="pb-3">Gross Booking Value</th>
+                      <th className="pb-3 text-emerald-600 dark:text-emerald-400">Direct Worker (95%)</th>
+                      <th className="pb-3 text-amber-600 dark:text-amber-400">Welfare (2%)</th>
+                      <th className="pb-3 text-right">Settlement Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {[
+                      { id: 'TXN-9841', worker: 'Rajesh Kumar', trade: 'Electrician', gross: 650, date: 'Today, 2:15 PM' },
+                      { id: 'TXN-9840', worker: 'Mohan Sharma', trade: 'Plumber', gross: 450, date: 'Today, 1:40 PM' },
+                      { id: 'TXN-9839', worker: 'Kamlesh Saini', trade: 'Carpenter', gross: 850, date: 'Today, 11:20 AM' },
+                      { id: 'TXN-9838', worker: 'Sunita Devi', trade: 'Cleaner', gross: 400, date: 'Yesterday' }
+                    ].map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="py-3 font-mono text-[11px] font-bold text-slate-900 dark:text-slate-200">
+                          {item.id}
+                          <span className="block text-[10px] text-slate-400 font-sans font-normal">{item.date}</span>
+                        </td>
+                        <td className="py-3">
+                          <span className="font-bold text-slate-900 dark:text-white block">{item.worker}</span>
+                          <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">{item.trade}</span>
+                        </td>
+                        <td className="py-3 font-bold text-slate-900 dark:text-white">₹{item.gross}</td>
+                        <td className="py-3 font-extrabold text-emerald-700 dark:text-emerald-400">₹{(item.gross * 0.95).toFixed(2)}</td>
+                        <td className="py-3 font-semibold text-amber-700 dark:text-amber-400">₹{(item.gross * 0.02).toFixed(2)}</td>
+                        <td className="py-3 text-right">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            ✓ Direct Settled
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -861,34 +955,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         {/* TAB 6: WELFARE FUND LEDGER */}
         {activeTab === 'welfare' && (
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-5">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5 animate-in fade-in duration-200">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <h3 className="font-bold text-slate-900 font-outfit text-base">Cooperative Welfare & Medical Relief Fund</h3>
-                <p className="text-xs text-slate-500">Funded automatically by the {bylaws.welfareShare}% fee collected on every completed service booking</p>
+                <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Cooperative Welfare & Medical Relief Fund</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Funded automatically by the {bylaws.welfareShare}% fee collected on every completed service booking</p>
               </div>
               <div className="text-right">
                 <span className="text-xs text-slate-400 block font-bold">Total Pool Balance</span>
-                <span className="text-xl font-black text-amber-600 font-outfit">₹{(opsMetrics.welfareFundBalance).toLocaleString()}</span>
+                <span className="text-xl font-black text-amber-600 dark:text-amber-400 font-outfit">₹{Math.round(opsMetrics.welfareFundBalance || 0).toLocaleString('en-IN')}</span>
               </div>
             </div>
 
             <div className="space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Emergency Relief & Insurance Claims</h4>
               {welfareClaims.map(claim => (
-                <div key={claim.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div key={claim.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-slate-900">{claim.workerName}</span>
-                      <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-[10px]">
+                      <span className="font-bold text-slate-900 dark:text-white">{claim.workerName}</span>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold text-[10px]">
                         {claim.claimType}
                       </span>
                     </div>
-                    <p className="text-slate-500 mt-0.5">Facility: {claim.hospital} · Member Since: {claim.coopMemberSince}</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-0.5">Facility: {claim.hospital} · Member Since: {claim.coopMemberSince}</p>
                   </div>
 
                   <div className="flex items-center space-x-3">
-                    <span className="font-black text-base text-slate-900 font-outfit">{claim.amount}</span>
+                    <span className="font-black text-base text-slate-900 dark:text-white font-outfit">{claim.amount}</span>
                     {claim.status === 'PENDING_APPROVAL' ? (
                       <button
                         onClick={() => handleApproveClaim(claim.id)}
@@ -897,7 +991,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         Approve Relief Payout
                       </button>
                     ) : (
-                      <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl">
+                      <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs rounded-xl">
                         ✓ Disbursed
                       </span>
                     )}
