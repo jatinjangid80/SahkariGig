@@ -693,16 +693,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </p>
             </div>
 
-            {/* Formula Card */}
-            <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-xs text-slate-700 space-y-2 font-mono">
-              <p className="font-bold text-emerald-900">
-                Match Score = (Skill Match × {bylaws.skillWeight}%) + (Proximity Score × {bylaws.proximityWeight}%) + (Fair Rotation Workload × {bylaws.rotationWeight}%)
-              </p>
-              <p className="text-[11px] text-slate-600">
-                • <strong>Fair Rotation:</strong> Workers with fewer shifts this week are prioritized to eliminate platform favoritism.<br />
-                • <strong>Proximity:</strong> Minimizes worker travel distance & fuel costs (within 5–10 km radius).
-              </p>
-            </div>
 
             {/* Live Queue Inspection */}
             <div className="space-y-3">
