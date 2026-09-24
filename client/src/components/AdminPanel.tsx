@@ -510,40 +510,6 @@ export const AdminPanel: React.FC = () => {
         {/* TAB 1: OVERVIEW & LIVE OPERATIONS */}
         {activeTab === 'overview' && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Live Operational Status Strip */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                <div className="flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs mb-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping" />
-                  <span>{opsMetrics.inProgressJobs} Jobs In Progress</span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Active electricians, plumbers, & cleaners on client sites across Jaipur</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
-                <div className="flex items-center space-x-2 text-amber-800 dark:text-amber-300 font-bold text-xs mb-1">
-                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  <span>11 Unassigned Requests</span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Queued in deterministic fair-rotation matching pipeline</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
-                <div className="flex items-center space-x-2 text-rose-800 dark:text-rose-300 font-bold text-xs mb-1">
-                  <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                  <span>4 Emergency Requests</span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Short-circuit & pipe burst alerts flagged for instant 15-min dispatch</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800">
-                <div className="flex items-center space-x-2 text-sky-800 dark:text-sky-300 font-bold text-xs mb-1">
-                  <CheckCircle className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                  <span>99.4% On-Time Arrival</span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Average ETA across completed shifts: 18.2 minutes</p>
-              </div>
-            </div>
 
             {/* Live Operations & Allocation Table */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
