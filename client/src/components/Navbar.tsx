@@ -28,6 +28,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [currentUser?.avatarUrl]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -155,17 +160,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/90 border border-[#E2E8F0] hover:border-[#166534] hover:shadow-xs cursor-pointer transition-all text-xs font-bold text-[#0F172A]"
                 >
-                  {currentUser.avatarUrl ? (
-                    <div className="p-[1.5px] rounded-full bg-gradient-to-tr from-[#3B82F6] via-[#6366F1] to-[#A855F7]">
+                  {currentUser.avatarUrl && !avatarError ? (
+                    <div className="p-[1.5px] rounded-full bg-gradient-to-tr from-[#3B82F6] via-[#6366F1] to-[#A855F7] shrink-0">
                       <img
                         src={currentUser.avatarUrl}
                         alt={currentUser.name}
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        onError={() => setAvatarError(true)}
                         className="w-6 h-6 rounded-full object-cover bg-white"
                       />
                     </div>
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-[#166534] text-white flex items-center justify-center text-xs font-bold">
-                      {currentUser.name.charAt(0).toUpperCase()}
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center text-xs font-bold shadow-xs shrink-0">
+                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                   )}
                   <span>{currentUser.name.split(' ')[0]}</span>

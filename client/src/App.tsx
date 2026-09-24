@@ -92,14 +92,22 @@ export default function App() {
       return;
     }
 
+    const getAvatarUrl = (user: any) => {
+      return user?.user_metadata?.avatar_url || 
+             user?.user_metadata?.picture || 
+             user?.identities?.[0]?.identity_data?.avatar_url || 
+             user?.identities?.[0]?.identity_data?.picture || 
+             '';
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const u = {
           id: session.user.id,
           email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
           role: session.user.user_metadata?.role || 'Customer',
-          avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
+          avatarUrl: getAvatarUrl(session.user)
         };
         setCurrentUser(u);
         if ((u.role === 'Supervisor' || u.role === 'Admin') && (currentPath === '/' || currentPath === '/projects')) {
@@ -125,9 +133,9 @@ export default function App() {
         const u = {
           id: session.user.id,
           email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
           role: session.user.user_metadata?.role || 'Customer',
-          avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
+          avatarUrl: getAvatarUrl(session.user)
         };
         setCurrentUser(u);
         if ((u.role === 'Supervisor' || u.role === 'Admin') && (currentPath === '/' || currentPath === '/projects')) {
@@ -182,8 +190,11 @@ export default function App() {
       if (session?.user) {
         const email = session.user.email || '';
         const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
-        const role = session.user.user_metadata?.role || 'Customer';
-        const avatarUrl = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
+        const avatarUrl = session.user.user_metadata?.avatar_url || 
+                          session.user.user_metadata?.picture || 
+                          session.user.identities?.[0]?.identity_data?.avatar_url || 
+                          session.user.identities?.[0]?.identity_data?.picture || 
+                          '';
 
         setCurrentUser({ name, role, id: session.user.id, email, avatarUrl });
       }

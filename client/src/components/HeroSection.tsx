@@ -128,20 +128,64 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <ArrowRight className="w-4 h-4" />
             </button>
 
-            <button
-              onClick={() => {
-                if (onOpenAuth) onOpenAuth('Worker', 'signup');
-                else if (onNavigate) onNavigate('/for-workers');
-              }}
-              className="px-8 py-3.5 bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
-            >
-              <HeartHandshake className="w-4 h-4" />
-              <span>Join as a Worker</span>
-            </button>
+            {currentUser?.role === 'Customer' ? (
+              <button
+                onClick={() => {
+                  if (onNavigate) onNavigate('/dashboard');
+                }}
+                className="px-8 py-3.5 bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
+              >
+                <Briefcase className="w-4 h-4" />
+                <span>My Bookings & Dashboard</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  if (onOpenAuth) onOpenAuth('Worker', 'signup');
+                  else if (onNavigate) onNavigate('/for-workers');
+                }}
+                className="px-8 py-3.5 bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-sm sm:text-base rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer"
+              >
+                <HeartHandshake className="w-4 h-4" />
+                <span>Join as a Worker</span>
+              </button>
+            )}
           </div>
 
+          {/* Customer Live Booked Services Quick Bar (if logged in as Customer) */}
+          {currentUser?.role === 'Customer' && (
+            <div className="pt-3 max-w-2xl mx-auto">
+              <div
+                onClick={() => { if (onNavigate) onNavigate('/dashboard'); }}
+                className="p-3.5 sm:p-4 bg-white/90 backdrop-blur-md rounded-2xl border border-emerald-200 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-3 text-left group"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-extrabold text-slate-900 font-outfit">Active Service Booking</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                        Live Tracking
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Track assigned cooperative workers, chat, and view live dispatch status
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-1 text-xs font-bold text-emerald-700 group-hover:translate-x-0.5 transition-transform shrink-0">
+                  <span>Go to My Dashboard</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 4 Core Trust Checkmarks */}
-          <div className="pt-4 sm:pt-6 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm font-bold text-[#0F172A]">
+          <div className="pt-2 sm:pt-4 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm font-bold text-[#0F172A]">
             <div className="flex items-center space-x-2">
               <span className="text-[#16A34A] font-extrabold text-base">✓</span>
               <span>Verified Workers</span>
