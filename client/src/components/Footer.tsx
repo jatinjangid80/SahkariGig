@@ -61,13 +61,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, currentUser }) => {
             </h4>
             <ul className="space-y-2.5 text-sm text-slate-300">
               <li>
-                <button onClick={() => onNavigate('/for-workers')} className="hover:text-white transition-colors cursor-pointer text-left">
-                  Join Us
+                <button onClick={() => onNavigate('/workers')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  Find Workers
                 </button>
               </li>
               <li>
                 <button onClick={() => onNavigate('/dashboard')} className="hover:text-white transition-colors cursor-pointer text-left">
-                  Worker Login
+                  Worker Dashboard
                 </button>
               </li>
               <li>

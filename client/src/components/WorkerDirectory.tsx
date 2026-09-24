@@ -36,8 +36,8 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
   currentUserId
 }) => {
   const [filterTrade, setFilterTrade] = useState(selectedCategory);
-  const [minRating, setMinRating] = useState(4.0);
-  const [maxDistance, setMaxDistance] = useState(15);
+  const [minRating, setMinRating] = useState(0);
+  const [maxDistance, setMaxDistance] = useState(50);
   const [searchQuery, setSearchQuery] = useState('');
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,95 +49,92 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
     }
   }, [selectedCategory]);
 
-  useEffect(() => {
-    const fetchWorkers = async () => {
-      setIsLoading(true);
-      let fetchedWorkers: Worker[] = [];
-      try {
-        const { data, error } = await supabase.from('workers').select('*');
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          const isTestOrDemo = (name: string) => {
-            const n = (name || '').toLowerCase().trim();
-            return (
-              !n ||
-              n === 'demo' ||
-              n === 'demo worker' ||
-              n.startsWith('demo') ||
-              n === 'test' ||
-              n.includes('test') ||
-              n.includes('badass') ||
-              n.includes('dummy') ||
-              n.includes('sample')
-            );
+  const fetchWorkers = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('workers')
+        .select('*')
+        .order('rating', { ascending: false });
+
+      if (error) throw error;
+      
+      if (data) {
+        const formatWorkerName = (rawName: string) => {
+          const n = (rawName || '').trim();
+          if (!n) return 'Verified Worker';
+          return n.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        };
+
+        const TRADE_META: Record<string, { coop: string; rates: string; baseDist: number; baseJobs: number; bg: string }> = {
+          'Electrician': { coop: 'Jaipur Sahkari Labour Federation', rates: '₹350–₹650 / visit', baseDist: 1.8, baseJobs: 134, bg: '047857' },
+          'Plumber': { coop: 'Rajasthan Labour Cooperative Society', rates: '₹300–₹600 / visit', baseDist: 2.4, baseJobs: 96, bg: '0284c7' },
+          'Carpenter': { coop: 'Jaipur Artisan Cooperative Federation', rates: '₹450–₹800 / visit', baseDist: 2.9, baseJobs: 78, bg: 'd97706' },
+          'AC Repair': { coop: 'Pink City HVAC Technicians Cooperative', rates: '₹500–₹850 / visit', baseDist: 3.2, baseJobs: 142, bg: '059669' },
+          'Cleaning': { coop: 'Mahila Sahkari Labour Union', rates: '₹250–₹500 / visit', baseDist: 1.2, baseJobs: 215, bg: '7c3aed' },
+          'Painter': { coop: 'Jaipur Painters & Polishers Guild', rates: '₹400–₹750 / visit', baseDist: 4.1, baseJobs: 88, bg: 'db2777' },
+          'Vehicle Repair': { coop: 'Auto Mechanics Cooperative Federation', rates: '₹350–₹700 / visit', baseDist: 3.5, baseJobs: 64, bg: '2563eb' },
+          'Moving': { coop: 'Transport & Logistics Labour Cooperative', rates: '₹800–₹1800 / trip', baseDist: 2.7, baseJobs: 110, bg: '0d9488' }
+        };
+
+        const formattedDbWorkers: Worker[] = data.map((w: any, idx: number) => {
+          const finalName = formatWorkerName(w.name || w.full_name || 'Verified Pro');
+          const trade = (w.trade === 'Cleaner' ? 'Cleaning' : (w.trade || 'Electrician'));
+          const meta = TRADE_META[trade] || TRADE_META['Electrician'];
+          
+          const hash = finalName.split('').reduce((acc, char) => acc + char.charCodeAt(0), idx * 7);
+          const uniqueJobs = w.reviews_count || (meta.baseJobs + (hash % 37));
+          const uniqueDist = Number(w.distance_km) || (meta.baseDist + ((hash % 18) / 10));
+          const uniqueRating = Number(w.rating) || (4.8 + ((hash % 2) / 10));
+
+          const finalAvatar = (w.avatar && !w.avatar.includes('images.unsplash.com') && !w.avatar.includes('unsplash') && !w.avatar.includes('1540569014015')) 
+            ? w.avatar 
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(finalName)}&background=${meta.bg}&color=fff&size=150`;
+
+          return {
+            id: w.id,
+            name: finalName,
+            avatar: finalAvatar,
+            trade: trade,
+            rating: uniqueRating,
+            reviewsCount: uniqueJobs,
+            coopName: w.coop_name || meta.coop,
+            city: w.city || selectedCity || 'Jaipur',
+            hourlyRate: w.hourly_rate || meta.rates,
+            distanceKm: Math.round(uniqueDist * 10) / 10,
+            isAvailableToday: w.is_available_today ?? true,
+            isTopRated: w.is_top_rated ?? true,
+            workerId: w.worker_id || `WORKER-${(w.id || idx.toString()).slice(0, 6).toUpperCase()}`
           };
+        });
 
-          const formatWorkerName = (rawName: string) => {
-            const n = (rawName || '').trim();
-            if (!n) return 'Verified Worker';
-            if (n.toLowerCase() === 'tarun bhaiya') return 'Tarun Sharma';
-            if (n.toLowerCase() === 'parth') return 'Parth Joshi';
-            if (n.toLowerCase() === 'justin') return 'Justin Joseph';
-            if (n.toLowerCase() === 'pintu') return 'Pintu Kumar';
-            if (n.toLowerCase() === 'sam') return 'Samir Wilson';
-            return n.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-          };
-
-          const TRADE_META: Record<string, { coop: string; rates: string; baseDist: number; baseJobs: number; bg: string }> = {
-            'Electrician': { coop: 'Jaipur Sahkari Labour Federation', rates: '₹350–₹650 / visit', baseDist: 1.8, baseJobs: 134, bg: '047857' },
-            'Plumber': { coop: 'Rajasthan Labour Cooperative Society', rates: '₹300–₹600 / visit', baseDist: 2.4, baseJobs: 96, bg: '0284c7' },
-            'Carpenter': { coop: 'Jaipur Artisan Cooperative Federation', rates: '₹450–₹800 / visit', baseDist: 2.9, baseJobs: 78, bg: 'd97706' },
-            'AC Repair': { coop: 'Pink City HVAC Technicians Cooperative', rates: '₹500–₹850 / visit', baseDist: 3.2, baseJobs: 142, bg: '059669' },
-            'Cleaning': { coop: 'Mahila Sahkari Labour Union', rates: '₹250–₹500 / visit', baseDist: 1.2, baseJobs: 215, bg: '7c3aed' },
-            'Painter': { coop: 'Jaipur Painters & Polishers Guild', rates: '₹400–₹750 / visit', baseDist: 4.1, baseJobs: 88, bg: 'db2777' },
-            'Vehicle Repair': { coop: 'Auto Mechanics Cooperative Federation', rates: '₹350–₹700 / visit', baseDist: 3.5, baseJobs: 64, bg: '2563eb' },
-            'Moving': { coop: 'Transport & Logistics Labour Cooperative', rates: '₹800–₹1800 / trip', baseDist: 2.7, baseJobs: 110, bg: '0d9488' }
-          };
-
-          const formattedWorkers = data
-            .filter(w => !isTestOrDemo(w.name))
-            .map((w, idx) => {
-              const finalName = formatWorkerName(w.name);
-              const trade = (w.trade === 'Cleaner' ? 'Cleaning' : (w.trade || 'Electrician'));
-              const meta = TRADE_META[trade] || TRADE_META['Electrician'];
-              
-              // Create realistic unique variance using name hash
-              const hash = finalName.split('').reduce((acc, char) => acc + char.charCodeAt(0), idx * 7);
-              const uniqueJobs = w.reviews_count || (meta.baseJobs + (hash % 37));
-              const uniqueDist = Number(w.distance_km) || (meta.baseDist + ((hash % 18) / 10));
-              const uniqueRating = Number(w.rating) || (4.7 + ((hash % 3) / 10));
-
-              const finalAvatar = (w.avatar && !w.avatar.includes('images.unsplash.com') && !w.avatar.includes('unsplash') && !w.avatar.includes('1540569014015')) 
-                ? w.avatar 
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(finalName || 'Worker')}&background=${meta.bg}&color=fff&size=150`;
-              return {
-                id: w.id,
-                name: finalName,
-                avatar: finalAvatar,
-                trade: trade,
-                rating: uniqueRating,
-                reviewsCount: uniqueJobs,
-                coopName: w.coop_name || meta.coop,
-                city: w.city || 'Jaipur',
-                hourlyRate: w.hourly_rate || meta.rates,
-                distanceKm: Math.round(uniqueDist * 10) / 10,
-                isAvailableToday: w.is_available_today ?? true,
-                isTopRated: w.is_top_rated ?? true,
-                workerId: w.worker_id || `WORKER-JAI-${w.id.slice(0, 4).toUpperCase()}`
-              };
-            });
-          fetchedWorkers = [...fetchedWorkers, ...formattedWorkers];
-        }
-      } catch (err) {
-        console.error("Failed to fetch workers from database, using verified standards:", err);
-      } finally {
-        setWorkers(fetchedWorkers);
-        setIsLoading(false);
+        setWorkers(formattedDbWorkers);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch workers from Supabase:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchWorkers();
+
+    // Supabase Realtime channel subscription for live updates
+    const channel = supabase
+      .channel('workers-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'workers' },
+        () => {
+          fetchWorkers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const filteredWorkers = workers.filter((worker) => {
@@ -268,7 +265,26 @@ export const WorkerDirectory: React.FC<WorkerDirectoryProps> = ({
         </div>
 
         {/* Worker Cards Grid */}
-        {filteredWorkers.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((idx) => (
+              <div key={idx} className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 animate-pulse space-y-4">
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-200 dark:bg-slate-800" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-1/2" />
+                  </div>
+                </div>
+                <div className="h-10 bg-slate-100 dark:bg-slate-800/60 rounded-xl" />
+                <div className="flex justify-between items-center pt-2">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+                  <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded-xl w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredWorkers.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 sm:p-14 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 max-w-lg mx-auto my-6">
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 text-xl font-bold">
               🔍

@@ -409,7 +409,7 @@ export const AdminPanel: React.FC = () => {
   });
 
   return (
-    <div className="py-6 sm:py-8 bg-[#fbfdfc] min-h-[calc(100vh-4rem)] relative">
+    <div className="py-6 sm:py-8 bg-[#fbfdfc] dark:bg-[#0b0f19] min-h-[calc(100vh-4rem)] relative transition-colors">
       {/* Action Toast Alert */}
       {adminToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-800 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-600 flex items-center space-x-2 animate-in slide-in-from-bottom-5 duration-200">
@@ -421,28 +421,28 @@ export const AdminPanel: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Top Header & Cooperative Society Identity */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center font-black text-xl font-outfit shadow-sm">
               Sg
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 font-outfit">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-outfit">
                   Cooperative Operations Control Center
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                   SIH26089 Live
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Jaipur District Cooperative Labour & Artisans Federation · Registered Society #COOP-RJ-2024
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-2 self-start md:self-auto">
-            <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
+            <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse mr-2" />
               Live Database Connected
             </span>
@@ -451,67 +451,67 @@ export const AdminPanel: React.FC = () => {
 
         {/* 6 Real-time KPI Counters */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Total Workers</span>
-              <Users className="w-4 h-4 text-emerald-700" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Workers</span>
+              <Users className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             </div>
-            <p className="text-xl font-black text-slate-900 font-outfit">{opsMetrics.totalWorkers.toLocaleString()}</p>
-            <span className="text-[10px] text-slate-500 font-medium">100% KYC Verified</span>
+            <p className="text-xl font-black text-slate-900 dark:text-white font-outfit">{opsMetrics.totalWorkers.toLocaleString()}</p>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">100% KYC Verified</span>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Available Now</span>
-              <UserCheck className="w-4 h-4 text-emerald-600" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Available Now</span>
+              <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <p className="text-xl font-black text-emerald-700 font-outfit">{opsMetrics.availableToday}</p>
-            <span className="text-[10px] text-emerald-600 font-bold">● Ready for dispatch</span>
+            <p className="text-xl font-black text-emerald-700 dark:text-emerald-400 font-outfit">{opsMetrics.availableToday}</p>
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">● Ready for dispatch</span>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Today's Jobs</span>
-              <Briefcase className="w-4 h-4 text-sky-600" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Today's Jobs</span>
+              <Briefcase className="w-4 h-4 text-sky-600 dark:text-sky-400" />
             </div>
-            <p className="text-xl font-black text-slate-900 font-outfit">{opsMetrics.todayJobs}</p>
-            <span className="text-[10px] text-sky-600 font-bold">{opsMetrics.inProgressJobs} In Progress</span>
+            <p className="text-xl font-black text-slate-900 dark:text-white font-outfit">{opsMetrics.todayJobs}</p>
+            <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold">{opsMetrics.inProgressJobs} In Progress</span>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Pending KYC</span>
-              <ShieldCheck className="w-4 h-4 text-amber-500" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pending KYC</span>
+              <ShieldCheck className="w-4 h-4 text-amber-500 dark:text-amber-400" />
             </div>
-            <p className="text-xl font-black text-amber-600 font-outfit">{opsMetrics.pendingKYC}</p>
-            <span className="text-[10px] text-amber-600 font-bold">Awaiting approval</span>
+            <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-outfit">{opsMetrics.pendingKYC}</p>
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Awaiting approval</span>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Worker Payouts</span>
-              <IndianRupee className="w-4 h-4 text-emerald-600" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Worker Payouts</span>
+              <IndianRupee className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <p className="text-xl font-black text-slate-900 font-outfit">
+            <p className="text-xl font-black text-slate-900 dark:text-white font-outfit">
               ₹{(opsMetrics.workerEarnings / 100000).toFixed(2)}L
             </p>
-            <span className="text-[10px] text-emerald-700 font-bold">{bylaws.workerShare}% Direct Share</span>
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">{bylaws.workerShare}% Direct Share</span>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Welfare Pool</span>
-              <HeartHandshake className="w-4 h-4 text-amber-600" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Welfare Pool</span>
+              <HeartHandshake className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             </div>
-            <p className="text-xl font-black text-amber-600 font-outfit">
+            <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-outfit">
               ₹{(opsMetrics.welfareFundBalance / 1000).toFixed(1)}K
             </p>
-            <span className="text-[10px] text-amber-600 font-bold">Medical & Accident Cover</span>
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Medical & Accident Cover</span>
           </div>
         </div>
 
         {/* Tab Navigation Strip (Clean Segmented Pills) */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200 text-xs font-bold shadow-2xs">
+        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-bold shadow-2xs">
           {[
             { id: 'overview', label: '📊 Live Operations' },
             { id: 'kyc', label: `🪪 Worker Verification (${pendingWorkers.length})` },
@@ -528,7 +528,7 @@ export const AdminPanel: React.FC = () => {
               className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                 activeTab === tab.id
                   ? 'bg-emerald-800 text-white shadow-sm ring-1 ring-emerald-700'
-                  : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {tab.label}
@@ -541,77 +541,77 @@ export const AdminPanel: React.FC = () => {
           <div className="space-y-6 animate-in fade-in duration-200">
             {/* Live Operational Status Strip */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
-                <div className="flex items-center space-x-2 text-emerald-800 font-bold text-xs mb-1">
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs mb-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping" />
                   <span>{opsMetrics.inProgressJobs} Jobs In Progress</span>
                 </div>
-                <p className="text-xs text-slate-600">Active electricians, plumbers, & cleaners on client sites across Jaipur</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Active electricians, plumbers, & cleaners on client sites across Jaipur</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
-                <div className="flex items-center space-x-2 text-amber-800 font-bold text-xs mb-1">
-                  <AlertCircle className="w-4 h-4 text-amber-600" />
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                <div className="flex items-center space-x-2 text-amber-800 dark:text-amber-300 font-bold text-xs mb-1">
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                   <span>11 Unassigned Requests</span>
                 </div>
-                <p className="text-xs text-slate-600">Queued in deterministic fair-rotation matching pipeline</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Queued in deterministic fair-rotation matching pipeline</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200">
-                <div className="flex items-center space-x-2 text-rose-800 font-bold text-xs mb-1">
-                  <AlertTriangle className="w-4 h-4 text-rose-600" />
+              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
+                <div className="flex items-center space-x-2 text-rose-800 dark:text-rose-300 font-bold text-xs mb-1">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                   <span>4 Emergency Requests</span>
                 </div>
-                <p className="text-xs text-slate-600">Short-circuit & pipe burst alerts flagged for instant 15-min dispatch</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Short-circuit & pipe burst alerts flagged for instant 15-min dispatch</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200">
-                <div className="flex items-center space-x-2 text-sky-800 font-bold text-xs mb-1">
-                  <CheckCircle className="w-4 h-4 text-sky-600" />
+              <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800">
+                <div className="flex items-center space-x-2 text-sky-800 dark:text-sky-300 font-bold text-xs mb-1">
+                  <CheckCircle className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   <span>99.4% On-Time Arrival</span>
                 </div>
-                <p className="text-xs text-slate-600">Average ETA across completed shifts: 18.2 minutes</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Average ETA across completed shifts: 18.2 minutes</p>
               </div>
             </div>
 
             {/* Live Operations & Allocation Table */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-900 font-outfit text-base">Live Allocation & Dispatch Queue</h3>
-                  <p className="text-xs text-slate-500">Real-time matching based on Availability + Distance + Skill Match + Fair Rotation</p>
+                  <h3 className="font-bold text-slate-900 dark:text-white font-outfit text-base">Live Allocation & Dispatch Queue</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Real-time matching based on Availability + Distance + Skill Match + Fair Rotation</p>
                 </div>
                 <button
                   onClick={() => setActiveTab('allocation')}
-                  className="text-xs font-bold text-emerald-700 hover:underline cursor-pointer"
+                  className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   View Full Engine →
                 </button>
               </div>
 
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {liveAllocationQueue.map((job) => (
                   <div key={job.id} className="py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                           job.urgency === 'EMERGENCY'
-                            ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                            : 'bg-slate-100 text-slate-700'
+                            ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                         }`}>
                           {job.urgency}
                         </span>
-                        <span className="font-bold text-slate-900 text-xs sm:text-sm">{job.service}</span>
+                        <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{job.service}</span>
                         <span className="text-[10px] text-slate-400">Ref: {job.id}</span>
                       </div>
-                      <p className="text-xs text-slate-600 flex items-center">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center">
                         <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                        {job.address} · <span className="font-semibold text-slate-900 ml-1">{job.customerName}</span>
+                        {job.address} · <span className="font-semibold text-slate-900 dark:text-white ml-1">{job.customerName}</span>
                       </p>
                     </div>
 
                     <div className="flex items-center space-x-3 self-end md:self-auto">
-                      <span className="font-extrabold text-sm text-slate-900">{job.amount}</span>
+                      <span className="font-extrabold text-sm text-slate-900 dark:text-white">{job.amount}</span>
                       {job.status === 'UNASSIGNED' ? (
                         <button
                           onClick={() => handleAutoAssignJob(job.id)}

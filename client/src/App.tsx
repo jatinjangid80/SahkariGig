@@ -29,7 +29,6 @@ import { supabase } from './supabase';
 import confetti from 'canvas-confetti';
 
 import { ServicesView } from './components/ServicesView';
-import { ForWorkersView } from './components/ForWorkersView';
 import { HelpView } from './components/HelpView';
 import { HowItWorksView } from './components/HowItWorksView';
 import { WorkerOnboarding } from './components/WorkerOnboarding';
@@ -381,7 +380,7 @@ export default function App() {
           </>
         )}
 
-        {currentPath === '/workers' && currentUser?.role !== 'Supervisor' && (
+        {(currentPath === '/workers' || currentPath === '/for-workers') && currentUser?.role !== 'Supervisor' && (
           <WorkersView
             selectedCategory={selectedCategory}
             selectedCity={selectedLocation.split(',')[0]}
@@ -406,23 +405,6 @@ export default function App() {
             onSelectCategory={(category) => {
               setSelectedCategory(category);
               navigateTo('/workers');
-            }}
-          />
-        )}
-
-        {currentPath === '/for-workers' && (
-          <ForWorkersView
-            onRegisterClick={() => handleOpenAuth('Worker', 'signup')}
-            onDemoWorkerClick={() => {
-              const demoWorker = {
-                id: 'demo-worker-202',
-                name: 'Rajesh Sharma',
-                email: 'rajesh.worker@sahkarigig.org',
-                role: 'Worker' as const
-              };
-              localStorage.setItem('demoUser', JSON.stringify(demoWorker));
-              setCurrentUser(demoWorker);
-              navigateTo('/dashboard');
             }}
           />
         )}
