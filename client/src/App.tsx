@@ -514,7 +514,10 @@ export default function App() {
             )}
 
             {currentUser?.role === 'Admin' && (
-              <AdminPanel />
+              <AdminPanel
+                activeTab={workerActiveTab}
+                onTabChange={setWorkerActiveTab as any}
+              />
             )}
           </div>
         )}

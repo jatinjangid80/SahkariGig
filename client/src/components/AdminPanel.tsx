@@ -56,13 +56,40 @@ interface RegisteredWorker {
   is_verified: boolean;
 }
 
-export const AdminPanel: React.FC = () => {
+interface AdminPanelProps {
+  activeTab?: 'overview' | 'kyc' | 'allocation' | 'workers' | 'payments' | 'welfare' | 'disputes' | 'settings' | string;
+  onTabChange?: (tab: 'overview' | 'kyc' | 'allocation' | 'workers' | 'payments' | 'welfare' | 'disputes' | 'settings') => void;
+}
+
+export const AdminPanel: React.FC<AdminPanelProps> = ({
+  activeTab: propActiveTab,
+  onTabChange
+}) => {
   const [pin, setPin] = useState('26089');
   const [isUnlocked, setIsUnlocked] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'kyc' | 'allocation' | 'workers' | 'payments' | 'welfare' | 'disputes' | 'settings'
-  >('overview');
+
+  const mapAdminTab = (t?: string): 'overview' | 'kyc' | 'allocation' | 'workers' | 'payments' | 'welfare' | 'disputes' | 'settings' => {
+    if (t === 'profile' || t === 'settings' || t === 'bylaws') return 'settings';
+    if (t && ['overview', 'kyc', 'allocation', 'workers', 'payments', 'welfare', 'disputes', 'settings'].includes(t)) {
+      return t as any;
+    }
+    return 'overview';
+  };
+
+  const [localActiveTab, setLocalActiveTab] = useState<'overview' | 'kyc' | 'allocation' | 'workers' | 'payments' | 'welfare' | 'disputes' | 'settings'>(() => mapAdminTab(propActiveTab));
+
+  useEffect(() => {
+    if (propActiveTab) {
+      setLocalActiveTab(mapAdminTab(propActiveTab));
+    }
+  }, [propActiveTab]);
+
+  const activeTab = propActiveTab ? mapAdminTab(propActiveTab) : localActiveTab;
+  const setActiveTab = (t: 'overview' | 'kyc' | 'allocation' | 'workers' | 'payments' | 'welfare' | 'disputes' | 'settings') => {
+    setLocalActiveTab(t);
+    if (onTabChange) onTabChange(t);
+  };
 
   // Operational metrics
   const [opsMetrics, setOpsMetrics] = useState({
