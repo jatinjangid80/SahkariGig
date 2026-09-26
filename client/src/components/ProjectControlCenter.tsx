@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LucideLayoutDashboard, LucideFileText, LucideUsers, LucideIndianRupee, LucideClock, LucideCheckSquare, LucideImage, LucideMessageSquare, LucidePlusCircle, LucideShieldCheck, LucideAlertCircle, Star } from 'lucide-react';
+import { LucideLayoutDashboard, LucideFileText, LucideUsers, LucideIndianRupee, LucideClock, LucideCheckSquare, LucideImage, LucideMessageSquare, LucidePlusCircle, LucideShieldCheck, LucideAlertCircle, LucideCamera, LucideMaximize2, X, Star } from 'lucide-react';
 import { supabase } from '../supabase';
 
 export interface ProjectControlCenterProps {
@@ -16,6 +16,23 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
   const [assignedWorkers, setAssignedWorkers] = useState<any[]>([]);
   const [currentProject, setCurrentProject] = useState<any>(null);
   const [projectProgress, setProjectProgress] = useState<number>(25);
+  const [selectedPhotoPreview, setSelectedPhotoPreview] = useState<string | null>(null);
+
+  const [siteUpdate, setSiteUpdate] = useState<{
+    note: string;
+    photos: string[];
+    timestamp: string;
+    supervisorName: string;
+  }>({
+    note: "Brickwork for the ground floor is proceeding nicely. We've completed the north and east walls. I've uploaded the photos from today's progress.",
+    photos: [
+      'https://images.unsplash.com/photo-1541888946425-d0fbb186156a?w=800&q=80',
+      'https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?w=800&q=80',
+      'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80'
+    ],
+    timestamp: 'Today at 4:30 PM',
+    supervisorName: 'Er. Vikramaditya Rathore'
+  });
 
   const fetchProjectAndTeamData = async () => {
     try {
@@ -59,11 +76,41 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
   useEffect(() => {
     fetchProjectAndTeamData();
 
+    const loadSiteUpdate = () => {
+      const saved = localStorage.getItem(`latest_site_update_${currentProject?.id}`) || localStorage.getItem('latest_site_update_general');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setSiteUpdate(prev => ({
+            ...prev,
+            ...parsed,
+            photos: parsed.photos?.length ? parsed.photos : prev.photos
+          }));
+        } catch (e) {}
+      }
+    };
+    loadSiteUpdate();
+
+    const handleSiteUpdateEvent = (e: any) => {
+      if (e.detail) {
+        setSiteUpdate(prev => ({
+          ...prev,
+          note: e.detail.note || prev.note,
+          photos: e.detail.photos?.length ? e.detail.photos : prev.photos,
+          timestamp: e.detail.timestamp || 'Just now',
+          supervisorName: e.detail.supervisorName || prev.supervisorName
+        }));
+        if (e.detail.progress) setProjectProgress(e.detail.progress);
+      }
+    };
+    window.addEventListener('site_progress_updated', handleSiteUpdateEvent);
+
     // Listen to real-time updates from Supervisor / DB
     const channel = supabase
       .channel('project_control_center_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
         fetchProjectAndTeamData();
+        loadSiteUpdate();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'project_workers' }, () => {
         fetchProjectAndTeamData();
@@ -71,9 +118,10 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
       .subscribe();
 
     return () => {
+      window.removeEventListener('site_progress_updated', handleSiteUpdateEvent);
       channel.unsubscribe();
     };
-  }, []);
+  }, [currentProject?.id]);
 
   const handleAssignWorker = async (worker: any, task: string) => {
     if (!currentProject) return;
@@ -210,30 +258,44 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
 
             {/* Latest Updates */}
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-4">Latest Site Update</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg">Latest Site Update</h3>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Verified Live
+                </span>
+              </div>
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs font-outfit border border-emerald-500/20">
-                  VR
+                  {siteUpdate.supervisorName ? siteUpdate.supervisorName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'VR'}
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
-                    <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
-                      "Brickwork for the ground floor is proceeding nicely. We've completed the north and east walls. I've uploaded the photos from today's progress."
+                    <p className="text-sm text-slate-700 dark:text-slate-300 mb-3 leading-relaxed">
+                      "{siteUpdate.note}"
                     </p>
-                    <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-                      <div className="w-24 h-24 bg-slate-200 rounded-lg shrink-0 flex items-center justify-center text-slate-400">
-                        <LucideImage className="w-6 h-6" />
+                    
+                    {siteUpdate.photos && siteUpdate.photos.length > 0 && (
+                      <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-1">
+                        {siteUpdate.photos.map((photoUrl, idx) => (
+                          <div 
+                            key={idx}
+                            onClick={() => setSelectedPhotoPreview(photoUrl)}
+                            className="w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 relative group cursor-pointer shadow-xs hover:scale-105 transition-transform bg-slate-100 dark:bg-slate-800"
+                          >
+                            <img src={photoUrl} alt={`Site inspection ${idx + 1}`} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-bold gap-1">
+                              <LucideMaximize2 className="w-3.5 h-3.5" /> View
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="w-24 h-24 bg-slate-200 rounded-lg shrink-0 flex items-center justify-center text-slate-400">
-                        <LucideImage className="w-6 h-6" />
-                      </div>
-                      <div className="w-24 h-24 bg-slate-200 rounded-lg shrink-0 flex items-center justify-center text-slate-400 relative">
-                        <LucideImage className="w-6 h-6" />
-                        <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center text-white text-xs font-bold">+1 more</div>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                  <div className="text-xs text-slate-400 mt-2">Today at 4:30 PM</div>
+                  <div className="flex items-center justify-between text-xs text-slate-400 mt-2">
+                    <span>{siteUpdate.timestamp}</span>
+                    <span className="font-semibold text-slate-600 dark:text-slate-300">By {siteUpdate.supervisorName}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -443,6 +505,35 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
             <div className="p-6 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800/50">
               <button onClick={() => setChangeRequestOpen(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer">Cancel</button>
               <button onClick={() => setChangeRequestOpen(false)} className="px-4 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors cursor-pointer">Submit Request</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Preview Lightbox Modal */}
+      {selectedPhotoPreview && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedPhotoPreview(null)}
+        >
+          <div 
+            className="relative max-w-4xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-700"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedPhotoPreview(null)}
+              className="absolute top-4 right-4 z-10 w-9 h-9 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img 
+              src={selectedPhotoPreview} 
+              alt="Site Progress Full View" 
+              className="w-full h-auto max-h-[80vh] object-contain"
+            />
+            <div className="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between text-xs text-slate-300">
+              <span className="font-semibold text-emerald-400">Verified Inspection Photo</span>
+              <span>Updated by {siteUpdate.supervisorName} • {siteUpdate.timestamp}</span>
             </div>
           </div>
         </div>

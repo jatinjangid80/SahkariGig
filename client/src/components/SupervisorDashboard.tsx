@@ -6,7 +6,7 @@ import {
   LucideClock, LucideAlertCircle, LucideCalendar, LucidePlusCircle,
   LucideSearch, LucideCheck, LucideSliders, LucideMapPin, LucideShieldCheck,
   LucidePhone, LucideMail, LucideAward, LucideActivity, LucideTrendingUp,
-  LucideTrash2, LucideX, LucideMessageSquare, Sun, Moon, Laptop
+  LucideTrash2, LucideX, LucideMessageSquare, LucideCamera, LucideUploadCloud, LucideImage, Sun, Moon, Laptop
 } from 'lucide-react';
 import { useTheme } from '../utils/theme';
 
@@ -106,7 +106,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   const [newProjBudget, setNewProjBudget] = useState('');
 
   // Update Progress Form
-  const [progressValue, setProgressValue] = useState<number>(68);
+  const [progressValue, setProgressValue] = useState<number>(25);
+  const [siteUpdateNote, setSiteUpdateNote] = useState<string>("Brickwork for the ground floor is proceeding nicely. We've completed the north and east walls. I've uploaded the photos from today's progress.");
+  const [sitePhotos, setSitePhotos] = useState<string[]>([
+    'https://images.unsplash.com/photo-1541888946425-d0fbb186156a?w=400&q=80',
+    'https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?w=400&q=80',
+    'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&q=80'
+  ]);
   const [newTaskName, setNewTaskName] = useState('');
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
@@ -392,6 +398,25 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     showToast('New milestone task added!');
   };
 
+  // Handle Photo Upload from device / camera
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        if (uploadEvent.target?.result) {
+          setSitePhotos(prev => [...prev, uploadEvent.target!.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setSitePhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Handle Save Progress Update
   const handleSaveProgress = async () => {
     setProjects(prev => prev.map(proj => {
@@ -405,8 +430,20 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
       return proj;
     }));
 
+    const updatePayload = {
+      note: siteUpdateNote,
+      photos: sitePhotos,
+      progress: progressValue,
+      timestamp: `Today at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      supervisorName: currentUser?.name || 'Er. Vikramaditya Rathore',
+      projectId: selectedProjectIdForProgress
+    };
+
     try {
       localStorage.setItem(`project_progress_${selectedProjectIdForProgress}`, String(progressValue));
+      localStorage.setItem(`latest_site_update_${selectedProjectIdForProgress}`, JSON.stringify(updatePayload));
+      localStorage.setItem('latest_site_update_general', JSON.stringify(updatePayload));
+      window.dispatchEvent(new CustomEvent('site_progress_updated', { detail: updatePayload }));
     } catch (e) {
       console.error(e);
     }
@@ -421,7 +458,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     }
 
     setIsUpdateProgressModalOpen(false);
-    showToast(`Project progress updated to ${progressValue}%!`);
+    showToast(`Project progress, note & site photos updated!`);
   };
 
   // Handle Assignment Status Change (Persisted to Supabase)
@@ -1516,7 +1553,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               <button onClick={() => setIsUpdateProgressModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
             
-            <div className="space-y-5">
+            <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
               {/* Slider */}
               <div className="bg-slate-50 dark:bg-slate-750 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-2">
@@ -1540,7 +1577,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     key={val}
                     type="button"
                     onClick={() => setProgressValue(val)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
                       progressValue === val 
                         ? 'bg-emerald-600 text-white border-emerald-600' 
                         : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
@@ -1551,20 +1588,86 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 ))}
               </div>
 
+              {/* Site Update Note for Customer */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                  <span>Supervisor Site Message / Note</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-normal">Visible to Customer</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={siteUpdateNote}
+                  onChange={e => setSiteUpdateNote(e.target.value)}
+                  placeholder="e.g. Ground floor brickwork completed. North and East walls finished. Photos uploaded."
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium leading-relaxed resize-none"
+                />
+              </div>
+
+              {/* Site Inspection Photos Upload */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <LucideCamera className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Site Inspection Photos ({sitePhotos.length})</span>
+                  </label>
+                  <label className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-1">
+                    <LucideUploadCloud className="w-3.5 h-3.5" />
+                    <span>Upload New</span>
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      onChange={handlePhotoUpload} 
+                      className="hidden" 
+                    />
+                  </label>
+                </div>
+
+                {/* Uploaded Photos Grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  {sitePhotos.map((photo, idx) => (
+                    <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 aspect-square bg-slate-100 dark:bg-slate-800 shadow-2xs">
+                      <img src={photo} alt={`Site inspection ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(idx)}
+                        className="absolute top-1 right-1 bg-black/60 hover:bg-red-600 text-white p-1 rounded-full text-[10px] transition-colors cursor-pointer"
+                        title="Remove photo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Add Photo Button Tile */}
+                  <label className="rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-emerald-500 dark:hover:border-emerald-400 flex flex-col items-center justify-center p-2 text-slate-400 hover:text-emerald-600 transition-colors aspect-square cursor-pointer bg-slate-50/50 dark:bg-slate-800/50">
+                    <LucideUploadCloud className="w-5 h-5 mb-1" />
+                    <span className="text-[10px] font-bold">Add Photo</span>
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      onChange={handlePhotoUpload} 
+                      className="hidden" 
+                    />
+                  </label>
+                </div>
+              </div>
+
               <div className="flex space-x-3 pt-3 border-t border-slate-100 dark:border-slate-700">
                 <button 
                   type="button"
                   onClick={() => setIsUpdateProgressModalOpen(false)}
-                  className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl"
+                  className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="button"
                   onClick={handleSaveProgress}
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
                 >
-                  Save Progress
+                  Save Progress & Photos
                 </button>
               </div>
             </div>
