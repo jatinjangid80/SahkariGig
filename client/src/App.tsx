@@ -403,6 +403,8 @@ export default function App() {
         {currentPath === '/services' && (
           <ServicesView
             currentUser={currentUser}
+            onNavigate={navigateTo}
+            onOpenBooking={handleOpenBooking}
             onSelectCategory={(category) => {
               setSelectedCategory(category);
               navigateTo('/workers');

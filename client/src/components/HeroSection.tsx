@@ -152,6 +152,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             )}
           </div>
 
+          {/* Quick Link for House Construction & Dedicated Supervisor */}
+          <div className="flex items-center justify-center pt-1">
+            <button
+              type="button"
+              onClick={() => { if (onNavigate) onNavigate('/house-construction'); }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 transition-all hover:scale-105 shadow-2xs cursor-pointer"
+            >
+              <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Turnkey House Construction & Site Supervisor Packages</span>
+              <ChevronRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            </button>
+          </div>
+
           {/* Customer Live Booked Services Quick Bar (if logged in as Customer) */}
           {currentUser?.role === 'Customer' && (
             <div className="pt-3 max-w-2xl mx-auto">
