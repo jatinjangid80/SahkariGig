@@ -79,6 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         { label: 'Home', path: '/' },
         { label: 'Services', path: '/services' },
         { label: 'Nearby Workers', path: '/workers' },
+        { label: 'House Construction', path: '/house-construction' },
         { label: 'My Dashboard', path: '/dashboard' },
         { label: 'How It Works', path: '/how-it-works' },
         { label: 'Support', path: '/help' },
@@ -90,6 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       { label: 'Home', path: '/' },
       { label: 'Services', path: '/services' },
       { label: 'Nearby Workers', path: '/workers' },
+      { label: 'House Construction', path: '/house-construction' },
       { label: 'How It Works', path: '/how-it-works' },
       { label: 'About', path: '/about' },
     ];
@@ -108,6 +110,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const isLinkActive = (link: { label: string; path: string; tab?: string }) => {
     if (link.path === '/' && currentPath === '/') return true;
+    if (
+      link.path === '/house-construction' && 
+      (currentPath === '/house-construction' || currentPath === '/projects' || currentPath === '/construction-packages' || currentPath === '/teams' || currentPath === '/bulk-workers')
+    ) {
+      return true;
+    }
     if (link.path !== '/' && currentPath === link.path) {
       if (!link.tab) return true;
       const effectiveTab = workerActiveTab || (currentUser?.role === 'Supervisor' ? 'overview' : (currentUser?.role === 'Worker' ? 'feed' : ''));
