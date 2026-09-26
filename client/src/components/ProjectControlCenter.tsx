@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LucideLayoutDashboard, LucideFileText, LucideUsers, LucideIndianRupee, LucideClock, LucideCheckSquare, LucideImage, LucideMessageSquare, LucidePlusCircle, LucideShieldCheck, LucideAlertCircle, LucideCamera, LucideMaximize2, X, Star } from 'lucide-react';
 import { supabase } from '../supabase';
+import { ContractsView } from './ContractsView';
 
 export interface ProjectControlCenterProps {
   currentUser: any;
@@ -209,10 +210,7 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
         {['Overview', 'Contract', 'Team', 'Milestones', 'Payments', 'Documents'].map(tab => (
           <button
             key={tab}
-            onClick={() => {
-              if (tab === 'Contract') onNavigate('/contracts');
-              else setActiveTab(tab);
-            }}
+            onClick={() => setActiveTab(tab)}
             className={`pb-3 font-semibold text-sm transition-colors cursor-pointer border-b-2 whitespace-nowrap ${activeTab === tab
                 ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
                 : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -341,8 +339,21 @@ export const ProjectControlCenter: React.FC<ProjectControlCenterProps> = ({ curr
         </div>
       )}
 
+      {/* Contract Tab Content */}
+      {activeTab === 'Contract' && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <ContractsView 
+            currentUser={currentUser} 
+            onNavigate={onNavigate} 
+            generatedProjectDetails={generatedProjectDetails}
+            isModal={false}
+            hideBackButton={true}
+          />
+        </div>
+      )}
+
       {/* Fallback for unbuilt tabs */}
-      {activeTab !== 'Overview' && activeTab !== 'Team' && (
+      {activeTab !== 'Overview' && activeTab !== 'Team' && activeTab !== 'Contract' && (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{activeTab}</h3>
           <p className="text-slate-500">This section is currently under development. Please check back later.</p>

@@ -11,10 +11,11 @@ export interface ContractsViewProps {
     floors: string;
   } | null;
   isModal?: boolean;
+  hideBackButton?: boolean;
   onClose?: () => void;
 }
 
-export const ContractsView: React.FC<ContractsViewProps> = ({ currentUser, onNavigate, generatedProjectDetails, isModal, onClose }) => {
+export const ContractsView: React.FC<ContractsViewProps> = ({ currentUser, onNavigate, generatedProjectDetails, isModal, hideBackButton, onClose }) => {
   const [activeVersion, setActiveVersion] = useState<'v1' | 'v2'>('v2');
   const [liveProgress, setLiveProgress] = useState<number>(25);
 
@@ -81,7 +82,7 @@ export const ContractsView: React.FC<ContractsViewProps> = ({ currentUser, onNav
     <div className={isModal ? "px-4 sm:px-6 lg:px-8 pb-12 pt-6 max-w-5xl mx-auto" : "max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12"}>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          {!isModal && (
+          {!isModal && !hideBackButton && (
             <button onClick={() => onNavigate('/projects')} className="text-sm font-semibold text-slate-500 hover:text-emerald-600 mb-2 inline-flex items-center gap-1 cursor-pointer">
               ← Back to Projects
             </button>
