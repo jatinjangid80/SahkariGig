@@ -189,6 +189,7 @@ export default function App() {
       if (session?.user) {
         const email = session.user.email || '';
         const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
+        const role = session.user.user_metadata?.role || 'Customer';
         const avatarUrl = session.user.user_metadata?.avatar_url || 
                           session.user.user_metadata?.picture || 
                           session.user.identities?.[0]?.identity_data?.avatar_url || 

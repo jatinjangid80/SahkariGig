@@ -195,9 +195,20 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           setSelectedProjectIdForProgress(projData[0].id);
         }
 
-        // 3. Fetch Workers
-        const { data: workerData } = await supabase.from('workers').select('*');
-        if (workerData && workerData.length > 0) setWorkers(workerData);
+        // 3. Fetch Workers directly from Supabase
+        const { data: workerData } = await supabase.from('workers').select('*').order('created_at', { ascending: false });
+        if (workerData && workerData.length > 0) {
+          setWorkers(workerData.map((w: any) => {
+            const rawName = (w.name || '').trim();
+            const formattedName = rawName
+              ? rawName.split(' ').map((p: string) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ')
+              : 'Verified Worker';
+            return {
+              ...w,
+              name: formattedName
+            };
+          }));
+        }
 
         // 4. Fetch Project Assignments
         const { data: assignData } = await supabase
@@ -228,6 +239,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'project_workers' },
+        () => {
+          fetchSupervisorData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'workers' },
         () => {
           fetchSupervisorData();
         }
@@ -437,6 +455,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
   // Filtered workers
   const filteredWorkers = workers.filter(w => {
+    const n = (w.name || '').toLowerCase().trim();
+    if (!n || n === 'demo' || n.startsWith('demo') || n.includes('test') || n.includes('badass') || n.includes('dummy')) {
+      return false;
+    }
     const matchesSearch = w.name?.toLowerCase().includes(workerSearch.toLowerCase()) || 
                           w.trade?.toLowerCase().includes(workerSearch.toLowerCase()) ||
                           w.coop_name?.toLowerCase().includes(workerSearch.toLowerCase());
@@ -521,7 +543,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             <div className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Total Crew</div>
             <LucideUsers className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
           </div>
-          <div className="text-3xl font-black text-slate-900 dark:text-white mt-2">{workers.length}</div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white mt-2">{filteredWorkers.length}</div>
           <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Verified Labourers</div>
         </div>
 
@@ -694,7 +716,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           <h3 className="font-extrabold text-lg text-slate-900 dark:text-white font-outfit">Recent Field Activities</h3>
           <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Live Supabase Feed
+            Live Updates
           </span>
         </div>
 

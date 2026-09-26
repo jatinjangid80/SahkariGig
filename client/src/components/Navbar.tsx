@@ -64,6 +64,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       ];
     }
 
+    if (currentUser?.role === 'Supervisor') {
+      return [
+        { label: 'Overview', path: '/dashboard', tab: 'overview' },
+        { label: 'Site Projects', path: '/dashboard', tab: 'projects' },
+        { label: 'Labour Crew', path: '/dashboard', tab: 'workers' },
+        { label: 'Assignments', path: '/dashboard', tab: 'assignments' },
+        { label: 'Site Progress', path: '/dashboard', tab: 'progress' },
+      ];
+    }
+
     if (currentUser?.role === 'Customer') {
       return [
         { label: 'Home', path: '/' },
@@ -100,7 +110,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (link.path === '/' && currentPath === '/') return true;
     if (link.path !== '/' && currentPath === link.path) {
       if (!link.tab) return true;
-      return workerActiveTab === link.tab;
+      const effectiveTab = workerActiveTab || (currentUser?.role === 'Supervisor' ? 'overview' : (currentUser?.role === 'Worker' ? 'feed' : ''));
+      return effectiveTab === link.tab;
     }
     return false;
   };

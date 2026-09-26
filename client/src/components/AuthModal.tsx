@@ -70,7 +70,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (err.message === "timeout") {
           // Demo fallback
           setTimeout(() => {
-            onSuccess({ name: 'Google User', email: 'google.user@example.com', role: 'Customer' });
+            onSuccess({ name: 'Google User', email: 'google.user@example.com', role: 'Customer' }, false);
             onClose();
           }, 1000);
           return;
@@ -80,7 +80,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       if (response?.error) {
         setTimeout(() => {
-          onSuccess({ name: 'Google User', email: 'google.user@example.com', role: 'Customer' });
+          onSuccess({ name: 'Google User', email: 'google.user@example.com', role: 'Customer' }, false);
           onClose();
         }, 1000);
         return;
