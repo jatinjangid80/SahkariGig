@@ -260,32 +260,41 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             console.warn('Project workers fetch note:', pwErr);
           }
 
-          // Check local cached assignments if Supabase returned nothing
-          if (loadedAssignments.length === 0) {
-            const localSaved = localStorage.getItem('sahkarigig_project_assignments');
-            if (localSaved) {
-              try {
-                const parsed = JSON.parse(localSaved);
-                const matched = parsed.filter((as: any) => {
-                  const asWorkerName = as.workers?.name || as.workerName || '';
-                  return workerName && asWorkerName.toLowerCase().includes(workerName.toLowerCase());
-                });
-                loadedAssignments = matched.map((as: any) => ({
-                  id: as.id,
-                  isProjectTask: true,
-                  service: as.projects?.name || 'House Construction Site',
-                  customerName: as.projects?.customer_name || 'Project Client',
-                  customerPhone: as.projects?.customer_phone || '+91 98765 43210',
-                  supervisorName: 'Er. Vikramaditya (Supervisor)',
-                  address: as.projects?.location || 'Jaipur, Rajasthan',
-                  task: as.task || 'Assigned Site Work',
-                  startDate: as.projects?.start_date || 'Today',
-                  status: as.status || 'IN_PROGRESS',
-                  amount: '₹800/day',
-                  paymentStatus: as.status === 'COMPLETED' ? 'PAID' : 'PENDING'
-                }));
-              } catch (e) {}
-            }
+          // Also merge local storage assignments so newly assigned tasks appear instantly across tabs
+          const localSaved = localStorage.getItem('sahkarigig_project_assignments');
+          if (localSaved) {
+            try {
+              const parsed = JSON.parse(localSaved);
+              const matched = parsed.filter((as: any) => {
+                const asWorkerName = as.workers?.name || as.workerName || as.worker_name || '';
+                const asWorkerId = as.worker_id || as.workers?.id || '';
+                if (asWorkerId && workerIdMatches.has(asWorkerId)) return true;
+                return workerName && asWorkerName && (
+                  asWorkerName.toLowerCase().includes(workerName.toLowerCase()) ||
+                  workerName.toLowerCase().includes(asWorkerName.toLowerCase())
+                );
+              });
+
+              matched.forEach((as: any) => {
+                const exists = loadedAssignments.some(la => la.id === as.id || (la.task === as.task && la.service === (as.projects?.name || as.service)));
+                if (!exists) {
+                  loadedAssignments.unshift({
+                    id: as.id || `as-local-${Date.now()}`,
+                    isProjectTask: true,
+                    service: as.projects?.name || as.service || 'House Construction — Ground',
+                    customerName: as.projects?.customer_name || as.customerName || 'Jatin Jangid',
+                    customerPhone: as.projects?.customer_phone || as.customerPhone || '+91 98765 43210',
+                    supervisorName: 'Er. Vikramaditya Rathore (Chief Supervisor)',
+                    address: as.projects?.location || as.address || 'Mansarovar / Jagatpura, Jaipur',
+                    task: as.task || 'Assigned Site Work',
+                    startDate: as.projects?.start_date || as.startDate || 'Today',
+                    status: as.status || 'IN_PROGRESS',
+                    amount: '₹800/day',
+                    paymentStatus: as.status === 'COMPLETED' ? 'PAID' : 'PENDING'
+                  });
+                }
+              });
+            } catch (e) {}
           }
 
           let loadedBookings: any[] = [];
@@ -805,67 +814,101 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 </div>
               ))}
 
-              {requests.filter(r => r.status === 'REQUESTED' || r.status === 'PENDING').map(req => (
-                <div key={req.id} className="bg-white rounded-3xl border border-emerald-200 shadow-md p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60 pointer-events-none" />
+              {requests.filter(r => (r.status === 'REQUESTED' || r.status === 'PENDING' || r.isProjectTask) && r.status !== 'COMPLETED').map(req => (
+                <div key={req.id} className={`bg-white dark:bg-slate-800 rounded-3xl border ${req.isProjectTask ? 'border-emerald-400 dark:border-emerald-600 shadow-md ring-1 ring-emerald-400/20' : 'border-slate-200 dark:border-slate-700 shadow-sm'} p-6 relative overflow-hidden`}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 dark:bg-amber-900/10 rounded-full blur-3xl -mr-10 -mt-10 opacity-60 pointer-events-none" />
 
                   <div className="relative z-10 flex flex-col sm:flex-row justify-between gap-4">
-                    <div className="space-y-3">
+                    <div className="space-y-3 flex-1">
                       <div className="flex items-center space-x-2">
                         {req.isProjectTask ? (
-                          <span className="text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-md border border-emerald-200">
-                            🏗️ Supervisor Site Assignment
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
+                              🏗️ Supervisor Site Task
+                            </span>
+                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md">
+                              {req.status === 'IN_PROGRESS' ? '• Active on Site' : '• New Request'}
+                            </span>
+                          </div>
                         ) : (
-                          <h3 className="text-base font-bold text-slate-900 font-outfit uppercase">{req.service}</h3>
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white font-outfit uppercase">{req.service}</h3>
                         )}
                       </div>
 
                       {req.isProjectTask && (
-                        <h3 className="text-lg font-bold text-slate-900 font-outfit">{req.service}</h3>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white font-outfit">{req.service}</h3>
                       )}
                       
-                      <div className="text-sm font-medium text-slate-600 space-y-1">
-                        <p>Customer: <span className="font-bold text-slate-900">{req.customerName}</span></p>
+                      <div className="text-sm font-medium text-slate-600 dark:text-slate-300 space-y-1">
+                        <p>Customer: <span className="font-bold text-slate-900 dark:text-white">{req.customerName}</span></p>
                         {req.supervisorName && (
-                          <p>Supervisor: <span className="font-bold text-emerald-800">{req.supervisorName}</span></p>
+                          <p>Supervisor: <span className="font-bold text-emerald-700 dark:text-emerald-400">{req.supervisorName}</span></p>
                         )}
-                        <p>Location: <span className="font-bold text-slate-900">{req.address}</span></p>
-                        <p>Cooperative Payout: <span className="font-bold text-emerald-700">{req.amount}</span> <span className="text-xs text-slate-500 font-normal">(95% Worker Guaranteed)</span></p>
+                        <p>Location: <span className="font-bold text-slate-900 dark:text-white">{req.address}</span></p>
+                        <p>Cooperative Payout: <span className="font-bold text-emerald-700 dark:text-emerald-400">{req.amount}</span> <span className="text-xs text-slate-500 font-normal">(95% Worker Guaranteed)</span></p>
                       </div>
 
                       <div className="pt-2">
                         <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Task To Perform</p>
-                        <p className="text-sm font-semibold text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100">{req.task}</p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-750 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700">{req.task}</p>
                       </div>
 
                       <div className="flex items-center gap-4 pt-2 text-sm text-slate-500 font-medium">
-                        <span className="flex items-center">Start Date: <span className="font-bold text-slate-900 ml-1">{req.startDate}</span></span>
+                        <span className="flex items-center">Start Date: <span className="font-bold text-slate-900 dark:text-white ml-1">{req.startDate}</span></span>
                       </div>
                     </div>
 
                     <div className="flex sm:flex-col gap-2 shrink-0 self-end sm:self-start">
-                      <button
-                        onClick={() => handleAccept(req.id)}
-                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs cursor-pointer"
-                      >
-                        Accept Assignment
-                      </button>
-                      <button
-                        onClick={() => handleReject(req.id)}
-                        className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center cursor-pointer"
-                      >
-                        Decline
-                      </button>
+                      {req.isProjectTask ? (
+                        <>
+                          <button
+                            onClick={() => handleMarkCompleted(req.id)}
+                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Mark Completed</span>
+                          </button>
+                          <button
+                            onClick={() => onOpenChat && onOpenChat({
+                              id: req.id,
+                              bookingId: req.id,
+                              customer_id: req.customerId || req.customer_id,
+                              customerName: 'Er. Vikramaditya Rathore',
+                              worker_id: currentUser?.id,
+                              workerName: currentUser?.name,
+                              service: req.service
+                            })}
+                            className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>Chat Supervisor</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleAccept(req.id)}
+                            className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          >
+                            Accept Assignment
+                          </button>
+                          <button
+                            onClick={() => handleReject(req.id)}
+                            className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center cursor-pointer"
+                          >
+                            Decline
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
 
-              {requests.filter(r => r.status === 'REQUESTED' || r.status === 'PENDING').length === 0 && requests.filter(r => r.isProjectTask && (r.status === 'IN_PROGRESS' || r.status === 'ACCEPTED')).length === 0 && (
-                <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-8 text-center py-12">
+              {requests.filter(r => (r.status === 'REQUESTED' || r.status === 'PENDING' || r.isProjectTask) && r.status !== 'COMPLETED').length === 0 && (
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xs p-8 text-center py-12">
                   <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                  <p className="text-slate-600 font-bold text-sm font-outfit">Your Inbox is Clear</p>
+                  <p className="text-slate-600 dark:text-slate-300 font-bold text-sm font-outfit">Your Inbox is Clear</p>
                   <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
                     No incoming requests right now. Keep your app open to receive alerts from local cooperative customers and site supervisors.
                   </p>
