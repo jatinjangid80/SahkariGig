@@ -183,28 +183,30 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        if (currentUser?.id) {
-          // Fetch internal worker ID by user_id or direct ID
-          let internalWorkerId: string | null = null;
-          let displayWorkerId = `WORKER-DEL-${currentUser.id.slice(0, 4).toUpperCase()}`;
-          const { data: workerData } = await supabase
-            .from('workers')
-            .select('id, worker_id')
-            .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id}`)
-            .limit(1)
-            .maybeSingle();
-          
-          if (workerData?.id) {
-            internalWorkerId = workerData.id;
-            if (workerData.worker_id) {
-              displayWorkerId = workerData.worker_id;
+        if (currentUser?.id || currentUser?.name) {
+          const workerName = (currentUser.name || profile.fullName || '').trim();
+          const workerIdMatches = new Set<string>();
+          if (currentUser?.id) workerIdMatches.add(currentUser.id);
+
+          try {
+            const { data: workerList } = await supabase
+              .from('workers')
+              .select('id, worker_id, user_id, name')
+              .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id},name.ilike.%${workerName}%`);
+            
+            if (workerList && workerList.length > 0) {
+              workerList.forEach((w: any) => {
+                if (w.id) workerIdMatches.add(w.id);
+                if (w.worker_id) workerIdMatches.add(w.worker_id);
+                if (w.user_id) workerIdMatches.add(w.user_id);
+              });
             }
-          } else {
-            internalWorkerId = currentUser.id;
+          } catch (e) {
+            console.warn('Worker match error:', e);
           }
 
           let loadedAssignments: any[] = [];
-          if (internalWorkerId) {
+          try {
             const { data: pwData } = await supabase
               .from('project_workers')
               .select(`
@@ -213,39 +215,84 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 status,
                 assigned_at,
                 project_id,
+                worker_id,
+                workers (
+                  id,
+                  worker_id,
+                  name,
+                  trade
+                ),
                 projects (
                   name,
                   customer_name,
+                  customer_phone,
                   location,
                   start_date
                 )
               `)
-              .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id},worker_id.eq.${displayWorkerId}`)
               .order('assigned_at', { ascending: false });
 
-            if (pwData) {
-              loadedAssignments = pwData.map((pw: any) => ({
+            if (pwData && pwData.length > 0) {
+              const relevantAssignments = pwData.filter((pw: any) => {
+                if (pw.worker_id && workerIdMatches.has(pw.worker_id)) return true;
+                if (pw.workers?.id && workerIdMatches.has(pw.workers.id)) return true;
+                if (pw.workers?.worker_id && workerIdMatches.has(pw.workers.worker_id)) return true;
+                if (workerName && pw.workers?.name && pw.workers.name.toLowerCase().includes(workerName.toLowerCase())) return true;
+                return false;
+              });
+
+              loadedAssignments = relevantAssignments.map((pw: any) => ({
                 id: pw.id,
                 isProjectTask: true,
-                service: pw.projects?.name || 'Site Assignment',
+                service: pw.projects?.name || 'House Construction Site',
                 customerName: pw.projects?.customer_name || 'Project Client',
-                supervisorName: 'Er. Vikramaditya (Supervisor)',
-                address: pw.projects?.location || 'Project Site',
+                customerPhone: pw.projects?.customer_phone || '+91 98765 43210',
+                supervisorName: 'Er. Vikramaditya Rathore (Chief Supervisor)',
+                address: pw.projects?.location || 'Mansarovar / Jagatpura, Jaipur',
                 task: pw.task || 'Assigned Site Work',
                 startDate: pw.projects?.start_date || 'Today',
-                status: (pw.status === 'PENDING' || !pw.status) ? 'REQUESTED' : pw.status,
+                status: pw.status || 'IN_PROGRESS',
                 amount: '₹800/day',
                 paymentStatus: pw.status === 'COMPLETED' ? 'PAID' : 'PENDING'
               }));
             }
+          } catch (pwErr) {
+            console.warn('Project workers fetch note:', pwErr);
+          }
+
+          // Check local cached assignments if Supabase returned nothing
+          if (loadedAssignments.length === 0) {
+            const localSaved = localStorage.getItem('sahkarigig_project_assignments');
+            if (localSaved) {
+              try {
+                const parsed = JSON.parse(localSaved);
+                const matched = parsed.filter((as: any) => {
+                  const asWorkerName = as.workers?.name || as.workerName || '';
+                  return workerName && asWorkerName.toLowerCase().includes(workerName.toLowerCase());
+                });
+                loadedAssignments = matched.map((as: any) => ({
+                  id: as.id,
+                  isProjectTask: true,
+                  service: as.projects?.name || 'House Construction Site',
+                  customerName: as.projects?.customer_name || 'Project Client',
+                  customerPhone: as.projects?.customer_phone || '+91 98765 43210',
+                  supervisorName: 'Er. Vikramaditya (Supervisor)',
+                  address: as.projects?.location || 'Jaipur, Rajasthan',
+                  task: as.task || 'Assigned Site Work',
+                  startDate: as.projects?.start_date || 'Today',
+                  status: as.status || 'IN_PROGRESS',
+                  amount: '₹800/day',
+                  paymentStatus: as.status === 'COMPLETED' ? 'PAID' : 'PENDING'
+                }));
+              } catch (e) {}
+            }
           }
 
           let loadedBookings: any[] = [];
-          const workerNameQuery = (currentUser.name || profile.fullName || 'Tarun').trim();
           const { data: bookData } = await supabase
             .from('bookings')
             .select('*')
-            .or(`worker_id.eq.${internalWorkerId},worker_id.eq.${currentUser.id},worker_id.eq.${displayWorkerId},worker_name.ilike.%${workerNameQuery}%`)
+            .or(`worker_id.eq.${currentUser.id},worker_name.ilike.%${workerName}%`)
             .order('created_at', { ascending: false });
 
           if (bookData) {
@@ -724,9 +771,39 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           {currentTab === 'feed' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Incoming Job Requests</h2>
+                <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Incoming Job Requests & Site Work</h2>
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">Live feed connected</span>
               </div>
+
+              {/* Active Site Tasks Quick Notification Banner */}
+              {requests.filter(r => r.isProjectTask && (r.status === 'IN_PROGRESS' || r.status === 'ACCEPTED')).map(siteTask => (
+                <div key={`banner-${siteTask.id}`} className="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 rounded-3xl p-5 text-white shadow-lg border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-3.5 w-full sm:w-auto">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 font-bold shrink-0">
+                      <Building2 className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase font-black tracking-wider bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-md">Supervisor Site Assignment</span>
+                        <span className="text-xs text-emerald-400 font-bold">• In Progress</span>
+                      </div>
+                      <h3 className="text-base font-bold font-outfit mt-0.5">{siteTask.service}</h3>
+                      <p className="text-xs text-slate-300">
+                        Assigned Task: <strong className="text-emerald-300 font-semibold">{siteTask.task}</strong> • Supervisor: <span className="text-slate-200 font-medium">{siteTask.supervisorName}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setLocalTab('active');
+                      if (onTabChange) onTabChange('active');
+                    }}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+                  >
+                    View in Active Jobs <ArrowUpRight className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
 
               {requests.filter(r => r.status === 'REQUESTED' || r.status === 'PENDING').map(req => (
                 <div key={req.id} className="bg-white rounded-3xl border border-emerald-200 shadow-md p-6 relative overflow-hidden">
@@ -735,18 +812,31 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <div className="relative z-10 flex flex-col sm:flex-row justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
-                        <h3 className="text-base font-bold text-slate-900 font-outfit uppercase">{req.service}</h3>
+                        {req.isProjectTask ? (
+                          <span className="text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                            🏗️ Supervisor Site Assignment
+                          </span>
+                        ) : (
+                          <h3 className="text-base font-bold text-slate-900 font-outfit uppercase">{req.service}</h3>
+                        )}
                       </div>
+
+                      {req.isProjectTask && (
+                        <h3 className="text-lg font-bold text-slate-900 font-outfit">{req.service}</h3>
+                      )}
                       
                       <div className="text-sm font-medium text-slate-600 space-y-1">
                         <p>Customer: <span className="font-bold text-slate-900">{req.customerName}</span></p>
+                        {req.supervisorName && (
+                          <p>Supervisor: <span className="font-bold text-emerald-800">{req.supervisorName}</span></p>
+                        )}
                         <p>Location: <span className="font-bold text-slate-900">{req.address}</span></p>
                         <p>Cooperative Payout: <span className="font-bold text-emerald-700">{req.amount}</span> <span className="text-xs text-slate-500 font-normal">(95% Worker Guaranteed)</span></p>
                       </div>
 
                       <div className="pt-2">
-                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Task</p>
-                        <p className="text-sm font-semibold text-slate-900">{req.task}</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Task To Perform</p>
+                        <p className="text-sm font-semibold text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100">{req.task}</p>
                       </div>
 
                       <div className="flex items-center gap-4 pt-2 text-sm text-slate-500 font-medium">
@@ -772,12 +862,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 </div>
               ))}
 
-              {requests.filter(r => r.status === 'REQUESTED' || r.status === 'PENDING').length === 0 && (
+              {requests.filter(r => r.status === 'REQUESTED' || r.status === 'PENDING').length === 0 && requests.filter(r => r.isProjectTask && (r.status === 'IN_PROGRESS' || r.status === 'ACCEPTED')).length === 0 && (
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-8 text-center py-12">
                   <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-2" />
                   <p className="text-slate-600 font-bold text-sm font-outfit">Your Inbox is Clear</p>
                   <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                    No incoming requests right now. Keep your app open to receive alerts from local cooperative customers.
+                    No incoming requests right now. Keep your app open to receive alerts from local cooperative customers and site supervisors.
                   </p>
                 </div>
               )}
@@ -796,19 +886,28 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <div className="flex flex-col sm:flex-row justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
-                        <span className="text-emerald-700 font-bold text-xs uppercase tracking-wider mb-1 block">Active Job</span>
+                        {req.isProjectTask ? (
+                          <span className="text-emerald-700 font-bold text-xs uppercase tracking-wider mb-1 block bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md">
+                            🏗️ Active Supervisor Site Task
+                          </span>
+                        ) : (
+                          <span className="text-emerald-700 font-bold text-xs uppercase tracking-wider mb-1 block">Active Direct Job</span>
+                        )}
                       </div>
                       <h3 className="text-lg font-bold text-slate-900 font-outfit uppercase">{req.service}</h3>
                       
                       <div className="text-sm font-medium text-slate-600 space-y-1">
                         <p>Customer: <span className="font-bold text-slate-900">{req.customerName}</span></p>
+                        {req.supervisorName && (
+                          <p>Supervisor: <span className="font-bold text-emerald-800">{req.supervisorName}</span></p>
+                        )}
                         <p>Location: <span className="font-bold text-slate-900">{req.address}</span></p>
                         <p>Estimated Payout: <span className="font-bold text-emerald-700">{req.amount}</span></p>
                       </div>
 
                       <div className="pt-2">
-                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Task</p>
-                        <p className="text-sm font-semibold text-slate-900">{req.task}</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Assigned Task</p>
+                        <p className="text-sm font-bold text-slate-900 bg-slate-50 p-3 rounded-xl border border-slate-100">{req.task}</p>
                       </div>
 
                       <div className="flex items-center gap-4 pt-2 text-sm text-slate-500 font-medium">
@@ -826,16 +925,16 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           id: req.id,
                           bookingId: req.id,
                           customer_id: req.customerId || req.customer_id,
-                          customerName: req.customerName,
+                          customerName: req.supervisorName ? 'Er. Vikramaditya Rathore' : req.customerName,
                           worker_id: currentUser?.id,
                           workerName: currentUser?.name,
                           service: req.service
                         })}
                         className="px-5 py-2.5 bg-[#166534] hover:bg-[#14532D] text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer"
-                        title="Chat directly with the Customer"
+                        title="Chat directly"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Chat with Customer</span>
+                        <span>{req.isProjectTask ? 'Chat with Supervisor' : 'Chat with Customer'}</span>
                       </button>
                       <button
                         type="button"
@@ -850,10 +949,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                           });
                         }}
                         className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer"
-                        title="Call or view customer contact details"
+                        title="Call or view contact details"
                       >
                         <PhoneCall className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>Call Customer</span>
+                        <span>{req.isProjectTask ? 'Contact Site' : 'Call Customer'}</span>
                       </button>
                     </div>
                   </div>

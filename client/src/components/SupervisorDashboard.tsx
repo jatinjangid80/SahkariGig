@@ -271,6 +271,8 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     const projObj = projects.find(p => p.id === assignProject) || projects[0];
     const workerObj = workers.find(w => w.id === assignWorker) || workers[0];
 
+    let finalAssignment: any = null;
+
     try {
       const { data: inserted, error: insErr } = await supabase
         .from('project_workers')
@@ -284,9 +286,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         .single();
 
       if (inserted && !insErr) {
+        finalAssignment = inserted;
         setAssignments(prev => [inserted, ...prev]);
       } else {
-        const newAssignment = {
+        finalAssignment = {
           id: `as-${Date.now()}`,
           project_id: assignProject,
           worker_id: assignWorker,
@@ -295,11 +298,11 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           workers: workerObj,
           projects: projObj
         };
-        setAssignments(prev => [newAssignment, ...prev]);
+        setAssignments(prev => [finalAssignment, ...prev]);
       }
     } catch (err) {
       console.warn('Supabase insert note', err);
-      const newAssignment = {
+      finalAssignment = {
         id: `as-${Date.now()}`,
         project_id: assignProject,
         worker_id: assignWorker,
@@ -308,7 +311,19 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         workers: workerObj,
         projects: projObj
       };
-      setAssignments(prev => [newAssignment, ...prev]);
+      setAssignments(prev => [finalAssignment, ...prev]);
+    }
+
+    // Save and broadcast across tabs
+    if (finalAssignment) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('sahkarigig_project_assignments') || '[]');
+        localStorage.setItem('sahkarigig_project_assignments', JSON.stringify([finalAssignment, ...saved]));
+        localStorage.setItem('last_booking_created', Date.now().toString());
+
+        const bc = new BroadcastChannel('sahkarigig_booking_channel');
+        bc.postMessage({ type: 'PROJECT_WORKER_ASSIGNED', assignment: finalAssignment });
+      } catch (e) {}
     }
 
     setIsAssignModalOpen(false);
