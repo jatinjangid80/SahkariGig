@@ -225,7 +225,6 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 projects (
                   name,
                   customer_name,
-                  customer_phone,
                   location,
                   start_date
                 )
@@ -237,7 +236,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 if (pw.worker_id && workerIdMatches.has(pw.worker_id)) return true;
                 if (pw.workers?.id && workerIdMatches.has(pw.workers.id)) return true;
                 if (pw.workers?.worker_id && workerIdMatches.has(pw.workers.worker_id)) return true;
-                if (workerName && pw.workers?.name && pw.workers.name.toLowerCase().includes(workerName.toLowerCase())) return true;
+                if (workerName && pw.workers?.name && (
+                  pw.workers.name.toLowerCase().includes(workerName.toLowerCase()) ||
+                  workerName.toLowerCase().includes(pw.workers.name.toLowerCase())
+                )) return true;
                 return false;
               });
 
@@ -246,7 +248,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 isProjectTask: true,
                 service: pw.projects?.name || 'House Construction Site',
                 customerName: pw.projects?.customer_name || 'Project Client',
-                customerPhone: pw.projects?.customer_phone || '+91 98765 43210',
+                customerPhone: '+91 98765 43210',
                 supervisorName: 'Er. Vikramaditya Rathore (Chief Supervisor)',
                 address: pw.projects?.location || 'Mansarovar / Jagatpura, Jaipur',
                 task: pw.task || 'Assigned Site Work',
